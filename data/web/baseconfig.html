@@ -2,8 +2,8 @@
 <html lang="en">
   <head>
     <meta name='viewport' content='width=device-width, initial-scale=1.0'/>
-    <meta charset='utf-8'>
-    <link rel='stylesheet' type='text/css' href='/web/Style.css'>
+    <meta charset='utf-8'/>
+    <link rel='stylesheet' type='text/css' href='/web/Style.css'/>
     <script language='javascript' type='text/javascript' src='/web/esp/gpio.js'></script>
     <script language='javascript' type='text/javascript' src='/parameter.js'></script>
     <script language='javascript' type='text/javascript' src='/web/Javascript.js'></script>
@@ -70,7 +70,7 @@
 
           <tr>
             <td>MQTT Topic Base Path (example: home/pumpcontrol)</td>
-            <td><input size='30' maxlength='40' name='mqttbasepath' id='mqttbasepath' type='text' v/></td>
+            <td><input size='30' maxlength='40' name='mqttbasepath' id='mqttbasepath' type='text' /></td>
           </tr>
 
           <tr>
@@ -109,12 +109,12 @@
           <tr id="tr_owSelect">
             <td colspan='2'>
               <div class='inline'>
-                <input type='radio' id='sel_ow1' name='sel_1wire' value='none' %s onclick="radioselection([],['onewire_0'])"/>
+                <input type='radio' id='sel_ow1' name='sel_1wire' value='none' onclick="radioselection([],['onewire_0'])"/>
                 <label for='sel_ow1'>kein OneWire</label>
               </div>
                 
               <div class='inline'>
-                <input type='radio' id='sel_ow2' name='sel_1wire' value='1wire' %s onclick="radioselection(['onewire_0'],[])"/>
+                <input type='radio' id='sel_ow2' name='sel_1wire' value='1wire' onclick="radioselection(['onewire_0'],[])"/>
                 <label for='sel_ow2'>OneWire Aktiv</label>
               </div>
               
@@ -129,12 +129,12 @@
             <tr id="tr_oledSelect">
               <td colspan='2'>
                 <div class='inline'>
-                  <input type='radio' id='sel_oled1' name='sel_oled' value='none' %s onclick="radioselection([],['oled_0','oled_1'])"/>
+                  <input type='radio' id='sel_oled1' name='sel_oled' value='none' onclick="radioselection([],['oled_0','oled_1'])"/>
                   <label for='sel_oled1'>kein OLED</label>
                 </div>
             
                 <div class='inline'>
-                  <input type='radio' id='sel_oled2' name='sel_oled' value='oled' %s onclick="radioselection(['oled_0','oled_1'],[])"/>
+                  <input type='radio' id='sel_oled2' name='sel_oled' value='oled' onclick="radioselection(['oled_0','oled_1'],[])"/>
                   <label for='sel_oled2'>mit OLED</label>
                 </div>
               </td>
@@ -159,12 +159,12 @@
             <tr>
               <td colspan='2'>
                 <div class='inline'>
-                  <input type='radio' id='sel_3wege_0' name='sel_3wege' value='none' %s onclick="radioselection([],['3wege_0'])"/>
+                  <input type='radio' id='sel_3wege_0' name='sel_3wege' value='none' onclick="radioselection([],['3wege_0'])"/>
                   <label for='sel_3wege_0'>kein Trinkwasser Bypass</label>
                 </div>
             
                 <div class='inline'>
-                  <input type='radio' id='sel_3wege_1' name='sel_3wege' value='3wege' %s onclick="radioselection(['3wege_0'],[])"/>
+                  <input type='radio' id='sel_3wege_1' name='sel_3wege' value='3wege' onclick="radioselection(['3wege_0'],[])"/>
                   <label for='sel_3wege_1'>mit Trinkwasser ByPass Ventil</label>
                 </div>
               </td>
@@ -182,7 +182,7 @@
                   <label for='sel_update_0'>Automatisches Update</label>
                 </div>
                 <div class='inline'>
-                  <input type='radio' id='sel_update_1' name='sel_update' value='manu' %s onclick="radioselection(['update_1'],['update_0'])"/>
+                  <input type='radio' id='sel_update_1' name='sel_update' value='manu' onclick="radioselection(['update_1'],['update_0'])"/>
                   <label for='sel_update_1'>Manuelles Update</label>
                 </div>
               </td>
@@ -202,8 +202,8 @@
                   </template>
                 </select>
               </td>
-              
-              <tr id='update_1'>
+            </tr>  
+            <tr id='update_1'>
                 <td>verfügbare Releases
                   <a href='#' onclick='FetchReleaseInfo()' class='ButtonRefresh' title='Die JSON Liste neu laden'>&#8634;</a>
                 </td>

@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="en">
   <head>
     <meta name='viewport' content='width=device-width, initial-scale=1.0'/>
-    <meta charset='utf-8'>
-    <link rel='stylesheet' type='text/css' href='/web/Style.css'>
+    <meta charset='utf-8'/>
+    <link rel='stylesheet' type='text/css' href='/web/Style.css'/>
     <script language='javascript' type='text/javascript' src='/web/esp/gpio.js'></script>
     <script language='javascript' type='text/javascript' src='/web/Javascript.js'></script>
     <script language='javascript' type='text/javascript' src='/web/valvefunctions.js'></script>
@@ -152,9 +152,9 @@
       <thead>
         <tr>
           <td style='width: 130px;'>
-            <input type='radio' id='sel_moisture1' name='sel_moisture' value='off' %s onclick="radioselection([],['moisture'])"/>
+            <input type='radio' id='sel_moisture1' name='sel_moisture' value='off' onclick="radioselection([],['moisture'])"/>
             <label for='sel_moisture1'>Off</label>
-            <input type='radio' id='sel_moisture2' name='sel_moisture' value='on' %s onclick="radioselection(['moisture'],[])"/>
+            <input type='radio' id='sel_moisture2' name='sel_moisture' value='on' onclick="radioselection(['moisture'],[])"/>
             <label for='sel_moisture2'>On</label>
           </td>
           <td style='width: 600px;'>Bodenfeuchtesensoren am ADS1115</td>
@@ -162,8 +162,8 @@
       </thead>
       <tbody>
         <tr id='moisture'>
-          <td valign=top class="noborder">  
-            <input type='button' value='&#10010; add new Port' onclick='addrow("moistureRows")'>
+          <td valign="top" class="noborder">  
+            <input type='button' value='&#10010; add new Port' onclick="addrow('moistureRows')"/>
           </td>
           <td class="noborder">
             <table id='moistureRows' class='editorDemoTable'>
@@ -183,7 +183,7 @@
                     <td><input id='mqtttopic' name='mqtttopic' type='text' size='30' placeholder='topic'/></td>
                     <td><input id="ads_addr" maxlength='2' name='ads_addr' type='text'/></td>
                     <td><input id='ads_port' name='ads_port' type='number' min='0' max='4'/></td>
-                    <td><input type='button' value='&#10008;' onclick='delrow(this)'></td>
+                    <td><input type='button' value='&#10008;' onclick='delrow(this)'/></td>
                   </tr>
                 </template>
               </tbody>
