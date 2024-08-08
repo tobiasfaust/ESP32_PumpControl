@@ -4,6 +4,8 @@ var DirJson;
 
 window.addEventListener('load', initHandleFS, false);
 function initHandleFS() {
+  document.querySelector("#loader").style.visibility = "hidden";
+  document.querySelector("body").style.visibility = "visible";
   init("/");
 }
 

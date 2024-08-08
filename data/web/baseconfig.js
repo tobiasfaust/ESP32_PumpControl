@@ -18,6 +18,8 @@ function MyCallback() {
   CreateSelectionListFromInputField('input[type=number][id*=ConfiguredPort]', [configuredPorts]);
   SetUpdateURL()
   FetchReleaseInfo();
+  document.querySelector("#loader").style.visibility = "hidden";
+  document.querySelector("body").style.visibility = "visible";
 }
 
 // ************************************************

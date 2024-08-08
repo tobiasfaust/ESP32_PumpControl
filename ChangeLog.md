@@ -14,6 +14,7 @@ Release 3.0.0:
   - move all webfiles (css,js) to FS
   - create new Webpage to maintain the FS-files, editing json registers on-the-fly is now possible
   - add ADS1115 moisture functionality
+  - add page loader
 
 Release 2.5.3:
   - Bug: Oled Typ selectionbox in GUI will now list correct

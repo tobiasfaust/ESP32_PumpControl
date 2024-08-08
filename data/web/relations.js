@@ -16,6 +16,8 @@ function GetInitData() {
 function MyCallback() {
   CreateSelectionListFromInputField('input[type=number][id$=ConfiguredPort]', [configuredPorts]);
   validate_identifiers("maintable");
+  document.querySelector("#loader").style.visibility = "hidden";
+  document.querySelector("body").style.visibility = "visible";
 }
 
 // ************************************************

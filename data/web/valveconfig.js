@@ -16,6 +16,8 @@ function GetInitData() {
 function MyCallback() {
   CreateSelectionListFromInputField('input[type=number][id*=AllePorts]', [gpio, availablePorts], gpio_disabled);
   validate_identifiers("maintable");
+  document.querySelector("#loader").style.visibility = "hidden";
+  document.querySelector("body").style.visibility = "visible";
 }
 
 // ************************************************

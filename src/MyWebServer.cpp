@@ -335,12 +335,12 @@ void MyWebServer::GetInitDataNavi(AsyncResponseStream *response){
 
   #ifdef USE_ONEWIRE
     if (VStruct->Get1WireCountDevices()==0) { 
-      json["data"]["td_1wire_0"]["className"] = "hide";
-      json["data"]["td_1wire_1"]["className"] = "hide";
+      json["data"]["td_1wire_0"]["className"] = "hide"; 
+      json["data"]["1wireconfig"]["className"] = "hide";
     }
   #else
     json["data"]["td_1wire_0"]["className"] = "hide";
-    json["data"]["td_1wire_1"]["className"] = "hide";
+    json["data"]["1wireconfig"]["className"] = "hide";
   #endif
 
   json["response"].to<JsonObject>();

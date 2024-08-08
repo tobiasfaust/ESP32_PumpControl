@@ -22,8 +22,11 @@ function highlightNavi(item) {
     } else {
       document.getElementById(collection[i].id).classList.remove('navi_active');
     }
-
   }
+
+  top.frames["frame_main"].document.querySelector("#loader").style.visibility = "visible";  
+  top.frames["frame_main"].document.querySelector("body").style.visibility = "hidden";
+ 
 }
 
 // ************************************************

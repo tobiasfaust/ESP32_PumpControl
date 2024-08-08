@@ -9,11 +9,16 @@ function GetInitData() {
   var data = {};
   data['action'] = "GetInitData";
   data['subaction'] = "status";
-  requestData(JSON.stringify(data), false);
+  requestData(JSON.stringify(data), false, MyCallback);
 }
 
 // ************************************************
+function MyCallback() {
+  document.querySelector("#loader").style.visibility = "hidden";
+  document.querySelector("body").style.visibility = "visible";
+}
 
+// ************************************************
 function RefreshI2C(id) {
   var data = {};
   data['action'] = "RefreshI2C";
