@@ -29,7 +29,7 @@ def lambda_handler(event, context):
 
     #exit("MyExit")
     CreateReleasesJson(bucketname, targetPath, "ESP32", 5)
-    CreateReleasesJson(bucketname, targetPath, "ESP8266", 5)
+    CreateReleasesJson(bucketname, targetPath, "ESP8266", 0)
     CreateReleasesJson(bucketname, targetPath, "ESP32-S2", 5)
     CreateReleasesJson(bucketname, targetPath, "ESP32-S3", 5)
     CreateReleasesJson(bucketname, targetPath, "ESP32-C3", 5)
