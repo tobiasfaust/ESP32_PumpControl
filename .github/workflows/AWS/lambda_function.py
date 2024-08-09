@@ -29,7 +29,10 @@ def lambda_handler(event, context):
 
     #exit("MyExit")
     CreateReleasesJson(bucketname, targetPath, "ESP32", 5)
-    CreateReleasesJson(bucketname, targetPath, "ESP8266", 0)
+    CreateReleasesJson(bucketname, targetPath, "ESP8266", 5)
+    CreateReleasesJson(bucketname, targetPath, "ESP32-S2", 5)
+    CreateReleasesJson(bucketname, targetPath, "ESP32-S3", 5)
+    CreateReleasesJson(bucketname, targetPath, "ESP32-C3", 5)
     
     
 ############################################
@@ -52,7 +55,7 @@ def CreateReleasesJson(BucketName, TargetPath, arch, history):
             except AttributeError:
                 found = '0' # apply your error handling
     
-            o['MyNum'] = found
+            o['MyNum'] = int(found)
 
         # sortieren nach Releasenummer
         files = sorted(objs, key=lambda i:i['MyNum'], reverse=True) 
