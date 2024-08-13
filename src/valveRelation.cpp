@@ -84,10 +84,10 @@ void valveRelation::LoadJsonConfig() {
 
   if (LittleFS.exists("/relations.json")) {
     //file exists, reading and loading
-    if (Config->GetDebugLevel() >=3) Serial.println("reading relations.json file....");
+    if (Config->GetDebugLevel() >=3) WebSerial.println("reading relations.json file....");
     File configFile = LittleFS.open("/relations.json", "r");
     if (configFile) {
-      if (Config->GetDebugLevel() >=3) Serial.println("relations.json is now open");
+      if (Config->GetDebugLevel() >=3) WebSerial.println("relations.json is now open");
 
       ReadBufferingStream stream{configFile, 64};
       stream.find("\"data\":[");
@@ -98,12 +98,12 @@ void valveRelation::LoadJsonConfig() {
         if (error) {
           loadDefaultConfig = true;
           if (Config->GetDebugLevel() >=1) {
-            Serial.printf("Failed to parse relations.json data: %s, load default config\n", error.c_str()); 
+            WebSerial.printf("Failed to parse relations.json data: %s, load default config\n", error.c_str()); 
           } 
         } else {
           // Print the result
-          if (Config->GetDebugLevel() >=4) {Serial.println("parsing JSON ok"); }
-          if (Config->GetDebugLevel() >=5) {serializeJsonPretty(elem, Serial);} 
+          if (Config->GetDebugLevel() >=4) {WebSerial.println("parsing JSON ok"); }
+          if (Config->GetDebugLevel() >=5) {serializeJsonPretty(elem, WebSerial);} 
 
           bool enabled = false;
           bool EnableByBypass = false;
@@ -121,20 +121,20 @@ void valveRelation::LoadJsonConfig() {
       } while (stream.findUntil(",","]"));
     } else {
       loadDefaultConfig = true;
-      if (Config->GetDebugLevel() >=1) {Serial.println("failed to load relations.json, load default config");}
+      if (Config->GetDebugLevel() >=1) {WebSerial.println("failed to load relations.json, load default config");}
     }
   } else {
     loadDefaultConfig = true;
-    if (Config->GetDebugLevel() >=3) {Serial.println("relations.json File not exists, load default config");}
+    if (Config->GetDebugLevel() >=3) {WebSerial.println("relations.json File not exists, load default config");}
   }
   
   if (loadDefaultConfig) {
-    if (Config->GetDebugLevel() >=3) { Serial.println("load Relations DefaultConfig"); }
+    if (Config->GetDebugLevel() >=3) { WebSerial.println("load Relations DefaultConfig"); }
     this->AddRelation(false, "testhost/TestValve1", 203, false);
     this->AddRelation(false, "testhost/TestValve2", 204, false);
   }
   if (Config->GetDebugLevel() >=3) {
-    Serial.printf("%d relations are now loaded \n", _relationen->size());
+    WebSerial.printf("%d relations are now loaded \n", _relationen->size());
   }
   _relationen->shrink_to_fit();
 }

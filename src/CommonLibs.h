@@ -24,6 +24,7 @@
 #include <LittleFS.h>
 #include <ESPAsyncWebServer.h>
 #include <DNSServer.h>
+#include <WebSerial.h>
 
 #if defined(USE_OLED) || defined(USE_PCF8574) || defined(USE_TB6612)
   #define USE_I2C

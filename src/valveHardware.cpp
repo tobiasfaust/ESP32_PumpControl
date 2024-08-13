@@ -19,7 +19,7 @@ valveHardware::valveHardware(uint8_t sda, uint8_t scl)
     char buffer[100] = {0};
     memset(buffer, 0, sizeof(buffer));
     sprintf(buffer, "Initialisiere HardwareDevice mit GPIO auf ic2Adresse 0x%02X", t.i2cAddress);
-    Serial.println(buffer);
+    WebSerial.println(buffer);
   }
 }
 
@@ -30,7 +30,7 @@ valveHardware::valveHardware(uint8_t sda, uint8_t scl)
       ow2408* MyDS2408 = static_cast<ow2408*>(t->Device);
       MyDS2408->init(pin_1wire);
       this->pin_1wire = pin_1wire;
-      if (Config->GetDebugLevel() >=3) { Serial.printf("1Wire Pin changed successfully, %d devices found\n", MyDS2408->GetCountDevices()); }
+      if (Config->GetDebugLevel() >=3) { WebSerial.printf("1Wire Pin changed successfully, %d devices found\n", MyDS2408->GetCountDevices()); }
     } 
     else if (!this->Get1WireActive()) {    
       ow2408* MyDS2408 = new ow2408();
@@ -43,9 +43,9 @@ valveHardware::valveHardware(uint8_t sda, uint8_t scl)
       t.i2cAddress=0x01;
       HWDevice->push_back(t);
 
-      if (Config->GetDebugLevel() >=3)  { Serial.printf("1Wire added successfully, %d devices found\n", MyDS2408->GetCountDevices()); }
+      if (Config->GetDebugLevel() >=3)  { WebSerial.printf("1Wire added successfully, %d devices found\n", MyDS2408->GetCountDevices()); }
     } else {
-      if (Config->GetDebugLevel() >=5)  { Serial.println("1wire already present"); }
+      if (Config->GetDebugLevel() >=5)  { WebSerial.println("1wire already present"); }
     }
   }
 
@@ -92,7 +92,7 @@ valveHardware::valveHardware(uint8_t sda, uint8_t scl)
 void valveHardware::addI2CDevice(uint8_t i2cAddress) {
   if (!I2CIsPresent(i2cAddress)) {
     if (i2cAddress == 0x01) {
-      if (Config->GetDebugLevel() >=1)  { Serial.println("cannot add 1wire simply, call 'add1WireDevice(pin)' instead"); }
+      if (Config->GetDebugLevel() >=1)  { WebSerial.println("cannot add 1wire simply, call 'add1WireDevice(pin)' instead"); }
     } else {
       HWdev_t t; 
       t.i2cAddress = i2cAddress;
@@ -110,13 +110,13 @@ bool valveHardware::I2CIsPresent(uint8_t i2cAddress) {
     if (Config->GetDebugLevel() >=5)  { 
       memset(buffer, 0, sizeof(buffer));
       sprintf(buffer, "Pruefe ic2Adresse 0x%02X ob HW-Element 0x%02X schon existiert", i2cAddress, HWDevice->at(i).i2cAddress);
-      Serial.println(buffer);
+      WebSerial.println(buffer);
     }    
     if (HWDevice->at(i).i2cAddress == i2cAddress) {
       if (Config->GetDebugLevel() >=4) { 
         memset(buffer, 0, sizeof(buffer));
         sprintf(buffer, "HW-Element von i2cAdresse 0x%02X gefunden", i2cAddress);
-        Serial.println(buffer);
+        WebSerial.println(buffer);
       }
       return true;
     }
@@ -153,7 +153,7 @@ void valveHardware::ConnectHWdevice(HWdev_t* dev) {
     char buffer[100] = {0};
     memset(buffer, 0, sizeof(buffer));
     sprintf(buffer, "Hardwaredevice fuer Typ %d auf i2c-Adresse 0x%02X erfolgreich erstellt", dev->HWType, dev->i2cAddress);
-    Serial.println(buffer);
+    WebSerial.println(buffer);
   }
 }
 
@@ -167,7 +167,7 @@ bool valveHardware::RegisterPort(HWdev_t*& dev, uint8_t Port, bool reverse) {
   if (Config->GetDebugLevel() >=4) { 
     memset(buffer, 0, sizeof(buffer));
     sprintf(buffer, "Fordere Registrierung Port %d an", Port);
-    Serial.println(buffer);
+    WebSerial.println(buffer);
   }
     
   PortMap_t PortMap;
@@ -215,7 +215,7 @@ bool valveHardware::RegisterPort(HWdev_t*& dev, uint8_t Port, bool reverse) {
     } else {
       sprintf(buffer, "Fehler bei der Registrierung des Ports %d ", Port);
     }
-    Serial.println(buffer);
+    WebSerial.println(buffer);
   }
   
   if (success) { return true; }
@@ -296,7 +296,7 @@ void valveHardware::SetPort(HWdev_t* dev, uint8_t Port1, uint8_t Port2, bool sta
     char buffer[100] = {0};
     memset(buffer, 0, sizeof(buffer));
     sprintf(buffer, "Aenderung Port %d nach Status: %s ", Port1, vState(state));
-    Serial.println(buffer);
+    WebSerial.println(buffer);
   }
 }
 

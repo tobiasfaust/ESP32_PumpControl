@@ -62,7 +62,7 @@ void valveStructure::loop() {
   }
 
   if (Config->Enabled1Wire() && /*this->ValveHW->Get1WireActive() &&*/ Config->GetPin1Wire() != this->ValveHW->GetPin1wire()) {
-    Serial.println("Der 1Wire hat sich geändert, initiiere den 1Wire Bus neu.....");
+    WebSerial.println("Der 1Wire hat sich geändert, initiiere den 1Wire Bus neu.....");
     ValveHW->add1WireDevice(Config->GetPin1Wire());
   }
 }
@@ -140,10 +140,10 @@ void valveStructure::LoadJsonConfig() {
 
   if (LittleFS.exists("/valveconfig.json")) {
     //file exists, reading and loading
-    if (Config->GetDebugLevel() >=3) Serial.println("reading valveconfig.json file....");
+    if (Config->GetDebugLevel() >=3) WebSerial.println("reading valveconfig.json file....");
     File configFile = LittleFS.open("/valveconfig.json", "r");
     if (configFile) {
-      if (Config->GetDebugLevel() >=3) Serial.println("valveconfig.json is now open");
+      if (Config->GetDebugLevel() >=3) WebSerial.println("valveconfig.json is now open");
 
       ReadBufferingStream stream{configFile, 64};
       stream.find("\"data\":[");
@@ -154,12 +154,12 @@ void valveStructure::LoadJsonConfig() {
         if (error) {
           loadDefaultConfig = true;
           if (Config->GetDebugLevel() >=1) {
-            Serial.printf("Failed to parse valveconfig.json data: %s, load default config\n", error.c_str()); 
+            WebSerial.printf("Failed to parse valveconfig.json data: %s, load default config\n", error.c_str()); 
           } 
         } else {
           // Print the result
-          if (Config->GetDebugLevel() >=4) {Serial.println("parsing JSON ok"); }
-          if (Config->GetDebugLevel() >=5) {serializeJsonPretty(elem, Serial);} 
+          if (Config->GetDebugLevel() >=4) {WebSerial.println("parsing JSON ok"); }
+          if (Config->GetDebugLevel() >=5) {serializeJsonPretty(elem, WebSerial);} 
 
           valve myValve;
             
@@ -180,15 +180,15 @@ void valveStructure::LoadJsonConfig() {
       } while (stream.findUntil(",","]"));
     } else {
       loadDefaultConfig = true;
-      if (Config->GetDebugLevel() >=1) {Serial.println("failed to load valveconfig.json, load default config");}
+      if (Config->GetDebugLevel() >=1) {WebSerial.println("failed to load valveconfig.json, load default config");}
     }
   } else {
     loadDefaultConfig = true;
-    if (Config->GetDebugLevel() >=3) {Serial.println("valveconfig.json File not exists, load default config");}
+    if (Config->GetDebugLevel() >=3) {WebSerial.println("valveconfig.json File not exists, load default config");}
   }
   
   if (loadDefaultConfig) {
-    if (Config->GetDebugLevel() >=3) { Serial.println("lade Ventile DefaultConfig"); }
+    if (Config->GetDebugLevel() >=3) { WebSerial.println("lade Ventile DefaultConfig"); }
     valve myValve;
     
     myValve.init(this->ValveHW, 203, "Valve1");
@@ -198,7 +198,7 @@ void valveStructure::LoadJsonConfig() {
     this->Valves->push_back(myValve);
   }
   if (Config->GetDebugLevel() >=3) {
-    Serial.printf("%d valves are now loaded \n", Valves->size());
+    WebSerial.printf("%d valves are now loaded \n", Valves->size());
   }
 }
 

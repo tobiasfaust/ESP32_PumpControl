@@ -10,21 +10,21 @@ void OLED::init(uint8_t sda, uint8_t scl, uint8_t i2cAddress) {
   this->i2cAddress = i2cAddress;
   this->type = Config->GetOledType();
 
-  if (Config->GetDebugLevel() >=4) Serial.printf("Starting OLED: I2c: 0x%02X, SDA: %d, SCL: %d, Type: %d )\n", this->i2cAddress, this->pin_sda, pin_scl, this->type);
+  if (Config->GetDebugLevel() >=4) WebSerial.printf("Starting OLED: I2c: 0x%02X, SDA: %d, SCL: %d, Type: %d )\n", this->i2cAddress, this->pin_sda, pin_scl, this->type);
   
   ssd = new OLEDWrapper(this->pin_sda, this->pin_scl, this->i2cAddress);
   
   if (this->ssd->init()) {
     this->ssd->flipScreenVertically();
-    if (Config->GetDebugLevel() >=3) Serial.println("OLED Ready");
+    if (Config->GetDebugLevel() >=3) WebSerial.println("OLED Ready");
   } else {
-    if (Config->GetDebugLevel() >=1) Serial.println("OLED failed to initialize");
+    if (Config->GetDebugLevel() >=1) WebSerial.println("OLED failed to initialize");
   }
   this->enabled = false;
 }
 
 void OLED::Enable(bool e) {
-  if (Config->GetDebugLevel() >=3) Serial.println((e?"OLED enabled":"OLED disabled"));
+  if (Config->GetDebugLevel() >=3) WebSerial.println((e?"OLED enabled":"OLED disabled"));
   this->enabled = e;
 }
 
@@ -67,7 +67,7 @@ void OLED::SetWiFiConnected(bool c) {
   if(this->WiFiConnected != c) {
     this->WiFiConnected = c;
     UpdateAll(); 
-    if (Config->GetDebugLevel() >=3) { Serial.print(F("OLED: Change WiFi Connect Status to ")); Serial.println(c);}
+    if (Config->GetDebugLevel() >=3) { WebSerial.print(F("OLED: Change WiFi Connect Status to ")); WebSerial.println(c);}
   }
 }
 
@@ -75,13 +75,13 @@ void OLED::SetMqttConnected(bool c) {
   if(this->MqttConnected != c) {
     this->MqttConnected = c;
     if (this->enabled) { display_MqttConnectInfo(); }
-    if (Config->GetDebugLevel() >=3) { Serial.print(F("OLED: Change MQTT Connect Status to ")); Serial.println(c);}
+    if (Config->GetDebugLevel() >=3) { WebSerial.print(F("OLED: Change MQTT Connect Status to ")); WebSerial.println(c);}
   }
 }
 
 void OLED::UpdateAll() {
   if (ssd && this->enabled) {
-    if (Config->GetDebugLevel() >=4) Serial.println("OLED Update All");
+    if (Config->GetDebugLevel() >=4) WebSerial.println("OLED Update All");
     ssd->clear();
     display_header();
     display_wifibars();
