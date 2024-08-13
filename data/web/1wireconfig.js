@@ -9,11 +9,11 @@ function GetInitData() {
   var data = {};
   data.action = "GetInitData";
   data.subaction = "1wireconfig";
-  requestData(JSON.stringify(data), true, LoadingLockPage);
+  requestData(JSON.stringify(data), true, MyCallback);
 }
 // ************************************************
 
-function LoadingLockPage() {
+function MyCallback() {
   document.querySelector("#loader").style.visibility = "hidden";
   document.querySelector("body").style.visibility = "visible";
 }
