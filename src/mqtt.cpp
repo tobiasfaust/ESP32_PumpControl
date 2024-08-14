@@ -205,6 +205,7 @@ void MQTT::reconnect() {
     WebSerial.println("connected... ");
     // Once connected, publish basics ...
     this->Publish_IP();
+    this->Publish_String("version", Config->GetReleaseName(), false);
     this->Publish_String("state", "Online", false); //LWT reset
     
     // ... and resubscribe if needed
