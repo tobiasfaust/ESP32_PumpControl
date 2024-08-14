@@ -25,7 +25,7 @@ MyWebServer::MyWebServer(AsyncWebServer *server, DNSServer* dns): server(server)
 
   server->on("^/(.+).(css|js|html|json)$", HTTP_GET, std::bind(&MyWebServer::handleRequestFiles, this, std::placeholders::_1));
   
-  WebSerial.println(F("WebServer started..."));
+  dbg.println(F("WebServer started..."));
 }
 
 void MyWebServer::handle_update_page(AsyncWebServerRequest *request) {
@@ -43,7 +43,7 @@ void MyWebServer::handle_update_response(AsyncWebServerRequest *request) {
 void MyWebServer::handle_update_progress(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
   
   if(!index){
-      WebSerial.printf("Update Start: %s\n", filename.c_str());
+      dbg.printf("Update Start: %s\n", filename.c_str());
       //Update.runAsync(true);
 
       /*
@@ -65,7 +65,7 @@ void MyWebServer::handle_update_progress(AsyncWebServerRequest *request, String 
   }
   if(final){
     if(Update.end(true)){
-      WebSerial.printf("Update Success: %uB\n", index+len);
+      dbg.printf("Update Success: %uB\n", index+len);
       this->DoReboot = true;//Set flag so main loop can issue restart call
     } else {
       Update.printError(Serial);
@@ -76,7 +76,7 @@ void MyWebServer::handle_update_progress(AsyncWebServerRequest *request, String 
 void MyWebServer::loop() {
   //delay(1); // slow response Issue: https://github.com/espressif/arduino-esp32/issues/4348#issuecomment-695115885
   if (this->DoReboot) {
-    WebSerial.println("Rebooting...");
+    dbg.println("Rebooting...");
     delay(100);
     ESP.restart();
   }
@@ -92,13 +92,13 @@ void MyWebServer::handleRoot(AsyncWebServerRequest *request) {
 
 void MyWebServer::handleRequestFiles(AsyncWebServerRequest *request) {
   if (Config->GetDebugLevel() >=3) {
-    WebSerial.printf("Request file %s", ("/" + request->pathArg(0) + "." + request->pathArg(1)).c_str()); WebSerial.println();
+    dbg.printf("Request file %s", ("/" + request->pathArg(0) + "." + request->pathArg(1)).c_str()); dbg.println();
   }  
   
   File f = LittleFS.open("/" + request->pathArg(0) + "." + request->pathArg(1), "r");
   
   if (!f) {
-    if (Config->GetDebugLevel() >=0) {WebSerial.printf("failed to open requested file: %s.%s", request->pathArg(0).c_str(), request->pathArg(1).c_str());}
+    if (Config->GetDebugLevel() >=0) {dbg.printf("failed to open requested file: %s.%s", request->pathArg(0).c_str(), request->pathArg(1).c_str());}
     request->send(404, "text/plain", "404: Not found"); 
     return;
   }
@@ -128,17 +128,17 @@ void MyWebServer::handleReboot(AsyncWebServerRequest *request) {
 }
 
 void MyWebServer::handleReset(AsyncWebServerRequest *request) {
-  if (Config->GetDebugLevel() >= 3) { WebSerial.println("deletion of all config files was requested ...."); }
+  if (Config->GetDebugLevel() >= 3) { dbg.println("deletion of all config files was requested ...."); }
   //LittleFS.format(); // Werkszustand -> nur die config dateien loeschen, die register dateien muessen erhalten bleiben
   File root = LittleFS.open("/", "r");
   File file = root.openNextFile();
   while(file){
     String path("/"); path.concat(file.name());
-    if (path.indexOf(".json") == -1) {WebSerial.println("Continue"); file = root.openNextFile(); continue;}
+    if (path.indexOf(".json") == -1) {dbg.println("Continue"); file = root.openNextFile(); continue;}
     file.close();
     bool rm = LittleFS.remove(path);
     if (Config->GetDebugLevel() >= 3) {
-      WebSerial.printf("deletion of configuration file '%s' %s\n", file.name(), (rm?"was successful":"has failed"));;
+      dbg.printf("deletion of configuration file '%s' %s\n", file.name(), (rm?"was successful":"has failed"));;
     }
     file = root.openNextFile();
   }
@@ -187,9 +187,9 @@ void MyWebServer::handleAjax(AsyncWebServerRequest *request) {
   JsonDocument jsonReturn;
   jsonReturn["response"].to<JsonObject>();
 
-  if (Config->GetDebugLevel() >=4) { WebSerial.print("Ajax Json Empfangen: "); }
+  if (Config->GetDebugLevel() >=4) { dbg.print("Ajax Json Empfangen: "); }
   if (!error) {
-    if (Config->GetDebugLevel() >=4) { serializeJsonPretty(jsonGet, WebSerial); WebSerial.println(); }
+    if (Config->GetDebugLevel() >=4) { serializeJsonPretty(jsonGet, dbg); dbg.println(); }
 
     if (jsonGet.containsKey("action"))   {action    = jsonGet["action"].as<String>();}
     if (jsonGet.containsKey("subaction")){subaction = jsonGet["subaction"].as<String>();}
@@ -208,7 +208,7 @@ void MyWebServer::handleAjax(AsyncWebServerRequest *request) {
     response->print(ret);
 
     if (Config->GetDebugLevel() >=2) {
-      WebSerial.println(FPSTR(buffer));
+      dbg.println(FPSTR(buffer));
     }
 
     return;
@@ -315,11 +315,11 @@ void MyWebServer::handleAjax(AsyncWebServerRequest *request) {
     response->print(ret);
 
     if (Config->GetDebugLevel() >=1) {
-      WebSerial.println(buffer);
+      dbg.println(buffer);
     }
   }
   
-  if (Config->GetDebugLevel() >=4) { WebSerial.print("Ajax Json Antwort: "); WebSerial.println(ret); }
+  if (Config->GetDebugLevel() >=4) { dbg.print("Ajax Json Antwort: "); dbg.println(ret); }
   
   request->send(response);
 }

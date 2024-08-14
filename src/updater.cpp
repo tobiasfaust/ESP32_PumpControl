@@ -22,7 +22,7 @@ void updater::setStage(stage_t s) {
 
 void updater::setAutoMode(bool a) {
   this->automode = a; 
-  WebSerial.printf("Automode now %s \n", this->automode?"on":"off");
+  dbg.printf("Automode now %s \n", this->automode?"on":"off");
 }
 
 void updater::setInterval(uint32_t seconds) {
@@ -73,26 +73,26 @@ void updater::Update() {
     if (r.number > this->currentRelease.number) {
       this->InstallLatestRelease();
     }
-  } else { WebSerial.println("No AutoMode"); }
+  } else { dbg.println("No AutoMode"); }
 #endif
 }
 
 void updater::downloadJson() {
-  WebSerial.println(F("Start download Release information"));
+  dbg.println(F("Start download Release information"));
   HTTPClient http;
   if (http.begin(*(this->WifiClient), this->json_url)) { 
     int httpCode = http.GET();
     if (httpCode > 0) {
-      //WebSerial.printf("[HTTP] GET... code: %d\n", httpCode);
+      //dbg.printf("[HTTP] GET... code: %d\n", httpCode);
       if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
         this->parseJson(http.getStream());
       }
     } else {
-      WebSerial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
+      dbg.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
     }
     http.end();
   } else {
-    WebSerial.printf("[HTTP] Unable to connect\n");
+    dbg.printf("[HTTP] Unable to connect\n");
   }
 }
 
@@ -107,10 +107,10 @@ void updater::parseJson(WiFiClient stream) {
 
     if (!error) {
       // Print the result
-      if (this->GetDebugLevel() >=4) {WebSerial.println("parsing JSON ok"); }
+      if (this->GetDebugLevel() >=4) {dbg.println("parsing JSON ok"); }
       if (this->GetDebugLevel() >=5) {
-        serializeJsonPretty(elem, WebSerial);
-        WebSerial.println();
+        serializeJsonPretty(elem, dbg);
+        dbg.println();
       }
     
       if (elem.containsKey("arch") && elem["arch"].as<String>() == MY_ARCH &&
@@ -134,14 +134,14 @@ void updater::parseJson(WiFiClient stream) {
 
     } else {
       if (this->GetDebugLevel() >=1) {
-        WebSerial.printf("Cannot parse the update-url json in updater.cpp: %s\n", error.c_str());
+        dbg.printf("Cannot parse the update-url json in updater.cpp: %s\n", error.c_str());
       }
     }
 
   } while (stream.findUntil(",","]")); 
 
   if (this->GetDebugLevel() >=3) {
-    WebSerial.println("latest release is:");
+    dbg.println("latest release is:");
     this->printRelease(&this->latestRelease); 
   } 
 }
@@ -159,7 +159,7 @@ void updater::StoreJsonConfig(release_t* r) {
     
   File configFile = LittleFS.open("/ESPUpdate.json", "w");
   if (!configFile) {
-    WebSerial.println("failed to open ESPUpdate.json file for writing");
+    dbg.println("failed to open ESPUpdate.json file for writing");
   }
 
   serializeJson(json, configFile);
@@ -170,18 +170,18 @@ void updater::LoadJsonConfig() {
   bool loadDefaultConfig = false;
   if (LittleFS.exists("/ESPUpdate.json")) {
     //file exists, reading and loading
-    WebSerial.println("reading ESPUpdate.json file");
+    dbg.println("reading ESPUpdate.json file");
     File configFile = LittleFS.open("/ESPUpdate.json", "r");
     if (configFile) {
-      WebSerial.println("opened ESPUpdate.json file");
+      dbg.println("opened ESPUpdate.json file");
       
       JsonDocument json; // TODO Use computed size??
       DeserializationError error = deserializeJson(json, configFile);
       
       if (!error) {
         if(this->GetDebugLevel() >=3) { 
-          serializeJsonPretty(json, WebSerial); 
-          WebSerial.println();
+          serializeJsonPretty(json, dbg); 
+          dbg.println();
         }
         
         release_t r;
@@ -193,12 +193,12 @@ void updater::LoadJsonConfig() {
         if (json.containsKey("download-url"))  { r.downloadURL= json["download-url"].as<String>();}
         this->currentRelease = r;
       } else {
-        WebSerial.println("failed to load ESPUpdate.json config, load default config");
+        dbg.println("failed to load ESPUpdate.json config, load default config");
         loadDefaultConfig = true;
       }
     }
   } else {
-    WebSerial.println("ESPUpdate.json config File not exists, load default config");
+    dbg.println("ESPUpdate.json config File not exists, load default config");
     loadDefaultConfig = true;
   }
 
@@ -222,13 +222,13 @@ void updater::InstallLatestRelease() {
 
   this->StoreJsonConfig(&this->currentRelease);
 
-  WebSerial.printf("Install Release: %s (Number: %d)\n", this->currentRelease.name.c_str(), this->currentRelease.number);
-  WebSerial.printf("Install Binary: %s \n", this->currentRelease.downloadURL.c_str());
+  dbg.printf("Install Release: %s (Number: %d)\n", this->currentRelease.name.c_str(), this->currentRelease.number);
+  dbg.printf("Install Binary: %s \n", this->currentRelease.downloadURL.c_str());
   
   t_httpUpdate_return ret = httpUpdate->update(*(this->WifiClient), this->currentRelease.downloadURL);
   switch (ret) {
     case HTTP_UPDATE_FAILED:
-      WebSerial.printf("HTTP_UPDATE_FAILED Error (%d): %s\n", httpUpdate->getLastError(), httpUpdate->getLastErrorString().c_str());
+      dbg.printf("HTTP_UPDATE_FAILED Error (%d): %s\n", httpUpdate->getLastError(), httpUpdate->getLastErrorString().c_str());
       this->currentRelease = oldRelease;
       this->StoreJsonConfig(&this->currentRelease);
       //this->automode = false;
@@ -236,19 +236,19 @@ void updater::InstallLatestRelease() {
       break;
 
     case HTTP_UPDATE_NO_UPDATES:
-      WebSerial.println("HTTP_UPDATE_NO_UPDATES");
+      dbg.println("HTTP_UPDATE_NO_UPDATES");
       this->currentRelease = oldRelease;
       this->StoreJsonConfig(&this->currentRelease);      
       break;
 
     case HTTP_UPDATE_OK:
-      WebSerial.println("HTTP_UPDATE_OK");
+      dbg.println("HTTP_UPDATE_OK");
       break;
   }
 }
 
 void updater::printRelease(release_t* r) {
-  WebSerial.printf("ReleaseName %s, Version: %s, Subversion: %d, Number: %d, Stage: %s, \n URL: %s\n", r->name.c_str(), r->version.c_str(), r->subversion, r->number, this->Stage2String(r->stage).c_str(), r->downloadURL.c_str());
+  dbg.printf("ReleaseName %s, Version: %s, Subversion: %d, Number: %d, Stage: %s, \n URL: %s\n", r->name.c_str(), r->version.c_str(), r->subversion, r->number, this->Stage2String(r->stage).c_str(), r->downloadURL.c_str());
 }
 
 void updater::loop() {

@@ -37,10 +37,10 @@ BaseConfig::BaseConfig():
 void BaseConfig::LoadJsonConfig() {
   if (LittleFS.exists("/baseconfig.json")) {
     //file exists, reading and loading
-    WebSerial.println(F("reading baseconfig.json file"));
+    dbg.println(F("reading baseconfig.json file"));
     File configFile = LittleFS.open("/baseconfig.json", "r");
     if (configFile) {
-      if (this->GetDebugLevel() >=3) WebSerial.println(F("baseconfig.json is now open"));
+      if (this->GetDebugLevel() >=3) dbg.println(F("baseconfig.json is now open"));
       ReadBufferingStream stream{configFile, 64};
       stream.find("\"data\":[");
       do {
@@ -49,12 +49,12 @@ void BaseConfig::LoadJsonConfig() {
         DeserializationError error = deserializeJson(elem, stream); 
         if (error) {
           if (this->GetDebugLevel() >=1) {
-            WebSerial.printf("Failed to parse baseconfig.json data: %s, load default config\n", error.c_str()); 
+            dbg.printf("Failed to parse baseconfig.json data: %s, load default config\n", error.c_str()); 
           } 
         } else {
           // Print the result
-          if (this->GetDebugLevel() >=5) {WebSerial.println(F("parsing partial JSON of baseconfig.json ok")); }
-          if (this->GetDebugLevel() >=5) {serializeJsonPretty(elem, WebSerial);} 
+          if (this->GetDebugLevel() >=5) {dbg.println(F("parsing partial JSON of baseconfig.json ok")); }
+          if (this->GetDebugLevel() >=5) {serializeJsonPretty(elem, dbg);} 
           
           if (elem.containsKey("mqttroot"))         { this->mqtt_root = elem["mqttroot"].as<String>();}
           if (elem.containsKey("mqttserver"))       { this->mqtt_server = elem["mqttserver"].as<String>();}
@@ -83,10 +83,10 @@ void BaseConfig::LoadJsonConfig() {
         }
       } while (stream.findUntil(",","]"));
     } else {
-      WebSerial.println("cannot open existing baseconfig.json config File, load default BaseConfig"); // -> constructor
+      dbg.println("cannot open existing baseconfig.json config File, load default BaseConfig"); // -> constructor
     }
   } else {
-    WebSerial.println("baseconfig.json config File not exists, load default BaseConfig");
+    dbg.println("baseconfig.json config File not exists, load default BaseConfig");
   }
 
   if (!this->autoupdate_url || this->autoupdate_url.length() < 10 ) {

@@ -6,7 +6,7 @@ void ow2408::init(uint8_t pin) {
   this->ow = new DS2408(pin); 
   this->findDevices();
   this->setup_devices();
-  if (Config->GetDebugLevel() >=3) WebSerial.printf("OneWire DS2408 with %d devices initialized \n", this->device_count);
+  if (Config->GetDebugLevel() >=3) dbg.printf("OneWire DS2408 with %d devices initialized \n", this->device_count);
 }
 
 uint8_t ow2408::findDevices() {
@@ -30,7 +30,7 @@ String ow2408::print_device(uint8_t index) {
 
 void ow2408::print_byte(uint8_t data) {
     for(int index=0; index<8; index++) {
-        WebSerial.print(data & 1, BIN);
+        dbg.print(data & 1, BIN);
         data = data >> 1;
     }
 }
@@ -53,13 +53,13 @@ bool ow2408::handlePort(uint8_t port, bool state) {
   bool ret;
   
   if ((index+1) > this->device_count) {
-    if (Config->GetDebugLevel() >=2) { WebSerial.printf("requested OnWire index %d out of range\n", index); }
+    if (Config->GetDebugLevel() >=2) { dbg.printf("requested OnWire index %d out of range\n", index); }
     return false; 
   }
-  if (Config->GetDebugLevel() >=4) { WebSerial.printf("Schalte Device #%d  Port %d (%s)\n", index, DevPort, this->print_device(index).c_str()); }
+  if (Config->GetDebugLevel() >=4) { dbg.printf("Schalte Device #%d  Port %d (%s)\n", index, DevPort, this->print_device(index).c_str()); }
 
   uint8_t currentstate = (this->ow->get_last_state(this->devices[index]));
-  if (Config->GetDebugLevel() >=5)  { WebSerial.print(" STATE ALT="); print_byte(currentstate); }
+  if (Config->GetDebugLevel() >=5)  { dbg.print(" STATE ALT="); print_byte(currentstate); }
 
   if(state) {
     // set ON
@@ -70,7 +70,7 @@ bool ow2408::handlePort(uint8_t port, bool state) {
   }
 
   ret = this->ow->set_state(this->devices[index], currentstate);
-  if (Config->GetDebugLevel() >=5) { WebSerial.print(" STATE NEU ="); print_byte(currentstate); WebSerial.println(""); }
+  if (Config->GetDebugLevel() >=5) { dbg.print(" STATE NEU ="); print_byte(currentstate); dbg.println(""); }
 
   return ret;
 }

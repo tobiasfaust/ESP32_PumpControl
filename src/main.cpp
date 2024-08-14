@@ -43,7 +43,7 @@ void myMQTTCallBack(char* topic, byte* payload, unsigned int length) {
   }
   
   if (Config->GetDebugLevel() >= 4) { 
-    WebSerial.printf("Message arrived [%s]\nMessage: %s\n", topic, msg.c_str()); 
+    dbg.printf("Message arrived [%s]\nMessage: %s\n", topic, msg.c_str()); 
   }
 
   if (LevelSensor->GetExternalSensor() && (strcmp(LevelSensor->GetExternalSensor().c_str(), topic)==0)) {
@@ -73,11 +73,11 @@ void setup() {
   //LittleFS.format();
 
   Config = new BaseConfig();
-  WebSerial.onMessage([](const String& msg) { Serial.println(msg); });
+  WebSerial.onMessage([](const String& msg) { Serial.println(msg); }); // dont works, workarround by using dbg definition in commonlibs
   WebSerial.begin(&server);
 
   #ifdef USE_I2C
-    WebSerial.printf("Starting WIRE at (SDA, SCL)): %d, %d", Config->GetPinSDA(), Config->GetPinSCL());
+    dbg.printf("Starting WIRE at (SDA, SCL)): %d, %d", Config->GetPinSDA(), Config->GetPinSCL());
     Wire.begin(Config->GetPinSDA(), Config->GetPinSCL());
   #endif
 
@@ -87,7 +87,7 @@ void setup() {
     oled->Enable(Config->EnabledOled());
   #endif
 
-  WebSerial.println("Starting Wifi and MQTT");
+  dbg.println("Starting Wifi and MQTT");
   mqtt = new MyMQTT(&server, &dns, 
                     Config->GetMqttServer().c_str(), 
                     Config->GetMqttPort(), 
@@ -104,28 +104,28 @@ void setup() {
   mqtt->setCallback(myMQTTCallBack);
 
   #ifdef USE_I2C
-    WebSerial.println("Starting I2CDetect");
+    dbg.println("Starting I2CDetect");
     I2Cdetect = new i2cdetect(Config->GetPinSDA(), Config->GetPinSCL());
   #endif
   
-  WebSerial.println("Starting Sensor");
+  dbg.println("Starting Sensor");
   LevelSensor = new sensor();
   #ifdef USE_OLED
     LevelSensor->SetOled(oled);
   #endif
 
-  WebSerial.println("Starting Valve Relations");
+  dbg.println("Starting Valve Relations");
   ValveRel = new valveRelation();
 
-  WebSerial.println("Starting Valve Structure");
+  dbg.println("Starting Valve Structure");
   VStruct = new valveStructure(Config->GetPinSDA(), Config->GetPinSCL());
 
-  WebSerial.println("Starting WebServer");
+  dbg.println("Starting WebServer");
   mywebserver = new MyWebServer(&server, &dns);
 
   //VStruct->OnForTimer("Valve1", 10); // Test
 
-  WebSerial.println("Setup finished");
+  dbg.println("Setup finished");
 }
 
 void loop() {

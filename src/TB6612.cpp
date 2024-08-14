@@ -6,7 +6,7 @@ tb6612::tb6612() {
 void tb6612::init(uint8_t address) {
   M1 = new Motor(address,_MOTOR_A, 1000);
   M2 = new Motor(address,_MOTOR_B, 1000);
-  WebSerial.println("TB6612 initialize");
+  dbg.println("TB6612 initialize");
 }
 
 void tb6612::setOff(uint8_t port) {
@@ -15,7 +15,7 @@ void tb6612::setOff(uint8_t port) {
   } else if (port==1) {
     M2->setmotor(_STOP);
   }
-  //WebSerial.println("Motor Stop");
+  //dbg.println("Motor Stop");
 }
 
 void tb6612::setOn(uint8_t port, bool dir) {
@@ -24,6 +24,6 @@ void tb6612::setOn(uint8_t port, bool dir) {
   } else if (port==1) {
     M2->setmotor( (dir?_CW:_CCW));
   }
-  //WebSerial.println("Motor On");
+  //dbg.println("Motor On");
 }
 

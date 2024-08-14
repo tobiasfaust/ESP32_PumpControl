@@ -63,7 +63,7 @@ void sensor::setSensorType(sensorType_t t) {
 
 void sensor::SetLvl(uint8_t lvl) {
   if (Config->GetDebugLevel() >= 4) {
-    WebSerial.printf("Sensor: Set Level from extern: %d\n", lvl);
+    dbg.printf("Sensor: Set Level from extern: %d\n", lvl);
   }
   this->level = lvl;
   #ifdef USE_OLED
@@ -80,7 +80,7 @@ void sensor::loop_analog() {
     pinanalog = A0;;
   #endif
 
-  if (Config->GetDebugLevel() >=4) WebSerial.printf("start measure, using analog Sensor pin: %d \n", pinanalog);
+  if (Config->GetDebugLevel() >=4) dbg.printf("start measure, using analog Sensor pin: %d \n", pinanalog);
 
   this->raw = analogRead(pinanalog);
   
@@ -102,7 +102,7 @@ void sensor::loop_hcsr04() {
   this->raw = (this->raw / 2) / 29.1; //Distance in CM's, use /148 for inches.
 
   if (this->raw == 0){//Reached timeout
-    WebSerial.println("Out of range");
+    dbg.println("Out of range");
   } else {
     if (this->measureDistMax - this->measureDistMin > 0) {
       this->level = (((this->measureDistMax - this->raw)*100)/(this->measureDistMax - this->measureDistMin));
@@ -115,15 +115,15 @@ void sensor::loop_hcsr04() {
     adsdev_t* device = this->getAdsDevice(i2c);
     
     if (device == nullptr) { 
-      if (Config->GetDebugLevel() >=4) WebSerial.printf("Init ADS1115 at i2cAdress 0x%02x \n", i2c);
+      if (Config->GetDebugLevel() >=4) dbg.printf("Init ADS1115 at i2cAdress 0x%02x \n", i2c);
       
       adsdev_t ads;
       ads.device = ADS1115_WE(i2c);
       
       if(!ads.device.init()){
-        if (Config->GetDebugLevel() >=1) WebSerial.printf("Could not connect to ADS1115 at i2cAddress 0x%02x, ignore it!\n", i2c );
+        if (Config->GetDebugLevel() >=1) dbg.printf("Could not connect to ADS1115 at i2cAddress 0x%02x, ignore it!\n", i2c );
       } else {
-        if (Config->GetDebugLevel() >=3) WebSerial.printf("Initialize ADS1115 at i2cAddress 0x%02x with channel %d\n", i2c, port);
+        if (Config->GetDebugLevel() >=3) dbg.printf("Initialize ADS1115 at i2cAddress 0x%02x with channel %d\n", i2c, port);
         ads.device.setVoltageRange_mV(ADS1115_RANGE_4096);
         ads.i2cAddress = i2c;
         if (port == 0) {ads.topic_chan1 = topic;}
@@ -133,7 +133,7 @@ void sensor::loop_hcsr04() {
         this->ads1115_devices->push_back(ads);
       }
     } else {
-      if (Config->GetDebugLevel() >=3) WebSerial.printf("Add Channel %d to ADS1115 at i2cAddress 0x%02x with topic '%s' \n", port, i2c, topic);
+      if (Config->GetDebugLevel() >=3) dbg.printf("Add Channel %d to ADS1115 at i2cAddress 0x%02x with topic '%s' \n", port, i2c, topic);
       if (port == 0) {device->topic_chan1 = topic;}
       if (port == 1) {device->topic_chan2 = topic;}
       if (port == 2) {device->topic_chan3 = topic;}
@@ -168,7 +168,7 @@ void sensor::loop_hcsr04() {
         return ADS1115_COMP_3_GND;
         break;
       default:
-        WebSerial.printf("ADS115 portnummer %d not available \n", port);
+        dbg.printf("ADS115 portnummer %d not available \n", port);
         break;
     }
     return ADS1115_COMP_0_GND;
@@ -195,7 +195,7 @@ void sensor::loop_hcsr04() {
         *  moisture sensor gets 100% = dry, but we want a moisture: 100% = wet  
         */
         level = 100 - map(raw, 0, 3300, 0, 100); // 0-3.3V -> 0-100%
-        if (Config->GetDebugLevel() >=4) WebSerial.printf("read moisture of ADS1115 (0x%02x) channel %d: raw: %d, calculated level: %d\n", this->ads1115_devices->at(i).i2cAddress, chan, raw, level);
+        if (Config->GetDebugLevel() >=4) dbg.printf("read moisture of ADS1115 (0x%02x) channel %d: raw: %d, calculated level: %d\n", this->ads1115_devices->at(i).i2cAddress, chan, raw, level);
 
         String topic = "";
         switch (chan) {
@@ -223,10 +223,10 @@ void sensor::loop_hcsr04() {
     this->level = 0;
 
     if (!this->getAdsDevice(this->ads1115_i2c)) {
-      if (Config->GetDebugLevel() >=3) WebSerial.printf("Measure of analog Sensor ADS1115 port %d requested, but not ADS1115 found. Stop measure! \n", this->ads1115_port);
+      if (Config->GetDebugLevel() >=3) dbg.printf("Measure of analog Sensor ADS1115 port %d requested, but not ADS1115 found. Stop measure! \n", this->ads1115_port);
     } else {
 
-      if (Config->GetDebugLevel() >=4) WebSerial.printf("start measure, use analog Sensor ADS1115 port: %d \n", this->ads1115_port);
+      if (Config->GetDebugLevel() >=4) dbg.printf("start measure, use analog Sensor ADS1115 port: %d \n", this->ads1115_port);
     
       this->raw = readADS1115Channel(this->getAdsDevice(this->ads1115_i2c), this->getAdsChannel(this->ads1115_port));
       
@@ -282,7 +282,7 @@ void sensor::loop() {
   #endif
   
      if (this->Type != NONE && this->Type != EXTERN && Config->GetDebugLevel() >=4) {
-      WebSerial.printf("measured sensor raw value: %d \n", this->raw);
+      dbg.printf("measured sensor raw value: %d \n", this->raw);
      }
   }
 }
@@ -295,10 +295,10 @@ void sensor::LoadJsonConfig() {
 
   if (LittleFS.exists("/sensorconfig.json")) {
     //file exists, reading and loading
-    WebSerial.println(F("reading sensorconfig.json file"));
+    dbg.println(F("reading sensorconfig.json file"));
     File configFile = LittleFS.open("/sensorconfig.json", "r");
     if (configFile) {
-      if (Config->GetDebugLevel() >=3) WebSerial.println(F("sensorconfig.json is now open"));
+      if (Config->GetDebugLevel() >=3) dbg.println(F("sensorconfig.json is now open"));
       ReadBufferingStream stream{configFile, 64};
       stream.find("\"data\":[");
       do {
@@ -307,12 +307,12 @@ void sensor::LoadJsonConfig() {
         DeserializationError error = deserializeJson(elem, stream); 
         if (error) {
           if (Config->GetDebugLevel() >=1) {
-            WebSerial.printf("Failed to parse sensorconfig.json data: %s, load default config\n", error.c_str()); 
+            dbg.printf("Failed to parse sensorconfig.json data: %s, load default config\n", error.c_str()); 
           } 
         } else {
           // Print the result
-          if (Config->GetDebugLevel() >=5) {WebSerial.println(F("parsing partial JSON of sensorconfig.json ok")); }
-          if (Config->GetDebugLevel() >=5) {serializeJsonPretty(elem, WebSerial);} 
+          if (Config->GetDebugLevel() >=5) {dbg.println(F("parsing partial JSON of sensorconfig.json ok")); }
+          if (Config->GetDebugLevel() >=5) {serializeJsonPretty(elem, dbg);} 
           
           if (elem.containsKey("measurecycle"))         { this->measurecycle = _max(elem["measurecycle"].as<int>(), 10);}
           if (elem.containsKey("measureDistMin"))       { this->measureDistMin = elem["measureDistMin"].as<int>();}
@@ -339,17 +339,17 @@ void sensor::LoadJsonConfig() {
       if (selection == "analog")        { this->init_analog(this->pinAnalog); }
       else if (selection == "hcsr04")   { this->init_hcsr04(this->pinTrigger, this->pinEcho); }
       else if (selection == "extern")   { this->init_extern(this->externalSensor); }
-      else if (selection == "none")     { this->setSensorType(NONE); WebSerial.println(F("No LevelSensor requested")); } 
+      else if (selection == "none")     { this->setSensorType(NONE); dbg.println(F("No LevelSensor requested")); } 
             
       #ifdef USE_ADS1115  
         else if(selection == "ads1115") { this->setSensorType(ADS1115); this->init_ads1115(this->ads1115_i2c, this->ads1115_port); }
       #endif
 
     } else {
-      WebSerial.println("cannot open existing sensorconfig.json config File, load default SensorConfig"); // -> constructor
+      dbg.println("cannot open existing sensorconfig.json config File, load default SensorConfig"); // -> constructor
     }
   } else {
-    WebSerial.println("sensorconfig.json config File not exists, load default SensorConfig");
+    dbg.println("sensorconfig.json config File not exists, load default SensorConfig");
   }
 }
 
