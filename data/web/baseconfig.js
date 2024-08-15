@@ -70,7 +70,7 @@ function ProcessReleaseInfo(json) {
 }
 
 function FetchRelease() {
-  r = document.getElementById('release')
+  r = document.getElementById('releases')
   console.log(r.value)
   fetch( r.value, {
   	responseType: 'blob'
