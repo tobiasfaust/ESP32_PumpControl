@@ -1,9 +1,8 @@
 #include "valve.h"
 
 valve::valve() : port1ms(10), port2ms(10), enabled(true), active(false), ValveType(NONE), autooff(0), reverse(false) {
-  HWdev_t t;
-  t.i2cAddress = 0;
-  this->myHWdev = &t;
+  this->myHWdev = new HWdev_t();
+  this->myHWdev->i2cAddress = 0;
 }
     
 void valve::init(valveHardware* vHW, uint8_t Port, String SubTopic) {
@@ -18,14 +17,20 @@ void valve::init(valveHardware* vHW, uint8_t Port, String SubTopic) {
 void valve::AddPort1(valveHardware* Device, uint8_t Port1) {
   this->valveHWClass = Device;
   bool ret = Device->RegisterPort(this->myHWdev, Port1);
-  if (!ret) { dbg.printf("Cannot locate port %d, set port as disabled \n", Port1); this->enabled = false; }
+  if (!ret) { dbg.printf("Cannot locate port %d, set port as disabled\n", Port1); this->enabled = false; }
   this->port1 = Port1;  
+  if (Config->GetDebugLevel()>=4) {
+    dbg.printf("Registrierung für Port %d (0x%02x) abgeschlossen\n", this->GetPort1(), this->GetI2cAddress());
+  }
 }
 
 void valve::AddPort2(valveHardware* Device, uint8_t Port2) {
   bool ret = Device->RegisterPort(this->myHWdev, Port2);
-  if (!ret) { dbg.printf("Cannot locate port %d, set port as disabled \n", Port2); this->enabled = false; }
+  if (!ret) { dbg.printf("Cannot locate port %d, set port as disabled\n", Port2); this->enabled = false; }
   this->port2 = Port2;
+  if (Config->GetDebugLevel()>=4) {
+    dbg.printf("Registrierung für Port %d (0x%02x) abgeschlossen\n", this->GetPort2(), this->GetI2cAddress());
+  }
 }
 
 void valve::SetActive(bool value) {
@@ -72,10 +77,10 @@ bool valve::HandleSwitch (bool state, int duration) {
   
   if (this->ValveType == NORMAL) {
     valveHWClass->SetPort(this->myHWdev, this->port1, state, this->reverse);
-    dbg.printf("Schalte Standard Ventil %s: Port %d (0x%02X) \n", (state?"An":"Aus"), this->port1, myHWdev->i2cAddress);
+    dbg.printf("Schalte Standard Ventil %s: Port %d (0x%02X) \n", (state?"An":"Aus"), this->port1, this->GetI2cAddress());
   } else if (ValveType == BISTABIL) {
     valveHWClass->SetPort(this->myHWdev, this->port1, this->port2, state, this->reverse, (state?this->port1ms:this->port2ms));
-    dbg.printf("Schalte Bistabiles Ventil %s: Port %d/%d, ms: %d/%d (0x%02X) \n", (state?"An":"Aus"), port1, port2, port1ms, port2ms, myHWdev->i2cAddress);
+    dbg.printf("Schalte Bistabiles Ventil %s: Port %d/%d, ms: %d/%d (0x%02X) \n", (state?"An":"Aus"), port1, port2, port1ms, port2ms, this->GetI2cAddress());
   } else {
     dbg.println("Unerwarteter Ventiltyp ?? Breche Schaltvorgang ab .....");
     return false;

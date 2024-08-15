@@ -7,13 +7,14 @@
 valveHardware::valveHardware(uint8_t sda, uint8_t scl)
   : pin_sda(sda), pin_scl(scl) {
 
-  HWDevice = new std::vector<HWdev_t>{};
-  
+  //this->HWDevice = new std::vector<HWdev_t>{};
+  this->HWDevice = std::make_shared<std::vector<HWdev_t>>();
+
   // initial immer das GPIO HardwareDevice erstellen
   HWdev_t t; 
   t.HWType=ONBOARD;
   t.i2cAddress=0x00;
-  HWDevice->push_back(t);
+  this->HWDevice->push_back(t);
 
   if (Config->GetDebugLevel() >=3)  { 
     char buffer[100] = {0};
@@ -41,7 +42,7 @@ valveHardware::valveHardware(uint8_t sda, uint8_t scl)
       t.Device = MyDS2408;
       t.HWType=OW2408;
       t.i2cAddress=0x01;
-      HWDevice->push_back(t);
+      this->HWDevice->push_back(t);
 
       if (Config->GetDebugLevel() >=3)  { dbg.printf("1Wire added successfully, %d devices found\n", MyDS2408->GetCountDevices()); }
     } else {
@@ -50,8 +51,8 @@ valveHardware::valveHardware(uint8_t sda, uint8_t scl)
   }
 
   bool valveHardware::Get1WireActive() {
-    for (uint8_t i=0; i<HWDevice->size(); i++) {
-      if (HWDevice->at(i).i2cAddress == 0x01) {
+    for (uint8_t i=0; i<this->HWDevice->size(); i++) {
+      if (this->HWDevice->at(i).i2cAddress == 0x01) {
         return true;
       }
     }
@@ -90,29 +91,29 @@ valveHardware::valveHardware(uint8_t sda, uint8_t scl)
 #endif
 
 void valveHardware::addI2CDevice(uint8_t i2cAddress) {
-  if (!I2CIsPresent(i2cAddress)) {
+  if (!this->I2CIsPresent(i2cAddress)) {
     if (i2cAddress == 0x01) {
       if (Config->GetDebugLevel() >=1)  { dbg.println("cannot add 1wire simply, call 'add1WireDevice(pin)' instead"); }
     } else {
       HWdev_t t; 
       t.i2cAddress = i2cAddress;
-      setHWType(&t);
-      ConnectHWdevice(&t);
-      HWDevice->push_back(t);
+      this->setHWType(&t);
+      this->ConnectHWdevice(&t);
+      this->HWDevice->push_back(t);
     }
   }
 }
 
 bool valveHardware::I2CIsPresent(uint8_t i2cAddress) {
   char buffer[100] = {0};
-  //for (const auto &element : HWDevice) {
-  for (uint8_t i=0; i<HWDevice->size(); i++) {
+  //for (const auto &element : this->HWDevice) {
+  for (uint8_t i=0; i < this->HWDevice->size(); i++) {
     if (Config->GetDebugLevel() >=5)  { 
       memset(buffer, 0, sizeof(buffer));
-      sprintf(buffer, "Pruefe ic2Adresse 0x%02X ob HW-Element 0x%02X schon existiert", i2cAddress, HWDevice->at(i).i2cAddress);
+      sprintf(buffer, "Pruefe ic2Adresse 0x%02X ob HW-Element 0x%02X schon existiert", i2cAddress, this->HWDevice->at(i).i2cAddress);
       dbg.println(buffer);
     }    
-    if (HWDevice->at(i).i2cAddress == i2cAddress) {
+    if (this->HWDevice->at(i).i2cAddress == i2cAddress) {
       if (Config->GetDebugLevel() >=4) { 
         memset(buffer, 0, sizeof(buffer));
         sprintf(buffer, "HW-Element von i2cAdresse 0x%02X gefunden", i2cAddress);
@@ -125,9 +126,9 @@ bool valveHardware::I2CIsPresent(uint8_t i2cAddress) {
 }
 
 HWdev_t* valveHardware::getI2CDevice(uint8_t i2cAddress) {
-  for (uint8_t i=0; i<HWDevice->size(); i++) {
-    if (HWDevice->at(i).i2cAddress == i2cAddress) {
-      return &HWDevice->at(i);
+  for (uint8_t i=0; i<this->HWDevice->size(); i++) {
+    if (this->HWDevice->at(i).i2cAddress == i2cAddress) {
+      return &this->HWDevice->at(i);
     }
   }
   return NULL;

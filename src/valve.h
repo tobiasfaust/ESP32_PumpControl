@@ -29,7 +29,8 @@ class valve {
     const bool& GetActive()      const {return active;}
     const bool&  GetEnabled()    const {return enabled;}
     const bool&  GetReverse()    const {return reverse;}
-    const uint16_t&  GetAutoOff()    const {return autooff;}
+    const uint16_t& GetAutoOff()    const {return autooff;}
+    const uint8_t&  GetI2cAddress()    const {return this->myHWdev->i2cAddress;}
     
     String    GetValveType();
     uint8_t   GetPort1();

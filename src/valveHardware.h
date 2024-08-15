@@ -65,8 +65,9 @@ class valveHardware {
     // https://www.learncpp.com/cpp-tutorial/6-16-an-introduction-to-stdvector/
     // https://www.learncpp.com/cpp-tutorial/7-10-stdvector-capacity-and-stack-behavior/
     // https://de.wikibooks.org/wiki/C%2B%2B-Programmierung:_Vector
-    std::vector<HWdev_t> *HWDevice;
-    
+    //std::vector<HWdev_t> *HWDevice; //list of all created physical devices
+    std::shared_ptr<std::vector<HWdev_t>> HWDevice;  //list of all created physical devices
+
     uint8_t pin_sda = SDA;
     uint8_t pin_scl = SCL;
     uint8_t pin_1wire = 0;

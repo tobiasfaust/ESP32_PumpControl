@@ -25,7 +25,7 @@ MyMQTT* mqtt = NULL;
 sensor* LevelSensor = NULL;
 MyWebServer* mywebserver = NULL;
 
-/* debugmodes
+/* debugmodes --> in der WebUI -> Basisconfig einstellbar
     0 -> nothing
     1 -> major and criticals
     2 -> majors
@@ -33,7 +33,6 @@ MyWebServer* mywebserver = NULL;
     4 -> more details, plus: available RAM, RSSI via MQTT, WiFi Credentials via Serial
     5 -> max details
 */
-//#define debugmode 4  --> in der WebUI -> Basisconfig einstellbar
 
 void myMQTTCallBack(char* topic, byte* payload, unsigned int length) {
   String msg;
@@ -73,7 +72,7 @@ void setup() {
   //LittleFS.format();
 
   Config = new BaseConfig();
-  WebSerial.onMessage([](const String& msg) { Serial.println(msg); }); // dont works, workarround by using dbg definition in commonlibs
+  //WebSerial.onMessage([](const String& msg) { Serial.println(msg); }); // dont works, workarround by using dbg definition in platformio.ini
   WebSerial.begin(&server);
 
   #ifdef USE_I2C
