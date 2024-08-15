@@ -42,15 +42,14 @@ class valveStructure {
     uint8_t   Refresh1WireDevices();
     
   private:
-    //void      addValve(uint8_t Port, String SubTopic);
     valve*    GetValveItem(uint8_t Port);
     valve*    GetValveItem(String SubTopic);
     void      handleDeps(String topic, int value); //prueft die Relationen
     String    GetJsonKeyMatch(JsonDocument* doc, String key);
 
     valveHardware* ValveHW = NULL;
-    std::vector<valve>* Valves = NULL;
-    
+    std::shared_ptr<std::vector<valve>> Valves;
+
     uint8_t pin_sda = SDA;
     uint8_t pin_scl = SCL;
     uint8_t parallelThreads = 0;

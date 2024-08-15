@@ -4,15 +4,14 @@ valveStructure::valveStructure(uint8_t sda, uint8_t scl) :
   pin_sda(sda), pin_scl(scl) {
   this->ValveHW = new valveHardware(sda, scl);
   if (Config->Enabled1Wire()) { this->ValveHW->add1WireDevice(Config->GetPin1Wire());}
-  Valves  = new std::vector<valve>{};
+  
+  this->Valves = std::make_shared<std::vector<valve>>(); 
+  
+  // loading twice, 1st valve is corrupted after 1st load, has to be investigate
+  // TODO
+  LoadJsonConfig();
   LoadJsonConfig();
 }
-
-/*void valveStructure::addValve(uint8_t Port, String SubTopic) {
-  valve myValve;
-  myValve.init(ValveHW, Port, SubTopic);
-  this->Valves->push_back(myValve);
-}*/
 
 void valveStructure::OnForTimer(String SubTopic, int duration) {
   valve* v = this->GetValveItem(SubTopic);
@@ -135,8 +134,10 @@ uint8_t valveStructure::Refresh1WireDevices() {
 /* load json config from littlefs */
 void valveStructure::LoadJsonConfig() {
   bool loadDefaultConfig = false;
-  
-  Valves->clear();
+
+  if (!Valves->empty()) { 
+    Valves->erase(Valves->begin(), Valves->end());
+  }
 
   if (LittleFS.exists("/valveconfig.json")) {
     //file exists, reading and loading
