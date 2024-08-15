@@ -12,14 +12,14 @@ const char HTML_UPDATERESPONSE[] PROGMEM = R"=====(
   <script language="javascript" type="text/javascript">
     setTimeout(GoBack, 10000);
     function GoBack() {
-        window.location.href="/";
+        top.location.href="/";
     }
   </script>
   <title>Pumpcontrol</title></head>
   <body>
     Success! Rebooting...
     <p/>
-    <input class='button' type='button' value='Go Back' onclick="window.location.href='/';" />
+    <input class='button' type='button' value='Go Back' onclick="top.location.href='/';" />
   </body>
 </html>
 
