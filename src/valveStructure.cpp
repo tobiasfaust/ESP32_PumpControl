@@ -67,15 +67,14 @@ void valveStructure::loop() {
 }
 
 void valveStructure::ReceiveMQTT(String topic, int value) {
-  char buffer[50] = {0};
-  memset(buffer, 0, sizeof(buffer));
   String SubTopic(topic); // nur das konfigurierte Subtopic, zb. "valve1"
   SubTopic = SubTopic.substring(SubTopic.lastIndexOf("/", SubTopic.lastIndexOf("/")-1)+1, SubTopic.lastIndexOf("/"));
   if (topic == "/test/on-for-timer") { Valves->at(0).OnForTimer(value); }
-  if (topic.startsWith(mqtt->GetRoot()) && topic.endsWith("on-for-timer")) { this->OnForTimer(SubTopic, value); }
-  if (topic.startsWith(mqtt->GetRoot()) && topic.endsWith("setstate") && value==1) { this->SetOn(SubTopic); }
-  if (topic.startsWith(mqtt->GetRoot()) && topic.endsWith("setstate") && value==0) { this->SetOff(SubTopic); }
-  if (topic.startsWith(mqtt->GetRoot()) && topic.endsWith("state") && value==0) { this->SetOff(SubTopic); }
+
+  if (topic.startsWith(mqtt->getTopic("", false)) && topic.endsWith("on-for-timer")) { this->OnForTimer(SubTopic, value); }
+  if (topic.startsWith(mqtt->getTopic("", false)) && topic.endsWith("setstate") && value==1) { this->SetOn(SubTopic); }
+  if (topic.startsWith(mqtt->getTopic("", false)) && topic.endsWith("setstate") && value==0) { this->SetOff(SubTopic); }
+  if (topic.startsWith(mqtt->getTopic("", false)) && topic.endsWith("state") && value==0) { this->SetOff(SubTopic); }
   if (topic.endsWith("state")) { this->handleDeps(topic, value); } 
 }
 
