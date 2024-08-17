@@ -1,3 +1,5 @@
+var ReleaseInfo;
+
 // ************************************************
 window.addEventListener('DOMContentLoaded', init, false);
 function init() {
@@ -39,6 +41,7 @@ function FetchReleaseInfo() {
 
 function ProcessReleaseInfo(json) {
 	var _parent, _select, _optgroup_dev, _optgroup_pre, _optgroup_prd, _option;
+  this.ReleaseInfo = json;
   
   _select = document.getElementById('releases');
   _select.replaceChildren();
@@ -55,7 +58,7 @@ function ProcessReleaseInfo(json) {
     for (var i=0; i < json.length; i++) {
     	//console.log(json[i])
       _option = document.createElement('option');
-      _option.value = json[i]['download-url'];
+      _option.value = json[i].subversion; //['download-url'];
       _option.text = json[i].name + " (" + json[i].subversion + ")";
       //_option.selected
       if (json[i].stage == 'DEV')  { _optgroup_dev.appendChild(_option); }
@@ -69,24 +72,57 @@ function ProcessReleaseInfo(json) {
   _select.add( _optgroup_dev ); 
 }
 
-function FetchRelease() {
-  r = document.getElementById('releases')
-  console.log(r.value)
-  fetch( r.value, {
+async function FetchRelease() {
+  var r = document.getElementById('releases')
+  var releaseJson = GetSpecificReleaseJson(r.value);
+  
+  // show loader
+  document.querySelector("#loader").style.visibility = "visible"; 
+
+  // fetch new release firmware
+  const ReleaseBlob = await fetch( releaseJson['download-url'], {
   	responseType: 'blob'
   		})
       .then (response =>  response.blob())
-      .then (blob => InstallRelease(blob))
       ;
-}
+  
+  if(ReleaseBlob) {
+    setResponse(true, "new Firmware successfully downloaded");
+  
+    //upload releaseinformation (to show in Web-Header)
+    var JsonText = JSON.stringify(releaseJson);
+    var JsonBlob = new Blob([JsonText], {type:"text/plain"});
+    await UploadFile(JsonBlob, "ESPUpdate.json", ""); 
+    
+    // Upload new release firmware
+    setResponse(true, "please wait to upload new firmware");
+    await InstallRelease(ReleaseBlob);
 
-function InstallRelease(BinaryBlob) {
+    setResponse(true, "please wait a few seconds to reload");
+
+    setTimeout(() => {
+      top.location.href="/";
+    }, 5000);
+
+  } else {
+    setResponse(false, "new Firmware download failed");
+  }
+} 
+ 
+async function InstallRelease(BinaryBlob) {
   const formData = new FormData();
   formData.append("firmware", BinaryBlob, "firmware.bin");
     
-  fetch('/update', {
+  await fetch('/update', {
       method: 'POST',
       body: formData,
     })
 }
-
+ 
+function GetSpecificReleaseJson(subversion) {
+  if (Array.isArray(this.ReleaseInfo)) {
+    for (var i=0; i < this.ReleaseInfo.length; i++) {
+      if (subversion == this.ReleaseInfo[i].subversion) return this.ReleaseInfo[i];
+    }
+  }
+}

@@ -7,37 +7,28 @@ MyWebServer::MyWebServer(AsyncWebServer *server, DNSServer* dns): server(server)
   server->begin();
 
   server->onNotFound(std::bind(&MyWebServer::handleNotFound, this, std::placeholders::_1));
-  server->on("/", HTTP_GET, std::bind(&MyWebServer::handleRoot, this, std::placeholders::_1));
-  server->on("/reboot", HTTP_GET, std::bind(&MyWebServer::handleReboot, this, std::placeholders::_1));
-  server->on("/reset", HTTP_GET, std::bind(&MyWebServer::handleReset, this, std::placeholders::_1));
-  server->on("/wifireset", HTTP_GET, std::bind(&MyWebServer::handleWiFiReset, this, std::placeholders::_1));
+  server->on("/",             HTTP_GET, std::bind(&MyWebServer::handleRoot, this, std::placeholders::_1));
+  server->on("/reboot",       HTTP_GET, std::bind(&MyWebServer::handleReboot, this, std::placeholders::_1));
+  server->on("/reset",        HTTP_GET, std::bind(&MyWebServer::handleReset, this, std::placeholders::_1));
+  server->on("/wifireset",    HTTP_GET, std::bind(&MyWebServer::handleWiFiReset, this, std::placeholders::_1));
 
   server->on("/parameter.js", HTTP_GET, std::bind(&MyWebServer::handleJSParam, this, std::placeholders::_1));
-  server->on("/ajax", HTTP_POST, std::bind(&MyWebServer::handleAjax, this, std::placeholders::_1));
-  server->on("/update",                 HTTP_GET, std::bind(&MyWebServer::handle_update_page, this, std::placeholders::_1));
-  server->on("/update",                 HTTP_POST, std::bind(&MyWebServer::handle_update_response, this, std::placeholders::_1),
-                                                   std::bind(&MyWebServer::handle_update_progress, this, std::placeholders::_1, 
-                                                          std::placeholders::_2,
-                                                          std::placeholders::_3,
-                                                          std::placeholders::_4,
-                                                          std::placeholders::_5,
-                                                          std::placeholders::_6));
+  server->on("/ajax",         HTTP_POST, std::bind(&MyWebServer::handleAjax, this, std::placeholders::_1));
+  server->on("/update",       HTTP_POST, std::bind(&MyWebServer::handle_update_response, this, std::placeholders::_1),
+                                                    std::bind(&MyWebServer::handle_update_progress, this, std::placeholders::_1, 
+                                                    std::placeholders::_2,
+                                                    std::placeholders::_3,
+                                                    std::placeholders::_4,
+                                                    std::placeholders::_5,
+                                                    std::placeholders::_6));
 
   server->on("^/(.+).(css|js|html|json)$", HTTP_GET, std::bind(&MyWebServer::handleRequestFiles, this, std::placeholders::_1));
   
   dbg.println(F("WebServer started..."));
 }
 
-void MyWebServer::handle_update_page(AsyncWebServerRequest *request) {
-  AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", HTML_UPDATEPAGE);
-  response->addHeader("Server","ESP Async Web Server");
-  request->send(response); 
-}
-
 void MyWebServer::handle_update_response(AsyncWebServerRequest *request) {
-  AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", HTML_UPDATERESPONSE);
-  response->addHeader("Server","ESP Async Web Server");
-  request->send(response); 
+  request->send(LittleFS, "/web/update_response.html", "text/html");
 }
 
 void MyWebServer::handle_update_progress(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
@@ -83,7 +74,7 @@ void MyWebServer::loop() {
 }
 
 void MyWebServer::handleNotFound(AsyncWebServerRequest *request) {
-  request->send_P(404, "text/plain", "404: Not found"); // Send HTTP status 404 (Not Found) when there's no handler for the URI in the request
+  request->send(404, "text/plain", "404: Not found"); // Send HTTP status 404 (Not Found) when there's no handler for the URI in the request
 }
 
 void MyWebServer::handleRoot(AsyncWebServerRequest *request) {
@@ -120,10 +111,7 @@ void MyWebServer::handleRequestFiles(AsyncWebServerRequest *request) {
 }
 
 void MyWebServer::handleReboot(AsyncWebServerRequest *request) {
-  AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", HTML_UPDATERESPONSE);
-  response->addHeader("Server","ESP Async Web Server");
-  request->send(response);
-
+  request->send(LittleFS, "/web/reboot.html", "text/html");
   this->DoReboot = true;
 }
 

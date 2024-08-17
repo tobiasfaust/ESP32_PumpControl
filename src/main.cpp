@@ -76,7 +76,7 @@ void setup() {
   WebSerial.begin(&server);
 
   #ifdef USE_I2C
-    dbg.printf("Starting WIRE at (SDA, SCL)): %d, %d", Config->GetPinSDA(), Config->GetPinSCL());
+    dbg.printf("Starting WIRE at (SDA, SCL)): %d, %d \n", Config->GetPinSDA(), Config->GetPinSCL());
     Wire.begin(Config->GetPinSDA(), Config->GetPinSCL());
   #endif
 

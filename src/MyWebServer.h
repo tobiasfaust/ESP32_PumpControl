@@ -13,7 +13,6 @@
 #include <ArduinoJson.h>
 #include "uptime.h" // https://github.com/YiannisBourkelis/Uptime-Library/
 #include "uptime_formatter.h"
-#include "html_update.h"
 #include "_Release.h"
 #include "handleFiles.h"
 
@@ -53,7 +52,6 @@ class MyWebServer {
 
     handleFiles* fsfiles;
     
-    void      handle_update_page(AsyncWebServerRequest *request);
     void      handle_update_progress(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final);    
     void      handle_update_response(AsyncWebServerRequest *request);
     void      handleNotFound(AsyncWebServerRequest *request);

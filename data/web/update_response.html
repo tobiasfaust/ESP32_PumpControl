@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8">
+  <link rel="stylesheet" type="text/css" href="/web/Style.css">
+  <script language='javascript' type='text/javascript' src='/web/Javascript.js'></script>
+  <script language="javascript" type="text/javascript">
+    
+    deleteAFile("/ESPUpdate.json");
+    setTimeout(GoBack, 10000);
+
+    function deleteAFile(file) {
+      if (file != '') {
+        var data = {};
+        data['action'] = 'handlefiles';
+        data['subaction'] = "deleteFile";
+        data['filename'] = file;
+
+        setResponse(true, 'Please wait for deleting ...');
+        requestData(JSON.stringify(data));
+      } else { setResponse(false, 'Filename is empty, Please define it.');}
+    }
+    
+    function GoBack() {
+        top.location.href="/";
+    }
+  </script>
+  <title>Pumpcontrol</title></head>
+  <body>
+    <div id="loader"></div> 
+    Update Successful! Rebooting...
+    <p/>
+    <input class='button' type='button' value='Go Back' onclick="top.location.href='/';" />
+    <p/>
+    <span id='response'></span>
+  </body>
+</html>

@@ -198,7 +198,7 @@ function destroyClickedElement(event)
 // ***********************************
 // store content of textarea
 // ***********************************
-function uploadFile() {
+function uploadAsFile() {
   var textToSave = document.getElementById("content").value;
   var textToSaveAsBlob = new Blob([textToSave], {type:"text/plain"});
   var fileNameToSaveAs = document.getElementById("filename").value;
@@ -214,35 +214,29 @@ function uploadFile() {
 
     setResponse(true, 'Please wait for saving ...');
     
-    const formData = new FormData();
-    formData.append(fileNameToSaveAs, textToSaveAsBlob, pathOfFile + '/' + fileNameToSaveAs);
-    
-    fetch('/doUpload', {
-      method: 'POST',
-      body: formData,
-    })
-      .then (response => response.json())
-      .then (json =>  {
-        setResponse(true, json.text)
-      }); 
+    UploadFile(textToSaveAsBlob, fileNameToSaveAs, pathOfFile);
   
   } else { setResponse(false, 'Filename is empty, Please define it.');}
 }
 
-function deleteFile() {
-  var pathOfFile = document.getElementById('path').innerHTML;
-  var fileName = document.getElementById("filename").value;
-  
-  if (fileName != '') {
+async function deleteAFile(file) {
+  if (file != '') {
     var data = {};
     data['action'] = 'handlefiles';
     data['subaction'] = "deleteFile";
-    data['filename'] = pathOfFile + '/' + fileName;
+    data['filename'] = file;
 
     setResponse(true, 'Please wait for deleting ...');
     requestData(JSON.stringify(data));
-    init(pathOfFile);
   } else { setResponse(false, 'Filename is empty, Please define it.');}
+}
+
+async function deleteFile() {
+  var pathOfFile = document.getElementById('path').innerHTML;
+  var fileName = document.getElementById("filename").value;
+  
+  await deleteAFile(pathOfFile + '/' + fileName);
+  init(pathOfFile);
 }
 
 // ***********************************
@@ -264,7 +258,7 @@ function backup() {
   compressed_img(url, "backup");
 }
 
-function compressed_img(urls,nombre) {
+function compressed_img(urls, nombre) {
   var zip = new JSZip();
   var count = 0;
   var name = nombre + ".zip";

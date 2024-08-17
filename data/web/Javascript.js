@@ -327,6 +327,22 @@ function onSubmit(DataForm, separator='') {
       }); 
 }
 
+/**************************************
+ * Upload a blob as file
+***************************************/
+async function UploadFile(blob, filename, filepath) {
+  const formData = new FormData();
+  formData.append(filename, blob, filepath + "/" + filename);
+    
+  await fetch('/doUpload', {
+    method: 'POST',
+    body: formData,
+  })
+    .then (response => response.json())
+    .then (json =>  {
+      setResponse(true, json.text)
+    });
+}
 
 /*******************************
 blendet Zeilen der Tabelle aus
