@@ -73,7 +73,7 @@ void setup() {
 
   Config = new BaseConfig();
   //WebSerial.onMessage([](const String& msg) { Serial.println(msg); }); // dont works, workarround by using dbg definition in platformio.ini
-  WebSerial.begin(&server);
+  //WebSerial.begin(&server);
 
   #ifdef USE_I2C
     dbg.printf("Starting WIRE at (SDA, SCL)): %d, %d \n", Config->GetPinSDA(), Config->GetPinSCL());
