@@ -13,7 +13,14 @@ void MyMQTT::SetOled(OLED* oled) {
 #endif
 
 void MyMQTT::loop() {
-  MQTT::loop();
+  if (MQTT::GetRoot() != Config->GetMqttRoot() || MQTT::GetBasePath() != Config->GetMqttBasePath()) {
+    if (Config->GetDebugLevel()>=3) {
+     dbg.println("MyMQTT: Root or Basepath changing, initiate resubscription");
+    } 
+    MQTT::UnSubscribe(MQTT::getTopic("#", false));
+    MQTT::loop();
+    this->reSubscribe(); 
+  } else MQTT::loop();
 
   #ifdef USE_OLED
   if(this->oled) {

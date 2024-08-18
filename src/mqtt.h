@@ -55,7 +55,9 @@ class MQTT: PubSubClient {
     String            getTopic(String subtopic, bool fulltopic);
     void              disconnect();
     const String&     GetRoot()  const {return mqtt_root;};
+    const String&     GetBasePath() const {return mqtt_basepath;};
     void              Subscribe(String topic);
+    bool              UnSubscribe(String topic);
     void              ClearSubscriptions();
     
     const bool&       GetConnectStatusWifi()      const {return ConnectStatusWifi;}

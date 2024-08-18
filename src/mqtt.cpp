@@ -284,6 +284,24 @@ void MQTT::Subscribe(String topic) {
   }
 }
 
+bool MQTT::UnSubscribe(String topic) {
+  bool ret = false;
+  for (uint8_t i=0; i< this->subscriptions->size(); i++) {
+    if (topic == this->subscriptions->at(i)) {
+      if (PubSubClient::connected()) {
+        PubSubClient::unsubscribe(this->subscriptions->at(i).c_str()); 
+      }
+      if (Config->GetDebugLevel()>=3) {
+        dbg.printf("MQTT unsubscribed from: %s\n", this->subscriptions->at(i).c_str());
+      }
+      this->subscriptions->erase(this->subscriptions->begin()+i);
+      ret = true;
+      break;
+    }
+  }
+  return ret;
+}
+
 void MQTT::ClearSubscriptions() {
   for ( uint8_t i=0; i< this->subscriptions->size(); i++) {
     if (PubSubClient::connected()) { 
