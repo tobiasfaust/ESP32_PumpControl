@@ -104,7 +104,6 @@ void BaseConfig::LoadJsonConfig() {
   }
 }
 
-
 String BaseConfig::GetReleaseName() {
   return ESPUpdate->GetReleaseName();
 }
@@ -112,7 +111,6 @@ String BaseConfig::GetReleaseName() {
 void BaseConfig::loop() {
   ESPUpdate->loop();  
 }
-
 
 /* https://cpp4arduino.com/2018/11/06/what-is-heap-fragmentation.html*/
 size_t BaseConfig::getFragmentation() {
@@ -142,7 +140,7 @@ void BaseConfig::GetInitData(AsyncResponseStream *response) {
   #ifdef ESP32
     json["data"]["sel_wifi"] = ((this->useETH)?0:1);
     json["data"]["sel_eth"]  = ((this->useETH)?1:0);
-  #else 
+  #else
     json["data"]["tr_LAN"]["className"] = "hide";
     json["data"]["SelectLAN"]["className"] = "hide";
   #endif
