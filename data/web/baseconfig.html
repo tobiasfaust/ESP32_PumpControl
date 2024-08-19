@@ -198,29 +198,30 @@
               <td>Auswahl der Stage</td>
               <td>
                 <select name='autoupdate_stage' size='1' style='width: 10em'>
-                  <template id='au_tpl'>
-                    <option id='au_tpl_opt'></option>
-                  </template>
+                  <option id='au_stage_prod' value="PROD">Produktion</option>
+                  <option id='au_stage_pre' value="PRE">PreRelease/QS</option>
+                  <option id='au_stage_dev' value="DEV">Development</option>
                 </select>
               </td>
-            </tr>  
+            </tr>
+
             <tr id='update_1'>
-                <td>verfügbare Releases
-                  <a href='#' onclick='FetchReleaseInfo()' class='ButtonRefresh' title='Die JSON Liste neu laden'>&#8634;</a>
-                </td>
-                <td>
-                  <table>
-                    <tr>
-                      <td class='noborder'>
-                        <select id='releases'></select>
-                      </td>
-                      <td class='noborder'>
-                        <input type='button' class='button' onclick='FetchRelease()' value='Install' />
-                      </td>
-                    </tr>
-                  </table>                   
-                </td>
-              </tr>
+              <td>verfügbare Releases
+                <a href='#' onclick='FetchReleaseInfo()' class='ButtonRefresh' title='Die JSON Liste neu laden'>&#8634;</a>
+              </td>
+              <td>
+                <table>
+                  <tr>
+                    <td class='noborder'>
+                      <select id='releases'></select>
+                    </td>
+                    <td class='noborder'>
+                      <input type='button' class='button' onclick='FetchRelease()' value='Install' />
+                    </td>
+                  </tr>
+                </table>                   
+              </td>
+            </tr>
           </tbody>
         </table>
       </form>

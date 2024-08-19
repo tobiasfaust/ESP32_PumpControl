@@ -190,6 +190,10 @@ void BaseConfig::GetInitData(AsyncResponseStream *response) {
   json["data"]["ConfiguredPort_0"] = this->ventil3wege_port;
   json["data"]["sel_update_0"] = ((this->enable_autoupdate)?1:0);
   json["data"]["sel_update_1"] = ((this->enable_autoupdate)?0:1);
+
+  json["data"]["au_stage_prod"]["selected"] = (this->autoupdate_stage == (stage_t)PROD?"selected":"");
+  json["data"]["au_stage_pre"]["selected"] =  (this->autoupdate_stage == (stage_t)PRE?"selected":"");
+  json["data"]["au_stage_dev"]["selected"] =  (this->autoupdate_stage == (stage_t)DEV?"selected":"");
   
   json["js"]["update_url"] = this->autoupdate_url;
 

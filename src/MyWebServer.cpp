@@ -117,7 +117,7 @@ void MyWebServer::handleReboot(AsyncWebServerRequest *request) {
 
 void MyWebServer::handleReset(AsyncWebServerRequest *request) {
   if (Config->GetDebugLevel() >= 3) { dbg.println("deletion of all config files was requested ...."); }
-  //LittleFS.format(); // Werkszustand -> nur die config dateien loeschen, die register dateien muessen erhalten bleiben
+  //LittleFS.format(); // Werkszustand -> nur die config dateien loeschen, die web dateien muessen erhalten bleiben
   File root = LittleFS.open("/", "r");
   File file = root.openNextFile();
   while(file){
