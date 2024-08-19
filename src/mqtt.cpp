@@ -341,14 +341,15 @@ void MQTT::loop() {
     this->mqtt_basepath = Config->GetMqttBasePath();
     if (PubSubClient::connected()) PubSubClient::disconnect();
   }
-//dbg.println("Checking Loop MQTT: ETH");
+
   // WIFI lost, try to reconnect
   if (!Config->GetUseETH() && !this->ConnectStatusWifi) {
-dbg.println("WIFI lost, try to reconnect");    
+    dbg.print("WIFI lost, try to reconnect...");    
     wifiManager->setConfigPortalTimeout(0);
-    WiFi.begin();        
+    wl_status_t wl_status = WiFi.begin();
+    dbg.printf("WIFI reconnect status: %d\n", wl_status);
   }
-//dbg.println("Checking Loop MQTT: WIFI ok");
+
   // WIFI ok, MQTT lost
   if (!PubSubClient::connected() && this->ConnectStatusWifi) { 
     if (millis() - mqttreconnect_lasttry > 10000) {
