@@ -133,7 +133,7 @@ void sensor::loop_hcsr04() {
         this->ads1115_devices->push_back(ads);
       }
     } else {
-      if (Config->GetDebugLevel() >=3) dbg.printf("Add Channel %d to ADS1115 at i2cAddress 0x%02x with topic '%s' \n", port, i2c, topic);
+      if (Config->GetDebugLevel() >=3) dbg.printf("Add Channel %d to ADS1115 at i2cAddress 0x%02x with topic '%s' \n", port, i2c, topic.c_str());
       if (port == 0) {device->topic_chan1 = topic;}
       if (port == 1) {device->topic_chan2 = topic;}
       if (port == 2) {device->topic_chan3 = topic;}
