@@ -18,7 +18,9 @@ BaseConfig::BaseConfig():
   max_parallel(0),
   enable_autoupdate(false),
   autoupdate_stage((stage_t)PROD),
-  useETH(0)
+  useETH(0),
+  serial_rx(3),
+  serial_tx(1)
   {
   
   #ifdef ESP8266
@@ -80,6 +82,8 @@ void BaseConfig::LoadJsonConfig() {
           if (elem.containsKey("i2coled"))          { this->i2caddress_oled = strtoul(elem["i2coled"], NULL, 16);} // hex convert to dec    
           if (elem.containsKey("oled_type"))        { this->oled_type = elem["oled_type"].as<int>();} 
           if (elem.containsKey("ventil3wege_port")) { this->ventil3wege_port = elem["ventil3wege_port"].as<int>();}
+          if (elem.containsKey("serial_rx"))        { this->serial_rx = (elem["serial_rx"].as<int>()) - 200;}
+          if (elem.containsKey("serial_tx"))        { this->serial_tx = (elem["serial_tx"].as<int>()) - 200;}
         }
       } while (stream.findUntil(",","]"));
     } else {
@@ -160,6 +164,14 @@ void BaseConfig::GetInitData(AsyncResponseStream *response) {
   #else
     json["data"]["tr_owSelect"]["className"] = "hide";
     json["data"]["onewire_0"]["className"] = "hide";
+  #endif
+
+  #ifdef USE_WEBSERIAL
+    json["data"]["tr_serial_rx"]["className"] = "hide";
+    json["data"]["tr_serial_tx"]["className"] = "hide";
+  #else
+    json["data"]["GpioPin_serial_rx"] = this->serial_rx + 200;
+    json["data"]["GpioPin_serial_tx"] = this->serial_tx + 200;
   #endif
 
   #ifdef USE_OLED

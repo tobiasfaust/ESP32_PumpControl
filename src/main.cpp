@@ -57,10 +57,6 @@ void myMQTTCallBack(char* topic, byte* payload, unsigned int length) {
 }
 
 void setup() {
-  Serial.begin(115200);
-  Serial.println("");
-  Serial.println("ready");
-
   #ifdef ESP8266
     LittleFS.begin();
   #elif ESP32
@@ -72,8 +68,17 @@ void setup() {
   //LittleFS.format();
 
   Config = new BaseConfig();
-  //WebSerial.onMessage([](const String& msg) { Serial.println(msg); }); // dont works, workarround by using dbg definition in platformio.ini
-  //WebSerial.begin(&server);
+  
+  #ifndef USE_WEBSERIAL
+    dbg.begin(115200, SERIAL_8N1, Config->GetSerialRx(), Config->GetSerialTx()); // RX, TX, zb.: 33, 32
+    dbg.println("");
+    dbg.println("ready");
+  #endif
+
+  #ifdef USE_WEBSERIAL
+    //WebSerial.onMessage([](const String& msg) { Serial.println(msg); }); 
+    WebSerial.begin(&server);
+  #endif
 
   #ifdef USE_I2C
     dbg.printf("Starting WIRE at (SDA, SCL)): %d, %d \n", Config->GetPinSDA(), Config->GetPinSCL());
@@ -136,5 +141,9 @@ void loop() {
 
   #ifdef USE_OLED
     oled->loop();  
+  #endif
+
+  #ifdef USE_WEBSERIAL
+    WebSerial.loop();
   #endif
 }

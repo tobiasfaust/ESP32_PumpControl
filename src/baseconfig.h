@@ -36,7 +36,9 @@ class BaseConfig {
     const bool&     GetUseETH()        const { return useETH; }
     void            GetInitData(AsyncResponseStream* response);
     const String&   GetLANBoard()      const {return LANBoard;}
-
+    const uint8_t&  GetSerialRx()     const {return serial_rx;}
+    const uint8_t&  GetSerialTx()     const {return serial_tx;}
+    
     size_t          getFragmentation();
      
   private:
@@ -64,6 +66,8 @@ class BaseConfig {
     String    autoupdate_url;
     bool      useETH;  // otherwise use WIFI
     String    LANBoard;
+    uint8_t   serial_rx;
+    uint8_t   serial_tx;
     
     updater*  ESPUpdate;
 };

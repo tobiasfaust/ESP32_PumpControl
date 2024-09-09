@@ -24,7 +24,13 @@
 #include <LittleFS.h>
 #include <ESPAsyncWebServer.h>
 #include <DNSServer.h>
-//#include <WebSerial.h>
+
+#ifdef USE_WEBSERIAL
+  #include <WebSerial.h>
+  #define dbg WebSerial
+#else
+  #define dbg Serial1  
+#endif
 
 #if defined(USE_OLED) || defined(USE_PCF8574) || defined(USE_TB6612)
   #define USE_I2C
@@ -34,16 +40,16 @@
   #define UPDATE_URL "http://tfa-releases.s3-website.eu-central-1.amazonaws.com/ESP8266_PumpControl/releases_ESP8266.json";
   #define MY_ARCH "ESP8266"
 #elif ARDUINO_ESP32_DEV
-  #define UPDATE_URL "http://tfa-releases.s3-website.eu-central-1.amazonaws.com/ESP8266_PumpControl/releases_ESP32.json";
+  #define UPDATE_URL "http://tfa-releases.s3-website.eu-central-1.amazonaws.com/ESP32_PumpControl/releases_ESP32.json";
   #define MY_ARCH "ESP32"
 #elif ARDUINO_ESP32S2_DEV
-  #define UPDATE_URL "http://tfa-releases.s3-website.eu-central-1.amazonaws.com/ESP8266_PumpControl/releases_ESP32-S2.json";
+  #define UPDATE_URL "http://tfa-releases.s3-website.eu-central-1.amazonaws.com/ESP32_PumpControl/releases_ESP32-S2.json";
   #define MY_ARCH "ESP32-S2"
 #elif ARDUINO_ESP32S3_DEV
-  #define UPDATE_URL "http://tfa-releases.s3-website.eu-central-1.amazonaws.com/ESP8266_PumpControl/releases_ESP32-S3.json";
+  #define UPDATE_URL "http://tfa-releases.s3-website.eu-central-1.amazonaws.com/ESP32_PumpControl/releases_ESP32-S3.json";
   #define MY_ARCH "ESP32-S3"
 #elif ARDUINO_ESP32C3_DEV
-  #define UPDATE_URL "http://tfa-releases.s3-website.eu-central-1.amazonaws.com/ESP8266_PumpControl/releases_ESP32-C3.json";
+  #define UPDATE_URL "http://tfa-releases.s3-website.eu-central-1.amazonaws.com/ESP32_PumpControl/releases_ESP32-C3.json";
   #define MY_ARCH "ESP32-C3"
 #endif
 
