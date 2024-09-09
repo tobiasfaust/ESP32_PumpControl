@@ -173,7 +173,12 @@ void valveStructure::LoadJsonConfig() {
           if (elem.containsKey("imp_b")) { myValve.port2ms = _max(10, _min(elem["imp_b"].as<int>(), 999));}
           if (elem["reverse"] && elem["reverse"] == 1) {myValve.SetReverse(true);} else {myValve.SetReverse(false);}
           if (elem.containsKey("autooff") && elem["autooff"].as<int>() > 0) { myValve.SetAutoOff(elem["autooff"].as<int>()); }
-            
+
+          // initiiere bistabile ventile
+          if (myValve.GetValveType() == "b") {
+            myValve.OnForTimer(1);
+          }
+
           Valves->push_back(myValve);
         }
 
