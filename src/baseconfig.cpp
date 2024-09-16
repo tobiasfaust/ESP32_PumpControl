@@ -94,7 +94,7 @@ void BaseConfig::LoadJsonConfig() {
   }
 
   if (!this->autoupdate_url || this->autoupdate_url.length() < 10 ) {
-    this->autoupdate_url = UPDATE_URL;
+    this->autoupdate_url = String(AWS_URL) + "/" + String(GIT_REPO) + "/releases_" +String(MY_ARCH);
   }
 
   ESPUpdate->setAutoMode(this->enable_autoupdate);
@@ -129,7 +129,6 @@ void BaseConfig::GetInitData(AsyncResponseStream *response) {
   i2caddress_oled_hex << std::hex << std::uppercase << std::setw(2) << std::setfill('0') << (int)this->i2caddress_oled;
 
   json["data"].to<JsonObject>();
-  json["data"]["arch"] = ARCH;
   json["data"]["mqttroot"]    = this->mqtt_root;
   json["data"]["mqttserver"]  = this->mqtt_server;
   json["data"]["mqttport"]    = this->mqtt_port;

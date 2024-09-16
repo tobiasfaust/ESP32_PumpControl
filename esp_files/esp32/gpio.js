@@ -1,5 +1,5 @@
 gpio =         [  {port: 201, name:'D1/TX0'},
-                  {port: 203, name:'D3/RX0'}
+                  {port: 203, name:'D3/RX0'},
                   {port: 204, name:'D24'},
                   {port: 213, name:'D13'},
                   {port: 216, name:'D16/RX2'},
