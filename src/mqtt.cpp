@@ -1,7 +1,7 @@
 #include "mqtt.h"
 
 MQTT::MQTT(AsyncWebServer* server, DNSServer *dns, const char* MqttServer, uint16_t MqttPort, String MqttBasepath, String MqttRoot, char* APName, char* APpassword): 
-server(server), dns(dns), mqtt_root(MqttRoot), mqtt_basepath(MqttBasepath), ConnectStatusWifi(false), ConnectStatusMqtt(false) { 
+server(server), dns(dns), mqtt_root(MqttRoot), mqtt_basepath(MqttBasepath), ConnectStatusWifi(false), ConnectStatusMqtt(false), WifiConnectRetryCount(0) { 
   
   this->subscriptions = new std::vector<String>{};
  
@@ -344,10 +344,20 @@ void MQTT::loop() {
 
   // WIFI lost, try to reconnect
   if (!Config->GetUseETH() && !this->ConnectStatusWifi) {
-    dbg.print("WIFI lost, try to reconnect...");    
-    wifiManager->setConfigPortalTimeout(0);
-    wl_status_t wl_status = WiFi.begin();
-    dbg.printf("WIFI reconnect status: %d\n", wl_status);
+    if (this->WifiConnectRetryCount <= 10) {
+      dbg.print("WIFI lost, try to reconnect...");    
+      wifiManager->setConfigPortalTimeout(0);
+      bool wl_status = WiFi.reconnect();
+      delay(5000);
+      dbg.printf("WIFI reconnect status: %d\n", (wl_status?"OK":"Failed"));
+      if (!wl_status) this->WifiConnectRetryCount++;
+    } else {
+      // reconnect times exeeded -> reboot
+      dbg.println("Wifi Reconnect failed for 10 times, initiiate ESP reboot");
+      ESP.restart();
+    }
+  } else {
+    this->WifiConnectRetryCount = 0;
   }
 
   // WIFI ok, MQTT lost

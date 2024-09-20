@@ -84,6 +84,7 @@ class MQTT: PubSubClient {
     bool              ConnectStatusWifi;
     bool              ConnectStatusMqtt;
     IPAddress         ipadresse;
+    uint8_t           WifiConnectRetryCount;
   
   #ifdef ESP32
     void              WifiOnEvent(WiFiEvent_t event);

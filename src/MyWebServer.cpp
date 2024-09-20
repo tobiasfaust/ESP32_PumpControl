@@ -45,13 +45,13 @@ void MyWebServer::handle_update_progress(AsyncWebServerRequest *request, String 
       } else {
       */
       if(!Update.begin((ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000)){
-          Update.printError(Serial);
+          Update.printError(dbg);
       }
       //}
   }
   if(!Update.hasError()){
     if(Update.write(data, len) != len){
-        Update.printError(Serial);
+        Update.printError(dbg);
     }
   }
   if(final){
@@ -59,7 +59,7 @@ void MyWebServer::handle_update_progress(AsyncWebServerRequest *request, String 
       dbg.printf("Update Success: %uB\n", index+len);
       this->DoReboot = true;//Set flag so main loop can issue restart call
     } else {
-      Update.printError(Serial);
+      Update.printError(dbg);
     }
   }
 }

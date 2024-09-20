@@ -1,6 +1,7 @@
 Release 3.0.1:
   - add: initialize bistable valves at start to prevent open valves
   - add: configurable serial output pins
+  - improve wifi reconnect handling
   
 Release 3.0.0:
   - +++++++ NO SUPPORT FOR ESP8266 anymore +++++++
