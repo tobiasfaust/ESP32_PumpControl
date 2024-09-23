@@ -7,6 +7,7 @@
 
 #include "SSD1306Wire.h"
 #include "SH1106.h"
+#include <sstream>
 
 extern BaseConfig* Config;
 

@@ -5,6 +5,7 @@
 #include "ArduinoJson.h"
 #include "updater.h"
 #include <iomanip>  // needed by setw / setfill
+#include <sstream>
 
 class BaseConfig {
 

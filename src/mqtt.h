@@ -93,6 +93,8 @@ class MQTT: PubSubClient {
     void              WaitForConnect();
 
     eth_shield_t*     GetEthShield(String ShieldName);
+
+    void              WifiConfigModeCallback (AsyncWiFiManager* WifiManager);
 };
 
 //extern MQTT* mqtt;
