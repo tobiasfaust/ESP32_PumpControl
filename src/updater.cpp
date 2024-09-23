@@ -66,19 +66,20 @@ String updater::GetReleaseName() {
 /* saving memory for ESP8266 */
 void updater::Update() {
 #ifdef ESP32  
-  this->downloadJson();
   // check auf neues Release wenn AutoModus und kein Fehlercode gesetzt
   if (this->automode) {
+    this->downloadJson();
     release_t r = this->latestRelease;
     if (r.number > this->currentRelease.number) {
       this->InstallLatestRelease();
     }
-  } else { dbg.println("No AutoMode"); }
+  } else { dbg.println("[Updater] No AutoMode"); }
 #endif
 }
 
 void updater::downloadJson() {
   dbg.println(F("Start download Release information"));
+  dbg.printf("URL: %s", this->json_url.c_str());
   HTTPClient http;
   if (http.begin(*(this->WifiClient), this->json_url)) { 
     int httpCode = http.GET();
