@@ -58,32 +58,32 @@ void BaseConfig::LoadJsonConfig() {
           if (this->GetDebugLevel() >=5) {dbg.println(F("parsing partial JSON of baseconfig.json ok")); }
           if (this->GetDebugLevel() >=5) {serializeJsonPretty(elem, dbg);} 
           
-          if (elem.containsKey("mqttroot"))         { this->mqtt_root = elem["mqttroot"].as<String>();}
-          if (elem.containsKey("mqttserver"))       { this->mqtt_server = elem["mqttserver"].as<String>();}
-          if (elem.containsKey("mqttport"))         { this->mqtt_port = elem["mqttport"].as<int>();}
-          if (elem.containsKey("mqttuser"))         { this->mqtt_username = elem["mqttuser"].as<String>();}
-          if (elem.containsKey("mqttpass"))         { this->mqtt_password = elem["mqttpass"].as<String>();}
-          if (elem.containsKey("mqttbasepath"))     { this->mqtt_basepath = elem["mqttbasepath"].as<String>();}
-          if (elem.containsKey("sel_UseRandomClientID")){ if (strcmp(elem["sel_UseRandomClientID"], "none")==0) { this->mqtt_UseRandomClientID=false;} else {this->mqtt_UseRandomClientID=true;}}
-          if (elem.containsKey("keepalive"))        { if (elem["keepalive"].as<int>() == 0) { this->keepalive = 0;} else { this->keepalive = _max(elem["keepalive"].as<int>(), 10);}}
-          if (elem.containsKey("debuglevel"))       { this->debuglevel = _max(elem["debuglevel"].as<int>(), 0);}
-          if (elem.containsKey("pinsda"))           { this->pin_sda = (elem["pinsda"].as<int>()) - 200;}
-          if (elem.containsKey("pinscl"))           { this->pin_scl = (elem["pinscl"].as<int>()) - 200;}
-          if (elem.containsKey("pin1wire"))         { this->pin_1wire = (elem["pin1wire"].as<int>()) - 200;}
-          if (elem.containsKey("sel_oled"))         { if (strcmp(elem["sel_oled"], "none")==0) { this->enable_oled=false;} else {this->enable_oled=true;}}
-          if (elem.containsKey("sel_1wire"))        { if (strcmp(elem["sel_1wire"], "none")==0) { this->enable_1wire=false;} else {this->enable_1wire=true;}}
-          if (elem.containsKey("sel_3wege"))        { if (strcmp(elem["sel_3wege"], "none")==0) { this->enable_3wege=false;} else {this->enable_3wege=true;}}
-          if (elem.containsKey("sel_update"))       { if (strcmp(elem["sel_update"], "manu")==0) { this->enable_autoupdate=false;} else {this->enable_autoupdate=true;}}
-          if (elem.containsKey("autoupdate_url"))   { this->autoupdate_url = elem["autoupdate_url"].as<String>(); }                   
-          if (elem.containsKey("autoupdate_stage")) { if (elem["autoupdate_stage"] == "PROD") { this->autoupdate_stage = (stage_t)PROD; }
-                                                      if (elem["autoupdate_stage"] == "PRE")  { this->autoupdate_stage = (stage_t)PRE; }
-                                                      if (elem["autoupdate_stage"] == "DEV")  { this->autoupdate_stage = (stage_t)DEV; }             
-                                                    }
-          if (elem.containsKey("i2coled"))          { this->i2caddress_oled = strtoul(elem["i2coled"], NULL, 16);} // hex convert to dec    
-          if (elem.containsKey("oled_type"))        { this->oled_type = elem["oled_type"].as<int>();} 
-          if (elem.containsKey("ventil3wege_port")) { this->ventil3wege_port = elem["ventil3wege_port"].as<int>();}
-          if (elem.containsKey("serial_rx"))        { this->serial_rx = (elem["serial_rx"].as<int>()) - 200;}
-          if (elem.containsKey("serial_tx"))        { this->serial_tx = (elem["serial_tx"].as<int>()) - 200;}
+          if (elem["mqttroot"])         { this->mqtt_root = elem["mqttroot"].as<String>();}
+          if (elem["mqttserver"])       { this->mqtt_server = elem["mqttserver"].as<String>();}
+          if (elem["mqttport"])         { this->mqtt_port = elem["mqttport"].as<int>();}
+          if (elem["mqttuser"])         { this->mqtt_username = elem["mqttuser"].as<String>();}
+          if (elem["mqttpass"])         { this->mqtt_password = elem["mqttpass"].as<String>();}
+          if (elem["mqttbasepath"])     { this->mqtt_basepath = elem["mqttbasepath"].as<String>();}
+          if (elem["sel_UseRandomClientID"]){ if (strcmp(elem["sel_UseRandomClientID"], "none")==0) { this->mqtt_UseRandomClientID=false;} else {this->mqtt_UseRandomClientID=true;}}
+          if (elem["keepalive"])        { if (elem["keepalive"].as<int>() == 0) { this->keepalive = 0;} else { this->keepalive = _max(elem["keepalive"].as<int>(), 10);}}
+          if (elem["debuglevel"])       { this->debuglevel = _max(elem["debuglevel"].as<int>(), 0);}
+          if (elem["pinsda"])           { this->pin_sda = (elem["pinsda"].as<int>()) - 200;}
+          if (elem["pinscl"])           { this->pin_scl = (elem["pinscl"].as<int>()) - 200;}
+          if (elem["pin1wire"])         { this->pin_1wire = (elem["pin1wire"].as<int>()) - 200;}
+          if (elem["sel_oled"])         { if (strcmp(elem["sel_oled"], "none")==0) { this->enable_oled=false;} else {this->enable_oled=true;}}
+          if (elem["sel_1wire"])        { if (strcmp(elem["sel_1wire"], "none")==0) { this->enable_1wire=false;} else {this->enable_1wire=true;}}
+          if (elem["sel_3wege"])        { if (strcmp(elem["sel_3wege"], "none")==0) { this->enable_3wege=false;} else {this->enable_3wege=true;}}
+          if (elem["sel_update"])       { if (strcmp(elem["sel_update"], "manu")==0) { this->enable_autoupdate=false;} else {this->enable_autoupdate=true;}}
+          if (elem["autoupdate_url"])   { this->autoupdate_url = elem["autoupdate_url"].as<String>(); }                   
+          if (elem["autoupdate_stage"]) { if (elem["autoupdate_stage"] == "PROD") { this->autoupdate_stage = (stage_t)PROD; }
+                                          if (elem["autoupdate_stage"] == "PRE")  { this->autoupdate_stage = (stage_t)PRE; }
+                                          if (elem["autoupdate_stage"] == "DEV")  { this->autoupdate_stage = (stage_t)DEV; }             
+                                        }
+          if (elem["i2coled"])          { this->i2caddress_oled = strtoul(elem["i2coled"], NULL, 16);} // hex convert to dec    
+          if (elem["oled_type"])        { this->oled_type = elem["oled_type"].as<int>();} 
+          if (elem["ventil3wege_port"]) { this->ventil3wege_port = elem["ventil3wege_port"].as<int>();}
+          if (elem["serial_rx"])        { this->serial_rx = (elem["serial_rx"].as<int>()) - 200;}
+          if (elem["serial_tx"])        { this->serial_tx = (elem["serial_tx"].as<int>()) - 200;}
         }
       } while (stream.findUntil(",","]"));
     } else {
