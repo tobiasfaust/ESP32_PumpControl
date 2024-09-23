@@ -21,18 +21,14 @@
 #include "valveStructure.h"
 #include "valveRelation.h"
 
+#include <ElegantOTA.h>
+
 extern sensor* LevelSensor;
 extern valveStructure* VStruct;
 extern valveRelation* ValveRel;
 
 #ifdef USE_I2C
   extern i2cdetect* I2Cdetect;
-#endif
-
-#ifdef ESP8266
-  #define ESPGPIO "gpio_esp8266.js"
-#elif ESP32
-  #define ESPGPIO "gpio_esp32.js"
 #endif
 
 class MyWebServer {
@@ -49,23 +45,25 @@ class MyWebServer {
 
     bool      DoReboot;
     unsigned long RequestRebootTime;
+    unsigned long ota_progress_millis = 0;
 
     handleFiles* fsfiles;
     
-    void      handle_update_progress(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final);    
-    void      handle_update_response(AsyncWebServerRequest *request);
     void      handleNotFound(AsyncWebServerRequest *request);
     void      handleReboot(AsyncWebServerRequest *request);
     void      handleReset(AsyncWebServerRequest *request);
     void      handleWiFiReset(AsyncWebServerRequest *request);
-    void      handleRequestFiles(AsyncWebServerRequest *request);
-    void      handleRoot(AsyncWebServerRequest *request);
     void      handleJSParam(AsyncWebServerRequest *request);
     
     void      handleAjax(AsyncWebServerRequest *request);
     void      GetInitDataStatus(AsyncResponseStream *response);
     void      GetInitDataNavi(AsyncResponseStream *response);
-  
+
+    void      onOTAStart();
+    void      onOTAProgress(size_t current, size_t final);
+    void      onOTAEnd(bool success);
+    
+
 };
 
 #endif

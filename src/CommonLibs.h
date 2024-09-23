@@ -17,7 +17,6 @@
 #elif ESP32
   #include <WiFi.h> 
   #include <AsyncTCP.h>
-  #include <Update.h>
 #endif
 
 #include <string.h>
@@ -36,19 +35,7 @@
   #define USE_I2C
 #endif
 
-#define AWS_URL "http://tfa-releases.s3-website.eu-central-1.amazonaws.com/"
-
-#ifdef ESP8266
-  #define MY_ARCH "ESP8266"
-#elif ARDUINO_ESP32_DEV
-  #define MY_ARCH "ESP32"
-#elif ARDUINO_ESP32S2_DEV
-  #define MY_ARCH "ESP32-S2"
-#elif ARDUINO_ESP32S3_DEV
-  #define MY_ARCH "ESP32-S3"
-#elif ARDUINO_ESP32C3_DEV
-  #define MY_ARCH "ESP32-C3"
-#endif
+#define AWS_URL "http://tfa-releases.s3-website.eu-central-1.amazonaws.com"
 
 #ifdef ESP8266
   #define ESP_getChipId() ESP.getChipId() 

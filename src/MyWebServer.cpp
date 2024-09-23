@@ -4,63 +4,45 @@ MyWebServer::MyWebServer(AsyncWebServer *server, DNSServer* dns): server(server)
   
   fsfiles = new handleFiles(server);
 
+  ElegantOTA.begin(server);
+  ElegantOTA.onStart(std::bind(&MyWebServer::onOTAStart, this));
+  ElegantOTA.onProgress(std::bind(&MyWebServer::onOTAProgress, this, std::placeholders::_1, std::placeholders::_2));
+  ElegantOTA.onEnd(std::bind(&MyWebServer::onOTAEnd, this, std::placeholders::_1));
+  
   server->begin();
 
   server->onNotFound(std::bind(&MyWebServer::handleNotFound, this, std::placeholders::_1));
-  server->on("/",             HTTP_GET, std::bind(&MyWebServer::handleRoot, this, std::placeholders::_1));
   server->on("/reboot",       HTTP_GET, std::bind(&MyWebServer::handleReboot, this, std::placeholders::_1));
   server->on("/reset",        HTTP_GET, std::bind(&MyWebServer::handleReset, this, std::placeholders::_1));
   server->on("/wifireset",    HTTP_GET, std::bind(&MyWebServer::handleWiFiReset, this, std::placeholders::_1));
-
   server->on("/parameter.js", HTTP_GET, std::bind(&MyWebServer::handleJSParam, this, std::placeholders::_1));
-  server->on("/ajax",         HTTP_POST, std::bind(&MyWebServer::handleAjax, this, std::placeholders::_1));
-  server->on("/update",       HTTP_POST, std::bind(&MyWebServer::handle_update_response, this, std::placeholders::_1),
-                                                    std::bind(&MyWebServer::handle_update_progress, this, std::placeholders::_1, 
-                                                    std::placeholders::_2,
-                                                    std::placeholders::_3,
-                                                    std::placeholders::_4,
-                                                    std::placeholders::_5,
-                                                    std::placeholders::_6));
-
-  server->on("^/(.+).(css|js|html|json)$", HTTP_GET, std::bind(&MyWebServer::handleRequestFiles, this, std::placeholders::_1));
+  server->on("/ajax",         HTTP_POST,std::bind(&MyWebServer::handleAjax, this, std::placeholders::_1));
   
+  server->serveStatic("/", LittleFS, "/", "max-age=3600").setDefaultFile("/web/index.html");
+
   dbg.println(F("WebServer started..."));
 }
 
-void MyWebServer::handle_update_response(AsyncWebServerRequest *request) {
-  request->send(LittleFS, "/web/update_response.html", "text/html");
+
+void MyWebServer::onOTAStart() {
+  // Log when OTA has started
+  dbg.println("OTA update started!");
 }
 
-void MyWebServer::handle_update_progress(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
-  
-  if(!index){
-      dbg.printf("Update Start: %s\n", filename.c_str());
-      //Update.runAsync(true);
+void MyWebServer::onOTAProgress(size_t current, size_t final) {
+  // Log every 1 second
+  if (millis() - ota_progress_millis > 1000) {
+    ota_progress_millis = millis();
+    dbg.printf("OTA Progress Current: %u bytes, Final: %u bytes\n", current, final);
+  }
+}
 
-      /*
-      if (filename == "filesystem") {
-        if(!Update.begin(LittleFS.totalBytes(), U_SPIFFS)) {
-          Update.printError(Serial);
-        }
-      } else {
-      */
-      if(!Update.begin((ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000)){
-          Update.printError(dbg);
-      }
-      //}
-  }
-  if(!Update.hasError()){
-    if(Update.write(data, len) != len){
-        Update.printError(dbg);
-    }
-  }
-  if(final){
-    if(Update.end(true)){
-      dbg.printf("Update Success: %uB\n", index+len);
-      this->DoReboot = true;//Set flag so main loop can issue restart call
-    } else {
-      Update.printError(dbg);
-    }
+void MyWebServer::onOTAEnd(bool success) {
+  // Log when OTA has finished
+  if (success) {
+    dbg.println("OTA update finished successfully!");
+  } else {
+    dbg.println("There was an error during OTA update!");
   }
 }
 
@@ -71,43 +53,12 @@ void MyWebServer::loop() {
     delay(100);
     ESP.restart();
   }
+
+  ElegantOTA.loop();
 }
 
 void MyWebServer::handleNotFound(AsyncWebServerRequest *request) {
   request->send(404, "text/plain", "404: Not found"); // Send HTTP status 404 (Not Found) when there's no handler for the URI in the request
-}
-
-void MyWebServer::handleRoot(AsyncWebServerRequest *request) {
-  request->redirect("/web/index.html");
-}
-
-void MyWebServer::handleRequestFiles(AsyncWebServerRequest *request) {
-  if (Config->GetDebugLevel() >=3) {
-    dbg.printf("Request file %s", ("/" + request->pathArg(0) + "." + request->pathArg(1)).c_str()); dbg.println();
-  }  
-  
-  File f = LittleFS.open("/" + request->pathArg(0) + "." + request->pathArg(1), "r");
-  
-  if (!f) {
-    if (Config->GetDebugLevel() >=0) {dbg.printf("failed to open requested file: %s.%s", request->pathArg(0).c_str(), request->pathArg(1).c_str());}
-    request->send(404, "text/plain", "404: Not found"); 
-    return;
-  }
-
-  f.close();
-
-  if (request->pathArg(1) == "css") {
-    request->send(LittleFS, "/" + request->pathArg(0) + "." + request->pathArg(1), "text/css");
-  } else if (request->pathArg(1) == "js") {
-    request->send(LittleFS, "/" + request->pathArg(0) + "." + request->pathArg(1), "text/javascript");
-  } else if (request->pathArg(1) == "html") {
-    request->send(LittleFS, "/" + request->pathArg(0) + "." + request->pathArg(1), "text/html");
-  } else if (request->pathArg(1) == "json") {
-    request->send(LittleFS, "/" + request->pathArg(0) + "." + request->pathArg(1), "text/json");
-  } else {
-    request->send(LittleFS, "/" + request->pathArg(0) + "." + request->pathArg(1), "text/plain");
-  }
-
 }
 
 void MyWebServer::handleReboot(AsyncWebServerRequest *request) {

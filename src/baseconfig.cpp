@@ -94,7 +94,7 @@ void BaseConfig::LoadJsonConfig() {
   }
 
   if (!this->autoupdate_url || this->autoupdate_url.length() < 10 ) {
-    this->autoupdate_url = String(AWS_URL) + "/" + String(GIT_REPO) + "/releases_" +String(MY_ARCH);
+    this->autoupdate_url = String(AWS_URL) + "/" + String(GIT_REPO) + "/releases_" + String(MY_ARCH) + ".json";
   }
 
   ESPUpdate->setAutoMode(this->enable_autoupdate);
