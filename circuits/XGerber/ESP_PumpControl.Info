@@ -1,0 +1,28 @@
+CAM-Ausgabe für aktuelles Projekt ESP_PumpControl.T3001
+Ausgabe am 24. Nov 2021, 14:31h
+Aktuelles Projekt erzeugt mit TARGET 30.3.0.82 discover
+Ausgabe erzeugt mit TARGET 3001! V30.3.0.82
+Aktuelles Projekt von TARGET NC-Edition: Kommerzielle Nutzung ist strafbar!
+LIEFERANSCHRIFT:
+  
+  
+  
+  D- 
+  Tel: 
+  FAX: 
+  eMail: 
+Größe der Platine: 70 mm x 85 mm
+
+Folgend die Beschreibung der erzeugten Dateien:
+
+ESP_PumpControl.Top = 16 = Kupfer oben L1   ( *.Top )
+ESP_PumpControl.Bot = 2 = Kupfer unten L2   ( *.Bot )
+ESP_PumpControl.Tool = Bohrerliste
+ESP_PumpControl.Drill = Durchkontaktierte Bohrungen
+ESP_PumpControl.Outline = 23 = Platinen-Umriss   ( *.Outline )
+ESP_PumpControl.StopTop = 18 = Lötstoppmaske oben   ( *.StopTop )
+ESP_PumpControl.StopBot = 4 = Lötstoppmaske unten   ( *.StopBot )
+ESP_PumpControl.PosiTop = 21 = Bestückungsdruck oben   ( *.PosiTop )
+ESP_PumpControl.X3T = Gerber X3 Bauteil-Informationen oben
+ESP_PumpControl.X3B = Gerber X3 Bauteil-Informationen unten
+
