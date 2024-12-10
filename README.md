@@ -14,4 +14,4 @@
 ![GitHub All Releases](https://img.shields.io/github/downloads/tobiasfaust/ESP8266_PumpControl/total?style=plastic)
 
 
-Beschreibung siehe Wiki: https://github.com/tobiasfaust/ESP8266_PumpControl/wiki
+Beschreibung siehe Wiki: https://github.com/tobiasfaust/ESP32_PumpControl/wiki
