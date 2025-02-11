@@ -3,7 +3,6 @@
 
 #include "CommonLibs.h" 
 #include <PubSubClient.h>
-#include <ESPAsyncWiFiManager.h>    // https://github.com/alanswx/ESPAsyncWiFiManager
 #include <vector>
 #include <mqtt.h>
 #include "baseconfig.h"
@@ -23,7 +22,7 @@ class MyMQTT: public MQTT {
       bool active;
     } subscription_t;
 
-    MyMQTT(AsyncWebServer* server, DNSServer *dns, const char* MqttServer, uint16_t MqttPort, String MqttBasepath, String MqttRoot, char* APName, char* APpassword);
+    MyMQTT(const char* MqttServer, uint16_t MqttPort, String MqttBasepath, String MqttRoot);
   
     void    loop();
     void    Subscribe(String topic, MqttSubscriptionType_t identifier);

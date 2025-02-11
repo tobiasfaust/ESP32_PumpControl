@@ -3,6 +3,7 @@
 
 #include "CommonLibs.h"
 #include "WEMOS_Motor.h"
+#include "baseconfig.h"
 
 class tb6612 {
   

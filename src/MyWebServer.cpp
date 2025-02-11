@@ -5,51 +5,62 @@ MyWebServer::MyWebServer(AsyncWebServer *server, DNSServer* dns): server(server)
   fsfiles = new handleFiles(server);
 
   ElegantOTA.begin(server);
+  ElegantOTA.setGitEnv(String(GIT_OWNER), String(GIT_REPO), String(GIT_BRANCH), String(GITHUB_RUN).toInt());
+  ElegantOTA.setFWVersion(String(Config->GetReleaseName() + " / Build: " + GITHUB_RUN ));
+  ElegantOTA.setBackupRestoreFS("/config");
+  ElegantOTA.setAutoReboot(true);
   ElegantOTA.onStart(std::bind(&MyWebServer::onOTAStart, this));
   ElegantOTA.onProgress(std::bind(&MyWebServer::onOTAProgress, this, std::placeholders::_1, std::placeholders::_2));
   ElegantOTA.onEnd(std::bind(&MyWebServer::onOTAEnd, this, std::placeholders::_1));
-  
-  server->begin();
 
   server->onNotFound(std::bind(&MyWebServer::handleNotFound, this, std::placeholders::_1));
   server->on("/reboot",       HTTP_GET, std::bind(&MyWebServer::handleReboot, this, std::placeholders::_1));
   server->on("/reset",        HTTP_GET, std::bind(&MyWebServer::handleReset, this, std::placeholders::_1));
-  server->on("/wifireset",    HTTP_GET, std::bind(&MyWebServer::handleWiFiReset, this, std::placeholders::_1));
   server->on("/parameter.js", HTTP_GET, std::bind(&MyWebServer::handleJSParam, this, std::placeholders::_1));
   server->on("/ajax",         HTTP_POST,std::bind(&MyWebServer::handleAjax, this, std::placeholders::_1));
   
   server->serveStatic("/", LittleFS, "/", "max-age=3600").setDefaultFile("/web/index.html");
 
-  dbg.println(F("WebServer started..."));
+  // try to start the server if wifi is connected, otherwise wait for wifi connection
+  if (mqtt->GetConnectStatusWifi()) {
+    server->begin();
+    Config->logN(1, "WebServer has been started ...");
+  } else {
+    mqtt->improvSerial.onImprovConnected(std::bind(&MyWebServer::onImprovWiFiConnectedCb, this, std::placeholders::_1, std::placeholders::_2));
+  }
 }
 
+void MyWebServer::onImprovWiFiConnectedCb(const char *ssid, const char *password) {
+  server->begin();
+  Config->logN(1, "WebServer has been started now ...");
+}
 
 void MyWebServer::onOTAStart() {
   // Log when OTA has started
-  dbg.println("OTA update started!");
+  Config->logN(3, "OTA update started!");
 }
 
 void MyWebServer::onOTAProgress(size_t current, size_t final) {
   // Log every 1 second
   if (millis() - ota_progress_millis > 1000) {
     ota_progress_millis = millis();
-    dbg.printf("OTA Progress Current: %u bytes, Final: %u bytes\n", current, final);
+    Config->logN(4, "OTA Progress Current: %u bytes, Final: %u bytes", current, final);
   }
 }
 
 void MyWebServer::onOTAEnd(bool success) {
   // Log when OTA has finished
   if (success) {
-    dbg.println("OTA update finished successfully!");
+    Config->logN(3, "OTA update finished successfully!");
   } else {
-    dbg.println("There was an error during OTA update!");
+    Config->logN(3, "There was an error during OTA update!");
   }
 }
 
 void MyWebServer::loop() {
   //delay(1); // slow response Issue: https://github.com/espressif/arduino-esp32/issues/4348#issuecomment-695115885
   if (this->DoReboot) {
-    dbg.println("Rebooting...");
+    Config->logN(1, "Rebooting...");
     delay(100);
     ESP.restart();
   }
@@ -67,32 +78,20 @@ void MyWebServer::handleReboot(AsyncWebServerRequest *request) {
 }
 
 void MyWebServer::handleReset(AsyncWebServerRequest *request) {
-  if (Config->GetDebugLevel() >= 3) { dbg.println("deletion of all config files was requested ...."); }
+  Config->logN(3, "deletion of all config files was requested ....");
   //LittleFS.format(); // Werkszustand -> nur die config dateien loeschen, die web dateien muessen erhalten bleiben
-  File root = LittleFS.open("/", "r");
+  File root = LittleFS.open("/config/", "r");
   File file = root.openNextFile();
   while(file){
     String path("/"); path.concat(file.name());
-    if (path.indexOf(".json") == -1) {dbg.println("Continue"); file = root.openNextFile(); continue;}
+    if (path.indexOf(".json") == -1) {file = root.openNextFile(); continue;}
     file.close();
     bool rm = LittleFS.remove(path);
-    if (Config->GetDebugLevel() >= 3) {
-      dbg.printf("deletion of configuration file '%s' %s\n", file.name(), (rm?"was successful":"has failed"));;
-    }
+    Config->logN(3, "deletion of configuration file '%s' %s", file.name(), (rm?"was successful":"has failed"));;
     file = root.openNextFile();
   }
   root.close();
 
-  this->handleReboot(request);
-}
-
-void MyWebServer::handleWiFiReset(AsyncWebServerRequest *request) {
-  #ifdef ESP32
-    WiFi.disconnect(true,true);
-  #elif ESP8266  
-    ESP.eraseConfig();
-  #endif
-  
   this->handleReboot(request);
 }
 
@@ -126,14 +125,14 @@ void MyWebServer::handleAjax(AsyncWebServerRequest *request) {
   JsonDocument jsonReturn;
   jsonReturn["response"].to<JsonObject>();
 
-  if (Config->GetDebugLevel() >=4) { dbg.print("Ajax Json Empfangen: "); }
+  Config->logN(4, "Ajax Json Empfangen: ");
   if (!error) {
-    if (Config->GetDebugLevel() >=4) { serializeJsonPretty(jsonGet, dbg); dbg.println(); }
+    Config->log(4, jsonGet);
 
-    if (jsonGet.containsKey("action"))   {action    = jsonGet["action"].as<String>();}
-    if (jsonGet.containsKey("subaction")){subaction = jsonGet["subaction"].as<String>();}
-    if (jsonGet.containsKey("newState")) { newState = jsonGet["newState"].as<String>(); }
-    if (jsonGet.containsKey("port"))     { port = jsonGet["port"].as<int>(); }
+    if (jsonGet["action"])   {action    = jsonGet["action"].as<String>();}
+    if (jsonGet["subaction"]){subaction = jsonGet["subaction"].as<String>();}
+    if (jsonGet["newState"]) { newState = jsonGet["newState"].as<String>(); }
+    if (jsonGet["port"])     { port = jsonGet["port"].as<int>(); }
   
   } else { 
     snprintf(buffer, sizeof(buffer), "Ajax Json Command not parseable: %s -> %s", json.c_str(), error.c_str());
@@ -146,9 +145,7 @@ void MyWebServer::handleAjax(AsyncWebServerRequest *request) {
     serializeJson(jsonReturn, ret);
     response->print(ret);
 
-    if (Config->GetDebugLevel() >=2) {
-      dbg.println(FPSTR(buffer));
-    }
+    Config->logN(2, buffer);
 
     return;
     
@@ -253,12 +250,10 @@ void MyWebServer::handleAjax(AsyncWebServerRequest *request) {
     serializeJson(jsonReturn, ret);
     response->print(ret);
 
-    if (Config->GetDebugLevel() >=1) {
-      dbg.println(buffer);
-    }
+    Config->logN(1, buffer);
   }
   
-  if (Config->GetDebugLevel() >=4) { dbg.print("Ajax Json Antwort: "); dbg.println(ret); }
+  Config->logN(4, "Ajax Json Antwort: %s", ret.c_str());
   
   request->send(response);
 }
@@ -331,7 +326,9 @@ void MyWebServer::GetInitDataStatus(AsyncResponseStream *response) {
   }
 
   #ifdef ESP32
-    json["data"]["rssi"] = (Config->GetUseETH()?ETH.linkSpeed():WiFi.RSSI()), (Config->GetUseETH()?"Mbps":"");
+  String rssi = (String)(Config->GetUseETH()?ETH.linkSpeed():WiFi.RSSI());
+  if (Config->GetUseETH()) rssi.concat(" Mbps");  
+  json["data"]["rssi"] = rssi;
   #else
     json["data"]["rssi"] = WiFi.RSSI();
   #endif

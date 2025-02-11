@@ -60,8 +60,8 @@ void valveStructure::loop() {
     Valves->at(i).loop();
   }
 
-  if (Config->Enabled1Wire() && /*this->ValveHW->Get1WireActive() &&*/ Config->GetPin1Wire() != this->ValveHW->GetPin1wire()) {
-    dbg.println("Der 1Wire hat sich geändert, initiiere den 1Wire Bus neu.....");
+  if (Config->Enabled1Wire() && Config->GetPin1Wire() != this->ValveHW->GetPin1wire()) {
+    Config->logN(2, "Der 1Wire hat sich geändert, initiiere den 1Wire Bus neu.....");
     ValveHW->add1WireDevice(Config->GetPin1Wire());
   }
 }
@@ -138,12 +138,12 @@ void valveStructure::LoadJsonConfig() {
     Valves->erase(Valves->begin(), Valves->end());
   }
 
-  if (LittleFS.exists("/valveconfig.json")) {
+  if (LittleFS.exists("/config/valveconfig.json")) {
     //file exists, reading and loading
-    if (Config->GetDebugLevel() >=3) dbg.println("reading valveconfig.json file....");
-    File configFile = LittleFS.open("/valveconfig.json", "r");
+    Config->logN(3, "reading valveconfig.json file....");
+    File configFile = LittleFS.open("/config/valveconfig.json", "r");
     if (configFile) {
-      if (Config->GetDebugLevel() >=3) dbg.println("valveconfig.json is now open");
+      Config->logN(3, "valveconfig.json is now open");
 
       ReadBufferingStream stream{configFile, 64};
       stream.find("\"data\":[");
@@ -153,26 +153,24 @@ void valveStructure::LoadJsonConfig() {
 
         if (error) {
           loadDefaultConfig = true;
-          if (Config->GetDebugLevel() >=1) {
-            dbg.printf("Failed to parse valveconfig.json data: %s, load default config\n", error.c_str()); 
-          } 
+          Config->logN(1, "Failed to parse valveconfig.json data: %s, load default config", error.c_str()); 
         } else {
           // Print the result
-          if (Config->GetDebugLevel() >=4) {dbg.println("parsing JSON ok"); }
-          if (Config->GetDebugLevel() >=5) {serializeJsonPretty(elem, dbg);} 
+          Config->logN(4, "parsing JSON ok");
+          Config->log(5, elem);
 
           valve myValve;
             
           String type = GetJsonKeyMatch(&elem, "type");
-          if (elem.containsKey("port_a") && elem["port_a"].as<int>() > 0) { myValve.AddPort1(this->ValveHW, elem["port_a"].as<int>()); }
-          if (elem.containsKey(type)) {myValve.SetValveType(elem[type].as<String>()); }
+          if (elem["port_a"] && elem["port_a"].as<int>() > 0) { myValve.AddPort1(this->ValveHW, elem["port_a"].as<int>()); }
+          if (elem[type]) {myValve.SetValveType(elem[type].as<String>()); }
           if (elem["active"] && elem["active"] == 1) {myValve.SetActive(true);} else {myValve.SetActive(false);}
-          if (elem.containsKey("mqtttopic")) {myValve.subtopic = elem["mqtttopic"].as<String>();}
-          if (elem.containsKey("port_b") && elem["port_b"].as<int>() > 0) { myValve.AddPort2(ValveHW, elem["port_b"].as<int>());}
-          if (elem.containsKey("imp_a")) { myValve.port1ms = _max(10, _min(elem["imp_a"].as<int>(), 999));}
-          if (elem.containsKey("imp_b")) { myValve.port2ms = _max(10, _min(elem["imp_b"].as<int>(), 999));}
+          if (elem["mqtttopic"]) {myValve.subtopic = elem["mqtttopic"].as<String>();}
+          if (elem["port_b"] && elem["port_b"].as<int>() > 0) { myValve.AddPort2(ValveHW, elem["port_b"].as<int>());}
+          if (elem["imp_a"]) { myValve.port1ms = _max(10, _min(elem["imp_a"].as<int>(), 999));}
+          if (elem["imp_b"]) { myValve.port2ms = _max(10, _min(elem["imp_b"].as<int>(), 999));}
           if (elem["reverse"] && elem["reverse"] == 1) {myValve.SetReverse(true);} else {myValve.SetReverse(false);}
-          if (elem.containsKey("autooff") && elem["autooff"].as<int>() > 0) { myValve.SetAutoOff(elem["autooff"].as<int>()); }
+          if (elem["autooff"] && elem["autooff"].as<int>() > 0) { myValve.SetAutoOff(elem["autooff"].as<int>()); }
 
           // initiiere bistabile ventile
           if (myValve.GetValveType() == "b") {
@@ -185,15 +183,15 @@ void valveStructure::LoadJsonConfig() {
       } while (stream.findUntil(",","]"));
     } else {
       loadDefaultConfig = true;
-      if (Config->GetDebugLevel() >=1) {dbg.println("failed to load valveconfig.json, load default config");}
+      Config->logN(1, "failed to load valveconfig.json, load default config");
     }
   } else {
     loadDefaultConfig = true;
-    if (Config->GetDebugLevel() >=3) {dbg.println("valveconfig.json File not exists, load default config");}
+    Config->logN(3, "valveconfig.json File not exists, load default config");
   }
   
   if (loadDefaultConfig) {
-    if (Config->GetDebugLevel() >=3) { dbg.println("lade Ventile DefaultConfig"); }
+    Config->logN(3, "lade Ventile DefaultConfig");
     valve myValve;
     
     myValve.init(this->ValveHW, 203, "Valve1");
@@ -202,9 +200,7 @@ void valveStructure::LoadJsonConfig() {
     myValve.init(this->ValveHW, 204, "Valve2");
     this->Valves->push_back(myValve);
   }
-  if (Config->GetDebugLevel() >=3) {
-    dbg.printf("%d valves are now loaded \n", Valves->size());
-  }
+  Config->logN(3, "%d valves are now loaded ", Valves->size());
 }
 
 /**************************************

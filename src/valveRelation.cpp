@@ -82,12 +82,12 @@ void valveRelation::LoadJsonConfig() {
   bool loadDefaultConfig = false;
 
 
-  if (LittleFS.exists("/relations.json")) {
+  if (LittleFS.exists("/config/relations.json")) {
     //file exists, reading and loading
-    if (Config->GetDebugLevel() >=3) dbg.println("reading relations.json file....");
-    File configFile = LittleFS.open("/relations.json", "r");
+    Config->logN(3, "reading relations.json file....");
+    File configFile = LittleFS.open("/config/relations.json", "r");
     if (configFile) {
-      if (Config->GetDebugLevel() >=3) dbg.println("relations.json is now open");
+      Config->logN(3, "relations.json is now open");
 
       ReadBufferingStream stream{configFile, 64};
       stream.find("\"data\":[");
@@ -97,23 +97,21 @@ void valveRelation::LoadJsonConfig() {
 
         if (error) {
           loadDefaultConfig = true;
-          if (Config->GetDebugLevel() >=1) {
-            dbg.printf("Failed to parse relations.json data: %s, load default config\n", error.c_str()); 
-          } 
+          Config->logN(1, "Failed to parse relations.json data: %s, load default config", error.c_str()); 
         } else {
           // Print the result
-          if (Config->GetDebugLevel() >=4) {dbg.println("parsing JSON ok"); }
-          if (Config->GetDebugLevel() >=5) {serializeJsonPretty(elem, dbg);} 
+          Config->logN(4, "parsing JSON ok");
+          Config->log(5, elem);
 
           bool enabled = false;
           bool EnableByBypass = false;
           String SubTopic = (char*)0;
           uint8_t Port = 0;
 
-          if (elem.containsKey("active") && elem["active"].as<bool>()) {enabled = elem["active"].as<bool>();} else {enabled = false;}
-          if (elem.containsKey("mqtttopic")) {SubTopic = elem["mqtttopic"].as<String>();}
-          if (elem.containsKey("port") && elem["port"].as<int>() > 0) { Port = elem["port"].as<int>();}
-          if (elem.containsKey("EnableByBypass") && elem["EnableByBypass"].as<bool>()) {EnableByBypass = elem["EnableByBypass"].as<bool>();} else {EnableByBypass = false;}
+          if (elem["active"] && elem["active"].as<bool>()) {enabled = elem["active"].as<bool>();} else {enabled = false;}
+          if (elem["mqtttopic"]) {SubTopic = elem["mqtttopic"].as<String>();}
+          if (elem["port"] && elem["port"].as<int>() > 0) { Port = elem["port"].as<int>();}
+          if (elem["EnableByBypass"] && elem["EnableByBypass"].as<bool>()) {EnableByBypass = elem["EnableByBypass"].as<bool>();} else {EnableByBypass = false;}
 
           this->AddRelation(enabled, SubTopic, Port, EnableByBypass);
         }
@@ -121,21 +119,20 @@ void valveRelation::LoadJsonConfig() {
       } while (stream.findUntil(",","]"));
     } else {
       loadDefaultConfig = true;
-      if (Config->GetDebugLevel() >=1) {dbg.println("failed to load relations.json, load default config");}
+      Config->logN(1, "failed to load relations.json, load default config");
     }
   } else {
     loadDefaultConfig = true;
-    if (Config->GetDebugLevel() >=3) {dbg.println("relations.json File not exists, load default config");}
+    Config->logN(3, "relations.json File not exists, load default config");
   }
   
   if (loadDefaultConfig) {
-    if (Config->GetDebugLevel() >=3) { dbg.println("load Relations DefaultConfig"); }
+    Config->logN(3, "load Relations DefaultConfig");
     this->AddRelation(false, "testhost/TestValve1", 203, false);
     this->AddRelation(false, "testhost/TestValve2", 204, false);
   }
-  if (Config->GetDebugLevel() >=3) {
-    dbg.printf("%d relations are now loaded \n", _relationen->size());
-  }
+  Config->logN(3, "%d relations are now loaded ", _relationen->size());
+
   _relationen->shrink_to_fit();
 }
 

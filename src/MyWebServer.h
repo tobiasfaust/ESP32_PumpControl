@@ -1,11 +1,3 @@
-// https://github.com/esp8266/Arduino/issues/3205
-// https://github.com/Hieromon/PageBuilder
-// https://www.mediaevent.de/tutorial/sonderzeichen.html
-//
-// https://byte-style.de/2018/01/automatische-updates-fuer-microcontroller-mit-gitlab-und-platformio/
-// https://community.blynk.cc/t/self-updating-from-web-server-http-ota-firmware-for-esp8266-and-esp32/18544
-// https://forum.fhem.de/index.php?topic=50628.0
-
 #ifndef MYWEBSERVER_H
 #define MYWEBSERVER_H
 
@@ -52,7 +44,6 @@ class MyWebServer {
     void      handleNotFound(AsyncWebServerRequest *request);
     void      handleReboot(AsyncWebServerRequest *request);
     void      handleReset(AsyncWebServerRequest *request);
-    void      handleWiFiReset(AsyncWebServerRequest *request);
     void      handleJSParam(AsyncWebServerRequest *request);
     
     void      handleAjax(AsyncWebServerRequest *request);
@@ -62,7 +53,7 @@ class MyWebServer {
     void      onOTAStart();
     void      onOTAProgress(size_t current, size_t final);
     void      onOTAEnd(bool success);
-    
+    void      onImprovWiFiConnectedCb(const char *ssid, const char *password);
 
 };
 

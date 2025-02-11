@@ -186,52 +186,6 @@
             <td><input min='0' max='254' id='ConfiguredPort_0' name='ventil3wege_port' type='number'/></td>
             </tr>
           
-            <tr>
-              <td colspan='2'>
-                <div class='inline'>
-                  <input type='radio' id='sel_update_0' name='sel_update' value='auto' onclick="radioselection(['update_0'],['update_1'])"/>
-                  <label for='sel_update_0'>Automatisches Update</label>
-                </div>
-                <div class='inline'>
-                  <input type='radio' id='sel_update_1' name='sel_update' value='manu' onclick="radioselection(['update_1'],['update_0'])"/>
-                  <label for='sel_update_1'>Manuelles Update</label>
-                </div>
-              </td>
-            </tr>
-          
-            <tr>
-            <td>Update URL</td>
-            <td><input size='30' id="au_url" name='autoupdate_url' type='text'/></td>
-            </tr>
-          
-            <tr id='update_0'>
-              <td>Auswahl der Stage</td>
-              <td>
-                <select name='autoupdate_stage' size='1' style='width: 10em'>
-                  <option id='au_stage_prod' value="PROD">Produktion</option>
-                  <option id='au_stage_pre' value="PRE">PreRelease/QS</option>
-                  <option id='au_stage_dev' value="DEV">Development</option>
-                </select>
-              </td>
-            </tr>
-
-            <tr id='update_1'>
-              <td>verfügbare Releases
-                <a href='#' onclick='FetchReleaseInfo()' class='ButtonRefresh' title='Die JSON Liste neu laden'>&#8634;</a>
-              </td>
-              <td>
-                <table>
-                  <tr>
-                    <td class='noborder'>
-                      <select id='releases'></select>
-                    </td>
-                    <td class='noborder'>
-                      <input type='button' class='button' onclick='FetchRelease()' value='Install' />
-                    </td>
-                  </tr>
-                </table>                   
-              </td>
-            </tr>
           </tbody>
         </table>
       </form>

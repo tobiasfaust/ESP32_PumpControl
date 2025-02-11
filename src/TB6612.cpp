@@ -6,7 +6,7 @@ tb6612::tb6612() {
 void tb6612::init(uint8_t address) {
   M1 = new Motor(address,_MOTOR_A, 1000);
   M2 = new Motor(address,_MOTOR_B, 1000);
-  dbg.println("TB6612 initialize");
+  Config->logN(3, "TB6612 initialize");
 }
 
 void tb6612::setOff(uint8_t port) {

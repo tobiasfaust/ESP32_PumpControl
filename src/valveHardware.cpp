@@ -16,12 +16,7 @@ valveHardware::valveHardware(uint8_t sda, uint8_t scl)
   t.i2cAddress=0x00;
   this->HWDevice->push_back(t);
 
-  if (Config->GetDebugLevel() >=3)  { 
-    char buffer[100] = {0};
-    memset(buffer, 0, sizeof(buffer));
-    sprintf(buffer, "Initialisiere HardwareDevice mit GPIO auf ic2Adresse 0x%02X", t.i2cAddress);
-    dbg.println(buffer);
-  }
+  Config->logN(3, "Initialisiere HardwareDevice mit GPIO auf ic2Adresse 0x%02X", t.i2cAddress);
 }
 
 #ifdef USE_ONEWIRE
@@ -31,7 +26,7 @@ valveHardware::valveHardware(uint8_t sda, uint8_t scl)
       ow2408* MyDS2408 = static_cast<ow2408*>(t->Device);
       MyDS2408->init(pin_1wire);
       this->pin_1wire = pin_1wire;
-      if (Config->GetDebugLevel() >=3) { dbg.printf("1Wire Pin changed successfully, %d devices found\n", MyDS2408->GetCountDevices()); }
+      Config->logN(3, "1Wire Pin changed successfully, %d devices found", MyDS2408->GetCountDevices());
     } 
     else if (!this->Get1WireActive()) {    
       ow2408* MyDS2408 = new ow2408();
@@ -44,9 +39,9 @@ valveHardware::valveHardware(uint8_t sda, uint8_t scl)
       t.i2cAddress=0x01;
       this->HWDevice->push_back(t);
 
-      if (Config->GetDebugLevel() >=3)  { dbg.printf("1Wire added successfully, %d devices found\n", MyDS2408->GetCountDevices()); }
+      Config->logN(3, "1Wire added successfully, %d devices found", MyDS2408->GetCountDevices());
     } else {
-      if (Config->GetDebugLevel() >=5)  { dbg.println("1wire already present"); }
+      Config->logN(5, "1wire already present");
     }
   }
 
@@ -93,7 +88,7 @@ valveHardware::valveHardware(uint8_t sda, uint8_t scl)
 void valveHardware::addI2CDevice(uint8_t i2cAddress) {
   if (!this->I2CIsPresent(i2cAddress)) {
     if (i2cAddress == 0x01) {
-      if (Config->GetDebugLevel() >=1)  { dbg.println("cannot add 1wire simply, call 'add1WireDevice(pin)' instead"); }
+      Config->logN(1, "cannot add 1wire simply, call 'add1WireDevice(pin)' instead");
     } else {
       HWdev_t t; 
       t.i2cAddress = i2cAddress;
@@ -105,20 +100,10 @@ void valveHardware::addI2CDevice(uint8_t i2cAddress) {
 }
 
 bool valveHardware::I2CIsPresent(uint8_t i2cAddress) {
-  char buffer[100] = {0};
-  //for (const auto &element : this->HWDevice) {
   for (uint8_t i=0; i < this->HWDevice->size(); i++) {
-    if (Config->GetDebugLevel() >=5)  { 
-      memset(buffer, 0, sizeof(buffer));
-      sprintf(buffer, "Pruefe ic2Adresse 0x%02X ob HW-Element 0x%02X schon existiert", i2cAddress, this->HWDevice->at(i).i2cAddress);
-      dbg.println(buffer);
-    }    
+    Config->logN(5, "Pruefe ic2Adresse 0x%02X ob HW-Element 0x%02X schon existiert", i2cAddress, this->HWDevice->at(i).i2cAddress);    
     if (this->HWDevice->at(i).i2cAddress == i2cAddress) {
-      if (Config->GetDebugLevel() >=4) { 
-        memset(buffer, 0, sizeof(buffer));
-        sprintf(buffer, "HW-Element von i2cAdresse 0x%02X gefunden", i2cAddress);
-        dbg.println(buffer);
-      }
+      Config->logN(4, "HW-Element von i2cAdresse 0x%02X gefunden", i2cAddress);
       return true;
     }
   }
@@ -135,27 +120,22 @@ HWdev_t* valveHardware::getI2CDevice(uint8_t i2cAddress) {
 }
 
 void valveHardware::ConnectHWdevice(HWdev_t* dev) {
-#ifdef USE_PCF8574
-  if(dev->HWType == PCF) {
-    PCF8574* pcf8574 = new PCF8574(dev->i2cAddress, this->pin_sda, this->pin_scl);
-    pcf8574->begin();
-    dev->Device = pcf8574;
-  } 
-#endif
-#ifdef USE_TB6612  
-  if(dev->HWType == TB6612) {
-    tb6612* motor = new tb6612();
-    motor->init(dev->i2cAddress); 
-    dev->Device = motor;
-  }
-#endif
+  #ifdef USE_PCF8574
+    if(dev->HWType == PCF) {
+      PCF8574* pcf8574 = new PCF8574(dev->i2cAddress, this->pin_sda, this->pin_scl);
+      pcf8574->begin();
+      dev->Device = pcf8574;
+    } 
+  #endif
+  #ifdef USE_TB6612  
+    if(dev->HWType == TB6612) {
+      tb6612* motor = new tb6612();
+      motor->init(dev->i2cAddress); 
+      dev->Device = motor;
+    }
+  #endif
 
- if (Config->GetDebugLevel() >=3) { 
-    char buffer[100] = {0};
-    memset(buffer, 0, sizeof(buffer));
-    sprintf(buffer, "Hardwaredevice fuer Typ %d auf i2c-Adresse 0x%02X erfolgreich erstellt", dev->HWType, dev->i2cAddress);
-    dbg.println(buffer);
-  }
+  Config->logN(3, "Hardwaredevice fuer Typ %d auf i2c-Adresse 0x%02X erfolgreich erstellt", dev->HWType, dev->i2cAddress);
 }
 
 bool valveHardware::RegisterPort(HWdev_t*& dev, uint8_t Port) {
@@ -163,13 +143,8 @@ bool valveHardware::RegisterPort(HWdev_t*& dev, uint8_t Port) {
 }
 
 bool valveHardware::RegisterPort(HWdev_t*& dev, uint8_t Port, bool reverse) {
-  char buffer[200] = {0};
   bool success = false;
-  if (Config->GetDebugLevel() >=4) { 
-    memset(buffer, 0, sizeof(buffer));
-    sprintf(buffer, "Fordere Registrierung Port %d an", Port);
-    dbg.println(buffer);
-  }
+  Config->logN(4, "Fordere Registrierung Port %d an", Port);
     
   PortMap_t PortMap;
   PortMap.Port = Port;
@@ -210,17 +185,14 @@ bool valveHardware::RegisterPort(HWdev_t*& dev, uint8_t Port, bool reverse) {
   }
   
   if (Config->GetDebugLevel() >=4) { 
-    memset(buffer, 0, sizeof(buffer));
     if (success) {
-      sprintf(buffer, "Port %d als internalPort %d fuer HardwareTyp %d auf i2c-Adresse 0x%02X erfolgreich registriert", Port, PortMap.internalPort, dev->HWType, dev->i2cAddress);
+      Config->logN(3, "Port %d als internalPort %d fuer HardwareTyp %d auf i2c-Adresse 0x%02X erfolgreich registriert", Port, PortMap.internalPort, dev->HWType, dev->i2cAddress);
     } else {
-      sprintf(buffer, "Fehler bei der Registrierung des Ports %d ", Port);
+      Config->logN(2, "Fehler bei der Registrierung des Ports %d ", Port);
     }
-    dbg.println(buffer);
   }
   
-  if (success) { return true; }
-  else { return false; }
+  return success;
 }
 
 bool valveHardware::IsValidPort(uint8_t Port) {
@@ -293,12 +265,7 @@ void valveHardware::SetPort(HWdev_t* dev, uint8_t Port1, uint8_t Port2, bool sta
     }
   }
 
-  if (Config->GetDebugLevel() >=5)  { 
-    char buffer[100] = {0};
-    memset(buffer, 0, sizeof(buffer));
-    sprintf(buffer, "Aenderung Port %d nach Status: %s ", Port1, vState(state));
-    dbg.println(buffer);
-  }
+  Config->logN(5, "Aenderung Port %d nach Status: %s ", Port1, vState(state));
 }
 
 void valveHardware::setHWType(HWdev_t* dev) {

@@ -1,7 +1,7 @@
 #include <MyMqtt.h>
 
-MyMQTT::MyMQTT(AsyncWebServer* server, DNSServer *dns, const char* MqttServer, uint16_t MqttPort, String MqttBasepath, String MqttRoot, char* APName, char* APpassword): 
-  MQTT(server, dns, MqttServer, MqttPort, MqttBasepath, MqttRoot, APName, APpassword) {
+MyMQTT::MyMQTT(const char* MqttServer, uint16_t MqttPort, String MqttBasepath, String MqttRoot): 
+  MQTT(MqttServer, MqttPort, MqttBasepath, MqttRoot) {
   
   this->subscriptions = new std::vector<subscription_t>{};
 }
@@ -14,9 +14,7 @@ void MyMQTT::SetOled(OLED* oled) {
 
 void MyMQTT::loop() {
   if (MQTT::GetRoot() != Config->GetMqttRoot() || MQTT::GetBasePath() != Config->GetMqttBasePath()) {
-    if (Config->GetDebugLevel()>=3) {
-     dbg.println("MyMQTT: Root or Basepath changing, initiate resubscription");
-    } 
+    Config->logN(3, "MyMQTT: Root or Basepath changing, initiate resubscription");
     MQTT::UnSubscribe(MQTT::getTopic("#", false));
     MQTT::loop();
     this->reSubscribe(); 
@@ -39,16 +37,12 @@ void MyMQTT::loop() {
 void MyMQTT::reSubscribe() {
   String topic = MQTT::getTopic("#", false);
   MQTT::Subscribe(topic);
-  if (Config->GetDebugLevel()>=3) {
-    dbg.printf("MyMQTT Subscribed to myself: %s\n", topic.c_str());
-  }
+  Config->logN(3, "MyMQTT Subscribed to myself: %s", topic.c_str());
 
   for (uint8_t i=0; i< this->subscriptions->size(); i++) {
     if (this->subscriptions->at(i).active == true) {
       MQTT::Subscribe(this->subscriptions->at(i).subscription.c_str()); 
-      if (Config->GetDebugLevel()>=3) {
-        dbg.printf("MyMQTT Subscribed to: %s\n", this->subscriptions->at(i).subscription.c_str());
-      }
+      Config->logN(3, "MyMQTT Subscribed to: %s", this->subscriptions->at(i).subscription.c_str());
     }
   }
 }

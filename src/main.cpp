@@ -41,9 +41,7 @@ void myMQTTCallBack(char* topic, byte* payload, unsigned int length) {
     msg.concat((char)payload[i]);
   }
   
-  if (Config->GetDebugLevel() >= 4) { 
-    dbg.printf("Message arrived [%s]\nMessage: %s\n", topic, msg.c_str()); 
-  }
+  Config->logN(4, "Message arrived [%s]\nMessage: %s", topic, msg.c_str()); 
 
   if (LevelSensor->GetExternalSensor() && (strcmp(LevelSensor->GetExternalSensor().c_str(), topic)==0)) {
     LevelSensor->SetLvl(atoi(msg.c_str()));
@@ -70,18 +68,24 @@ void setup() {
   Config = new BaseConfig();
   
   #ifndef USE_WEBSERIAL
-    dbg.begin(115200, SERIAL_8N1, Config->GetSerialRx(), Config->GetSerialTx()); // RX, TX, zb.: 33, 32
-    dbg.println("");
-    dbg.println("ready");
+    Serial.begin(115200,
+                 SERIAL_8N1,
+                 Config->GetSerialRx(),
+                 Config->GetSerialTx());  // RX, TX, zb.: 33, 32
+    Serial.println("");
+    Serial.println("ready");
   #endif
 
   #ifdef USE_WEBSERIAL
-    //WebSerial.onMessage([](const String& msg) { Serial.println(msg); }); 
+    WebSerial.onMessage([](const String& msg) { Serial.println(msg); });
     WebSerial.begin(&server);
+    WebSerial.setBuffer(100);
   #endif
 
+  Config->logN(1, "Start of ESP PumpControl");
+
   #ifdef USE_I2C
-    dbg.printf("Starting WIRE at (SDA, SCL)): %d, %d \n", Config->GetPinSDA(), Config->GetPinSCL());
+    Config->logN(1, "Starting WIRE at (SDA, SCL)): %d, %d ", Config->GetPinSDA(), Config->GetPinSCL());
     Wire.begin(Config->GetPinSDA(), Config->GetPinSCL());
   #endif
 
@@ -91,45 +95,40 @@ void setup() {
     oled->Enable(Config->EnabledOled());
   #endif
 
-  dbg.println("Starting Wifi and MQTT");
-  mqtt = new MyMQTT(&server, &dns, 
-                    Config->GetMqttServer().c_str(), 
-                    Config->GetMqttPort(), 
-                    Config->GetMqttBasePath().c_str(), 
-                    Config->GetMqttRoot().c_str(),
-                    (char*)"AP_PumpControl",
-                    (char*)"password"
-                  );
+  Config->logN(1, "Starting Wifi and MQTT");
+  mqtt = new MyMQTT(Config->GetMqttServer().c_str(),
+                    Config->GetMqttPort(),
+                    Config->GetMqttBasePath().c_str(),
+                    Config->GetMqttRoot().c_str());
+  mqtt->setCallback(myMQTTCallBack);
   
   #ifdef USE_OLED
     mqtt->SetOled(oled);
   #endif
 
-  mqtt->setCallback(myMQTTCallBack);
-
   #ifdef USE_I2C
-    dbg.println("Starting I2CDetect");
+    Config->logN(1, "Starting I2CDetect");
     I2Cdetect = new i2cdetect(Config->GetPinSDA(), Config->GetPinSCL());
   #endif
   
-  dbg.println("Starting Sensor");
+  Config->logN(1, "Starting Sensor");
   LevelSensor = new sensor();
   #ifdef USE_OLED
     LevelSensor->SetOled(oled);
   #endif
 
-  dbg.println("Starting Valve Relations");
+  Config->logN(1, "Starting Valve Relations");
   ValveRel = new valveRelation();
 
-  dbg.println("Starting Valve Structure");
+  Config->logN(1, "Starting Valve Structure");
   VStruct = new valveStructure(Config->GetPinSDA(), Config->GetPinSCL());
 
-  dbg.println("Starting WebServer");
+  Config->logN(1, "attempting to start WebServer");
   mywebserver = new MyWebServer(&server, &dns);
 
   //VStruct->OnForTimer("Valve1", 10); // Test
 
-  dbg.println("Setup finished");
+  Config->logN(1, "Setup finished");
 }
 
 void loop() {
@@ -137,7 +136,6 @@ void loop() {
   mqtt->loop();
   LevelSensor->loop();
   mywebserver->loop();
-  Config->loop();
 
   #ifdef USE_OLED
     oled->loop();  
