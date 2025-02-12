@@ -183,7 +183,7 @@ void MyWebServer::handleAjax(AsyncWebServerRequest *request) {
     response->print(ret);
   
   } else if(action && action == "handlefiles") {
-    fsfiles->HandleAjaxRequest(jsonGet, response);
+    fsfiles->HandleRequest(jsonGet);
 
   } else if (action && action == "SetValve") {
       if (newState && port && port > 0 && !VStruct->GetEnabled(port)) { 
