@@ -34,6 +34,7 @@ class MyWebServer {
 
     AsyncWebServer* server;
     DNSServer* dns;
+    AsyncWebSocket* ws;
 
     bool      DoReboot;
     unsigned long RequestRebootTime;
@@ -42,19 +43,18 @@ class MyWebServer {
     handleFiles* fsfiles;
     
     void      handleNotFound(AsyncWebServerRequest *request);
-    void      handleReboot(AsyncWebServerRequest *request);
-    void      handleReset(AsyncWebServerRequest *request);
+    void      handleRoot(AsyncWebServerRequest *request);
+    bool      handleReset();
     void      handleJSParam(AsyncWebServerRequest *request);
     
-    void      handleAjax(AsyncWebServerRequest *request);
-    void      GetInitDataStatus(AsyncResponseStream *response);
-    void      GetInitDataNavi(AsyncResponseStream *response);
+    void      GetInitDataStatus(JsonDocument& json);
+    void      GetInitDataNavi(JsonDocument& json);
 
     void      onOTAStart();
     void      onOTAProgress(size_t current, size_t final);
     void      onOTAEnd(bool success);
     void      onImprovWiFiConnectedCb(const char *ssid, const char *password);
-
+    void      onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len);
 };
 
 #endif

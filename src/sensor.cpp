@@ -349,10 +349,7 @@ void sensor::LoadJsonConfig() {
   }
 }
 
-void sensor::GetInitData(AsyncResponseStream *response) {
-  String ret;
-  JsonDocument json;
-
+void sensor::GetInitData(JsonDocument& json) {
   json["data"].to<JsonObject>();
   json["data"]["sel0"] = ((this->Type==NONE)?1:0);
   json["data"]["sel1"] = ((this->Type==HCSR04)?1:0);
@@ -449,7 +446,4 @@ void sensor::GetInitData(AsyncResponseStream *response) {
   json["response"].to<JsonObject>();
   json["response"]["status"] = 1;
   json["response"]["text"] = "successful";
-
-  serializeJson(json, ret);
-  response->print(ret);
 }

@@ -29,7 +29,7 @@ class valveRelation {
     void      DelSubscriber(String TriggerTopic);
     uint8_t   CountActiveSubscribers(uint8_t ActorPort);
     
-    void      GetInitData(AsyncResponseStream* response);
+    void      GetInitData(JsonDocument& json);
     void      LoadJsonConfig();
     
   private:

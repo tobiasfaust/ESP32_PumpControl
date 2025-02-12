@@ -216,10 +216,7 @@ String valveStructure::GetJsonKeyMatch(JsonDocument* doc, String key) {
   return "";
 }
 
-void valveStructure::GetInitData(AsyncResponseStream* response) {
-  String ret;
-  JsonDocument json;
-  
+void valveStructure::GetInitData(JsonDocument& json) {
   json["data"].to<JsonObject>();
   JsonArray row = json["data"]["rows"].to<JsonArray>();
   
@@ -252,13 +249,10 @@ void valveStructure::GetInitData(AsyncResponseStream* response) {
   json["response"].to<JsonObject>();
   json["response"]["status"] = 1;
   json["response"]["text"] = "successful";
-
-  serializeJson(json, ret);
-  response->print(ret);
 }
 
-void valveStructure::GetInitData1Wire(AsyncResponseStream* response) {
-  if (Config->Enabled1Wire()) { ValveHW->GetInitData1Wire(response); }
+void valveStructure::GetInitData1Wire(JsonDocument& json) {
+  if (Config->Enabled1Wire()) { ValveHW->GetInitData1Wire(json); }
 }
 
 void valveStructure::getWebJsParameter(AsyncResponseStream *response) {

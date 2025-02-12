@@ -56,7 +56,7 @@ class valveHardware {
     uint8_t   Get1WireCountDevices();
     uint8_t   Refresh1WireDevices();
     
-    void      GetInitData1Wire(AsyncResponseStream* response);
+    void      GetInitData1Wire(JsonDocument& json);
     
     const uint8_t& GetPin1wire()      const {return pin_1wire;}
     

@@ -72,10 +72,10 @@ valveHardware::valveHardware(uint8_t sda, uint8_t scl)
     else  return 0;
   }
 
-  void valveHardware::GetInitData1Wire(AsyncResponseStream* response) {
+  void valveHardware::GetInitData1Wire(JsonDocument& json) {
   HWdev_t* t = getI2CDevice(0x01);
   ow2408* MyDS2408 = static_cast<ow2408*>(t->Device);
-  MyDS2408->GetInitData(response);
+  MyDS2408->GetInitData(json);
 }
 #else
   void valveHardware::add1WireDevice(uint8_t pin_1wire) {};

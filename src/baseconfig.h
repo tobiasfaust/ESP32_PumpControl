@@ -44,7 +44,7 @@ class BaseConfig {
     const uint8_t&  GetDebugLevel()   const {return debuglevel;}
     const String    GetReleaseName();
     const bool&     GetUseETH()        const { return useETH; }
-    void            GetInitData(AsyncResponseStream* response);
+    void            GetInitData(JsonDocument& json);
     const String&   GetLANBoard()      const {return LANBoard;}
     const uint8_t&  GetSerialRx()     const {return serial_rx;}
     const uint8_t&  GetSerialTx()     const {return serial_tx;}

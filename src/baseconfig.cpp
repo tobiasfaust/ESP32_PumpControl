@@ -96,10 +96,7 @@ size_t BaseConfig::getFragmentation() {
   return 100 - ESP_GetMaxFreeAvailableBlock() * 100 / ESP.getFreeHeap();
 }
 
-void BaseConfig::GetInitData(AsyncResponseStream *response) {
-  String ret;
-  JsonDocument json;
-  
+void BaseConfig::GetInitData(JsonDocument& json) {
   std::ostringstream i2caddress_oled_hex;
   i2caddress_oled_hex << std::hex << std::uppercase << std::setw(2) << std::setfill('0') << (int)this->i2caddress_oled;
 
@@ -176,8 +173,6 @@ void BaseConfig::GetInitData(AsyncResponseStream *response) {
   json["response"].to<JsonObject>();
   json["response"]["status"] = 1;
   json["response"]["text"] = "successful";
-  serializeJson(json, ret);
-  response->print(ret);
 }
 
 void BaseConfig::logN(const int loglevel, const char* format, ...) {

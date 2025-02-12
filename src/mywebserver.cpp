@@ -3,6 +3,7 @@
 MyWebServer::MyWebServer(AsyncWebServer *server, DNSServer* dns): server(server), dns(dns), DoReboot(false) {
   
   fsfiles = new handleFiles(server);
+  ws = new AsyncWebSocket("/ajaxws");
 
   ElegantOTA.begin(server);
   ElegantOTA.setGitEnv(String(GIT_OWNER), String(GIT_REPO), String(GIT_BRANCH), String(GITHUB_RUN).toInt());
@@ -13,11 +14,18 @@ MyWebServer::MyWebServer(AsyncWebServer *server, DNSServer* dns): server(server)
   ElegantOTA.onProgress(std::bind(&MyWebServer::onOTAProgress, this, std::placeholders::_1, std::placeholders::_2));
   ElegantOTA.onEnd(std::bind(&MyWebServer::onOTAEnd, this, std::placeholders::_1));
 
+  server->on("/", HTTP_GET, std::bind(&MyWebServer::handleRoot, this, std::placeholders::_1));
   server->onNotFound(std::bind(&MyWebServer::handleNotFound, this, std::placeholders::_1));
-  server->on("/reboot",       HTTP_GET, std::bind(&MyWebServer::handleReboot, this, std::placeholders::_1));
-  server->on("/reset",        HTTP_GET, std::bind(&MyWebServer::handleReset, this, std::placeholders::_1));
   server->on("/parameter.js", HTTP_GET, std::bind(&MyWebServer::handleJSParam, this, std::placeholders::_1));
-  server->on("/ajax",         HTTP_POST,std::bind(&MyWebServer::handleAjax, this, std::placeholders::_1));
+  
+  ws->onEvent(std::bind(&MyWebServer::onWsEvent, this, std::placeholders::_1, 
+    std::placeholders::_2, 
+    std::placeholders::_3, 
+    std::placeholders::_4, 
+    std::placeholders::_5, 
+    std::placeholders::_6 ));
+
+  server->addHandler(ws);
   
   server->serveStatic("/", LittleFS, "/", "max-age=3600").setDefaultFile("/web/index.html");
 
@@ -57,6 +65,10 @@ void MyWebServer::onOTAEnd(bool success) {
   }
 }
 
+void MyWebServer::handleRoot(AsyncWebServerRequest *request) {
+  request->redirect("/web/index.html");
+}
+
 void MyWebServer::loop() {
   //delay(1); // slow response Issue: https://github.com/espressif/arduino-esp32/issues/4348#issuecomment-695115885
   if (this->DoReboot) {
@@ -72,27 +84,29 @@ void MyWebServer::handleNotFound(AsyncWebServerRequest *request) {
   request->send(404, "text/plain", "404: Not found"); // Send HTTP status 404 (Not Found) when there's no handler for the URI in the request
 }
 
-void MyWebServer::handleReboot(AsyncWebServerRequest *request) {
-  request->send(LittleFS, "/web/reboot.html", "text/html");
-  this->DoReboot = true;
-}
-
-void MyWebServer::handleReset(AsyncWebServerRequest *request) {
+bool MyWebServer::handleReset() {
+  bool ret = true;
   Config->logN(3, "deletion of all config files was requested ....");
-  //LittleFS.format(); // Werkszustand -> nur die config dateien loeschen, die web dateien muessen erhalten bleiben
-  File root = LittleFS.open("/config/", "r");
+  //LittleFS.format(); // Werkszustand -> nur die config dateien loeschen, die register dateien muessen erhalten bleiben
+  File root = LittleFS.open("/config/");
   File file = root.openNextFile();
   while(file){
-    String path("/"); path.concat(file.name());
+    String path("/config/"); path.concat(file.name());
     if (path.indexOf(".json") == -1) {file = root.openNextFile(); continue;}
     file.close();
-    bool rm = LittleFS.remove(path);
-    Config->logN(3, "deletion of configuration file '%s' %s", file.name(), (rm?"was successful":"has failed"));;
+    
+    if (LittleFS.remove(path)) {
+      Config->logN(4, "deletion of configuration file '%s' was successful", file.name());
+    } else {
+      Config->logN(2, "deletion of configuration file '%s' has failed", file.name());
+      ret = false;
+    }
     file = root.openNextFile();
   }
   root.close();
+  this->DoReboot = true;
 
-  this->handleReboot(request);
+  return ret;
 }
 
 void MyWebServer::handleJSParam(AsyncWebServerRequest *request) {
@@ -103,164 +117,155 @@ void MyWebServer::handleJSParam(AsyncWebServerRequest *request) {
   request->send(response);
 }
 
-void MyWebServer::handleAjax(AsyncWebServerRequest *request) {
-  char buffer[100] = {0};
-  memset(buffer, 0, sizeof(buffer));
-  String ret = (char*)0;
-  bool RaiseError = false;
-  String action, subaction, newState; 
-  String json = "{}";
-  uint8_t port = 0;
 
-  AsyncResponseStream *response = request->beginResponseStream("text/json");
-  response->addHeader("Server","ESP Async Web Server");
-
-  if(request->hasArg("json")) {
-    json = request->arg("json");
-  }
-
-  JsonDocument jsonGet; 
-  DeserializationError error = deserializeJson(jsonGet, json.c_str());
-
-  JsonDocument jsonReturn;
-  jsonReturn["response"].to<JsonObject>();
-
-  Config->logN(4, "Ajax Json Empfangen: ");
-  if (!error) {
-    Config->log(4, jsonGet);
-
-    if (jsonGet["action"])   {action    = jsonGet["action"].as<String>();}
-    if (jsonGet["subaction"]){subaction = jsonGet["subaction"].as<String>();}
-    if (jsonGet["newState"]) { newState = jsonGet["newState"].as<String>(); }
-    if (jsonGet["port"])     { port = jsonGet["port"].as<int>(); }
+void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len) {
+  if (type == WS_EVT_CONNECT) {
+    Config->logN(2, "[Client: %u] WebSocket client connected", client->id());
   
-  } else { 
-    snprintf(buffer, sizeof(buffer), "Ajax Json Command not parseable: %s -> %s", json.c_str(), error.c_str());
-    RaiseError = true; 
-  }
-
-  if (RaiseError) {
-    jsonReturn["response"]["status"] = 0;
-    jsonReturn["response"]["text"] = buffer;
-    serializeJson(jsonReturn, ret);
-    response->print(ret);
-
-    Config->logN(2, buffer);
-
-    return;
-    
-  } else if(action && action == "GetInitData")  {
-    if (subaction && subaction == "status") {
-      this->GetInitDataStatus(response);
-    } else if (subaction && subaction == "navi") {
-      this->GetInitDataNavi(response);
-    } else if (subaction && subaction == "baseconfig") {
-      Config->GetInitData(response);
-    } else if (subaction && subaction == "valveconfig") {
-      VStruct->GetInitData(response);
-    } else if (subaction && subaction == "1wireconfig") {
-      VStruct->GetInitData1Wire(response);
-    }else if (subaction && subaction == "sensorconfig") {
-      LevelSensor->GetInitData(response);
-    } else if (subaction && subaction == "relations") {
-      ValveRel->GetInitData(response);
-    }
+  } else if (type == WS_EVT_DISCONNECT) {
+    Config->logN(2, "[Client: %u] WebSocket client disconnected", client->id());
   
-  } else if(action && action == "ReloadConfig")  {
-    if (subaction && subaction == "baseconfig") {
-      Config->LoadJsonConfig();
-    } else if (subaction && subaction == "valveconfig") {
-      VStruct->LoadJsonConfig();
-    } else if (subaction && subaction == "sensorconfig") {
-      LevelSensor->LoadJsonConfig();
-    } else if (subaction && subaction == "relations") {
-      ValveRel->LoadJsonConfig();
-    }
-  
-    jsonReturn["response"]["status"] = 1;
-    jsonReturn["response"]["text"] = "new config reloaded sucessfully";
-    serializeJson(jsonReturn, ret); 
-    response->print(ret);
-  
-  } else if(action && action == "handlefiles") {
-    fsfiles->HandleRequest(jsonGet);
+  } else if (type == WS_EVT_DATA) {
+    String msg(""); msg.reserve(len + 1);
+    for (size_t i = 0; i < len; i++) { msg += (char)data[i]; } msg += '\0';
+    Config->logN(2, "[Client: %u] WebSocket data received: %s", client->id(), msg.c_str()); 
 
-  } else if (action && action == "SetValve") {
-      if (newState && port && port > 0 && !VStruct->GetEnabled(port)) { 
-        jsonReturn["response"]["status"] = 0; 
-        jsonReturn["response"]["text"] = "Requested Port not enabled. Please enable first!";
-        serializeJson(jsonReturn, ret);
-        response->print(ret);
+    // message json request format: {"cmd": {"action": "GetInitData", "subaction": "status"}} // subaction optional
+    // message json response format: die Antwort wird im json ergänzt, so weiß der Requestor zu welchem Command die Antwort gehört: 
+    // Example: {"cmd": {"action": "GetInitData", "subaction": "status"}, "response": {"status": 1, "text": "successful"}, "data": {"ipaddress": "", "wifiname": "", "macaddress": "", "rssi": "", "bssid": "", "mqtt_status": "", "inverter_type": "", "inverter_serial": "", "uptime": "", "freeheapmem": ""}}
+    // Ausnahme: kontinuierliches Streaming der modbuswerte, hier wird kein response und nicht das ursprüngliche Command zurückgegeben
+    // example: {"data-id":{ "registername": "value", "registername": "value", ...}}
+
+    String action(""), subaction(""), item("");
+    bool newState = false;
+    uint8_t port = 0;
+    JsonDocument json;
+    DeserializationError error = deserializeJson(json, msg.c_str());
+    if (!error) {
+      if (json["cmd"]) {
+        if (json["action"])   {action    = json["action"].as<String>();}
+        if (json["subaction"]){subaction = json["subaction"].as<String>();}
+        if (json["cmd"]["newState"]) {newState  = (json["cmd"]["newState"].as<String>() == "true"?true:false);}
+        if (json["port"])     { port = json["port"].as<int>(); }
+        
       }
-      else if (newState && port && port > 0 )  { 
-        if (newState == "On") {
-          VStruct->SetOn(port); 
+
+      if (action && action == "reset") {
+        if (handleReset()) {
+          json["response"]["status"] = 1;
+          json["response"]["text"] = "all config files deleted successfully";
+        } else {
+          json["response"]["status"] = 0;
+          json["response"]["text"] = "deletion of config files failed";
         }
-        if (newState == "Off") { 
-          VStruct->SetOff(port); 
+      }
+
+      if(action && action == "reboot") {
+        this->DoReboot = true;
+        json["response"]["status"] = 1;
+        json["response"]["text"] = "reboot after 5sec...";
+      }
+
+      if(action && action == "GetInitData")  {
+        if (subaction && subaction == "status") {
+          this->GetInitDataStatus(json);
+        } else if (subaction && subaction == "navi") {
+          this->GetInitDataNavi(json);
+        } else if (subaction && subaction == "baseconfig") {
+          Config->GetInitData(json);
+        } else if (subaction && subaction == "valveconfig") {
+          VStruct->GetInitData(json);
+        } else if (subaction && subaction == "1wireconfig") {
+          VStruct->GetInitData1Wire(json);
+        } else if (subaction && subaction == "sensorconfig") {
+          LevelSensor->GetInitData(json);
+        } else if (subaction && subaction == "relations") {
+          ValveRel->GetInitData(json);
         }
-
-        jsonReturn["response"]["status"] = 1;
-        jsonReturn["response"]["text"] =(VStruct->GetState(port)?"Valve is now: ON":"Valve is now: OFF");
-        jsonReturn["data"][subaction] = (VStruct->GetState(port)?"Set Off":"Set On"); // subaction = button.id
-        serializeJson(jsonReturn, ret);
-        response->print(ret);
       }
 
-  
-  } else if (action && newState && action == "EnableValve") {
-      if (port && port > 0 && newState) {
-        if (strcmp(newState.c_str(),"true")==0) VStruct->SetEnable(port, true);
-        if (strcmp(newState.c_str(),"false")==0) VStruct->SetEnable(port, false);
-        jsonReturn["response"]["status"] = 1;
-        jsonReturn["response"]["text"] = (VStruct->GetEnabled(port)?"valve now enabled":"valve now disabled");
-        serializeJson(jsonReturn, ret);
-        response->print(ret);
+      if(action && action == "ReloadConfig")  {
+        if (subaction && subaction == "baseconfig") {
+          Config->LoadJsonConfig();
+        } else if (subaction && subaction == "valveconfig") {
+          VStruct->LoadJsonConfig();
+        } else if (subaction && subaction == "sensorconfig") {
+          LevelSensor->LoadJsonConfig();
+        } else if (subaction && subaction == "relations") {
+          ValveRel->LoadJsonConfig();
+        }
+      
+        json["response"]["status"] = 1;
+        json["response"]["text"] = "new config reloaded sucessfully";
       }
-  
-#ifdef USE_I2C
-  } else if (action && action == "RefreshI2C") {
-      I2Cdetect->i2cScan();  
+
+      if(action && action == "handlefiles") {
+        fsfiles->HandleRequest(json);
+      }
+
+      if(action && action == "SetValve") {
+        if (newState && port && port > 0 && !VStruct->GetEnabled(port)) { 
+          json["response"]["status"] = 0; 
+          json["response"]["text"] = "Requested Port not enabled. Please enable first!";
+        }
+        else if (newState && port && port > 0 )  { 
+          if (newState) {
+            VStruct->SetOn(port); 
+          } else { 
+            VStruct->SetOff(port); 
+          }
+
+          json["response"]["status"] = 1;
+          json["response"]["text"] =(VStruct->GetState(port)?"Valve is now: ON":"Valve is now: OFF");
+          json["data"][subaction] = (VStruct->GetState(port)?"Set Off":"Set On"); // subaction = button.id
+        }
+      }
+
+      if(action && action == "EnableValve") {
+        if (port && port > 0 && newState) {
+          if (newState) VStruct->SetEnable(port, true);
+          if (!newState) VStruct->SetEnable(port, false);
+          json["response"]["status"] = 1;
+          json["response"]["text"] = (VStruct->GetEnabled(port)?"valve now enabled":"valve now disabled");
+        }
+      }
+
+      #ifdef USE_I2C
+      if (action && action == "RefreshI2C") {
+        I2Cdetect->i2cScan();  
+        
+        json["data"].to<JsonObject>();
+        json["data"]["showI2C"] = I2Cdetect->i2cGetAddresses();
+        json["response"]["status"] = 1;
+        json["response"]["text"] = "successful";
+      }
+      #endif
       
-      jsonReturn["data"].to<JsonObject>();
-      jsonReturn["data"]["showI2C"] = I2Cdetect->i2cGetAddresses();
-      jsonReturn["response"]["status"] = 1;
-      jsonReturn["response"]["text"] = "successful";
-      serializeJson(jsonReturn, ret);
-      response->print(ret);
-#endif
+      #ifdef USE_ONEWIRE
+      if (action && action == "Refresh1Wire") {
+        uint8_t ow = VStruct->Refresh1WireDevices();  
+        
+        String buffer = String(ow) + " (" + String(ow * 8) + ")";
+        
+        json["data"].to<JsonObject>();
+        json["data"]["show1Wire"] = buffer;
+        json["response"]["status"] = 1;
+        json["response"]["text"] = "successful";
+      }
+      #endif
 
-#ifdef USE_ONEWIRE
-  } else if (action && action == "Refresh1Wire") {
-      uint8_t ow = VStruct->Refresh1WireDevices();  
-      snprintf(buffer, sizeof(buffer), "%d (%d)", ow, ow * 8);
-      
-      jsonReturn["data"].to<JsonObject>();
-      jsonReturn["data"]["show1Wire"] = buffer;
-      jsonReturn["response"]["status"] = 1;
-      jsonReturn["response"]["text"] = "successful";
-      serializeJson(jsonReturn, ret);
-      response->print(ret);
-  #endif
+    } else {
+      Config->logN(1, "WebSocket data received but not a valid json string: %s -> %s", msg.c_str(), error.c_str());
+      json["response"]["status"] = 0;
+      json["response"]["text"] = error.c_str();
+    }
 
-  } else {
-    snprintf(buffer, sizeof(buffer), "Ajax Command unknown: %s - %s", action.c_str(), subaction.c_str());
-    jsonReturn["response"]["status"] = 0;
-    jsonReturn["response"]["text"] = buffer;
-    serializeJson(jsonReturn, ret);
-    response->print(ret);
+    ws->text(client->id(), json.as<String>());
 
-    Config->logN(1, buffer);
   }
-  
-  Config->logN(4, "Ajax Json Antwort: %s", ret.c_str());
-  
-  request->send(response);
 }
 
-void MyWebServer::GetInitDataNavi(AsyncResponseStream *response){
-  String ret;
-  JsonDocument json;
+void MyWebServer::GetInitDataNavi(JsonDocument& json){
   json["data"].to<JsonObject>();
   json["data"]["hostname"] = Config->GetMqttRoot();
   json["data"]["releasename"] = Config->GetReleaseName();
@@ -280,18 +285,14 @@ void MyWebServer::GetInitDataNavi(AsyncResponseStream *response){
   json["response"].to<JsonObject>();
   json["response"]["status"] = 1;
   json["response"]["text"] = "successful";
-  serializeJson(json, ret);
-  response->print(ret);
 }
 
-void MyWebServer::GetInitDataStatus(AsyncResponseStream *response) {
-  String ret;
-  JsonDocument json;
-  
+void MyWebServer::GetInitDataStatus(JsonDocument& json) {
   json["data"].to<JsonObject>();
   json["data"]["ipaddress"] = mqtt->GetIPAddress().toString();
   json["data"]["wifiname"] = (Config->GetUseETH()?"LAN":WiFi.SSID());
   json["data"]["macaddress"] = WiFi.macAddress();
+  json["data"]["bssid"] = (Config->GetUseETH()?"wired LAN":WiFi.BSSIDstr());
   json["data"]["mqtt_status"] = (mqtt->GetConnectStatusMqtt()?"Connected":"Not Connected");
   json["data"]["uptime"] = uptime_formatter::getUptime();
   json["data"]["freeheapmem"] = ESP.getFreeHeap();
@@ -333,11 +334,12 @@ void MyWebServer::GetInitDataStatus(AsyncResponseStream *response) {
     json["data"]["rssi"] = WiFi.RSSI();
   #endif
 
+  #ifndef USE_WEBSERIAL
+    json["data"]["tr_webserial"]["className"] = "hide";
+  #endif
+
   json["response"].to<JsonObject>();
   json["response"]["status"] = 1;
   json["response"]["text"] = "successful";
-
-  serializeJson(json, ret);
-  response->print(ret);
 }
 

@@ -136,10 +136,7 @@ void valveRelation::LoadJsonConfig() {
   _relationen->shrink_to_fit();
 }
 
-void valveRelation::GetInitData(AsyncResponseStream *response) {
-  String ret;
-  JsonDocument json;
-  
+void valveRelation::GetInitData(JsonDocument& json) {
   json["data"].to<JsonObject>();
   JsonArray row = json["data"]["rows"].to<JsonArray>();
 
@@ -153,8 +150,5 @@ void valveRelation::GetInitData(AsyncResponseStream *response) {
   json["response"].to<JsonObject>();
   json["response"]["status"] = 1;
   json["response"]["text"] = "successful";
-
-  serializeJson(json, ret);
-  response->print(ret);
 }
 

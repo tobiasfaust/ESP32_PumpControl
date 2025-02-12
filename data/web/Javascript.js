@@ -1,55 +1,195 @@
+/*****************************************************************************************
+ * @file /data/web/Javascript.js
+ * @description This file contains various JavaScript functions and constants used for handling GPIO configurations, 
+ *              data fetching, applying JSON data to HTML templates, creating selection lists from input fields, 
+ *              and transforming checkboxes into styled on/off switches. The functions are designed to work with 
+ *              a web interface for managing and configuring GPIO ports and other related settings.
+ * @version 1.0.0
+ * @date 2023-10-01
+ * 
+ * @author Tobias.Faust
+ * 
+ * @license MIT
+ * 
+ *****************************************************************************************/
+
+/*****************************************************************************************
+ * Definition of constants
+ *****************************************************************************************/
+
+import { functionMap as statusFunctionMap } from './status.js';
+import { functionMap as baseconfigFunctionMap } from './baseconfig.js';
+import { functionMap as mbconfigFunctionMap } from './modbusconfig.js';
+import { functionMap as mbitemconfigFunctionMap } from './modbusitemconfig.js';
+import { functionMap as rawdataFunctionMap } from './rawdata.js';
+import { functionMap as filesFunctionMap } from './handlefiles.js';
+
+const combinedFunctionMap = {
+  ...statusFunctionMap,
+  ...baseconfigFunctionMap,
+  ...mbconfigFunctionMap,
+  ...mbitemconfigFunctionMap,
+  ...rawdataFunctionMap,
+  ...filesFunctionMap
+};
+
+export let ws;    // websocket handle
+var datavalues;   // form data values as string to check, if "needToSave" Dialog should be shown
 
 var timer; // ID of setTimout Timer -> setResponse
+let reconnectInterval = 5000; // 5 seconds interval to reconnect websocket connection
 
-/*############################################################
-#
+/******************************************************************************************
+ * Connect to WebSocket server
+ * *****************************************************************************************/
+export function connectWebSocket() {
+  window.addEventListener('beforeunload', function() {
+    if (ws) {
+      ws.close();
+    }
+  }, false);
 
-# activate all radioselections after pageload to hide unnecessary elements
-#
-############################################################*/
-function handleRadioSelections() {
-  var objects = document.querySelectorAll('input[type=radio]:checked');
-  for( var i=0; i< objects.length; i++) {
-    objects[i].click();
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible') {
+      if (!ws || ws.readyState === WebSocket.CLOSED) {
+        console.log('Reconnecting WebSocket due to visibility change');
+        connectWebSocket();
+      }
+    } else {
+      if (ws) {
+        console.log('Closing WebSocket due to visibility change');
+        ws.close();
+      }
+    }
+  });
+
+  if (document.visibilityState != 'visible') {
+    console.log('Not connecting WebSocket due to visibility state:', document.visibilityState);
+    return;
+  }
+
+  ws = new WebSocket(location.origin.replace(/^http/, 'ws') + '/ajaxws');
+  //ws = new WebSocket('ws://10.0.2.150/ajaxws'); 
+  var wsStatus = document.getElementById('ws-status');
+
+  ws.onopen = function() {
+    console.log('WebSocket connection opened');
+    if (wsStatus) wsStatus.style.backgroundColor = 'green';
+  };
+
+  ws.onmessage = function(event) {
+    //try {
+      const json = JSON.parse(event.data);
+      console.log('Received JSON:', json);
+      handleJsonItems(json);
+    //} catch (e) {
+    //  console.error('Invalid JSON received:', event.data);
+    //}
+  };
+
+  ws.onclose = function() {
+    console.log('WebSocket connection closed, attempting to reconnect in ' + reconnectInterval / 1000 + ' seconds');
+    if (wsStatus) wsStatus.style.backgroundColor = 'yellow';
+    setTimeout(connectWebSocket, reconnectInterval);
+  };
+
+  ws.onerror = function(error) {
+    console.error('WebSocket error:', error);
+    if (wsStatus) wsStatus.style.backgroundColor = 'red';
+    ws.close();
+  };
+}
+
+/******************************************************************************************
+ * activate all radioselections after pageload to hide unnecessary elements
+ * Works for all checkbox and radio elements with onclick="radioselection(show, hide)"
+ * 
+ ******************************************************************************************/
+export function handleRadioSelections() {
+  var radios = document.querySelectorAll('input[type=radio][onclick*=radioselection]:checked');
+  for (var i = 0; i < radios.length; i++) {
+    if (radios[i].onclick) {
+      var onclickStr = radios[i].getAttribute('onclick');
+      var match = onclickStr.match(/radioselection\((.*)\)/);
+      if (match) {
+        eval("radioselection(" + match[1] + ")");
+      }
+    }
+  }
+
+  var checkboxes = document.querySelectorAll('input[type=checkbox][onclick*=onCheckboxSelection]');
+  for (var i = 0; i < checkboxes.length; i++) {
+    if (checkboxes[i].onclick) {
+      var onclickStr = checkboxes[i].getAttribute('onclick');
+      var match = onclickStr.match(/onCheckboxSelection\((.*)\)/);
+      if (match) {
+        eval("onCheckboxSelection(" + match[1] + ")");
+      }
+    }
   }
 }
 
-/*############################################################
-#
-# central function to initiate data fetch
-#
-############################################################*/
-
-function requestData(json, highlight, callbackFn) {
-  const data = new URLSearchParams();
-  data.append('json', json);
-
-  fetch('/ajax', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: data
-  })
-  .then (response => response.json())
-  .then (json =>  { handleJsonItems(json, highlight, callbackFn)}); 
+/*****************************************************************************************
+ * central function to send data to server
+ * @param {*} json -> json object to send
+ * @param {*} highlight -> highlight on/off
+ * @param {*} callbackFn -> callback function to call after data is fetched
+ * @returns {*} void
+******************************************************************************************/
+export function requestData(json) {
+  if (typeof ws !== 'undefined' && ws.readyState === WebSocket.OPEN) {
+    console.log('WebSocket is open, sending data:', json);
+    ws.send(JSON.stringify(json));
+  } else {
+    console.log('WebSocket not open');
+    setResponse(false, 'WebSocket not open, could not send data');
+  }
 }
 
-/*############################################################
-#
-# definition of applying jsondata to html templates
-#
-############################################################*/
+/*****************************************************************************************
+ * @description This function updated values according their data-id in DOM elements.
+ * @param {*} json: JSON object containing the data-id values to update
+ * @param {*} highlight: boolean value to highlight the updated elements
+ * @returns {*} void
+ * @example updateDataID({"data-id":{"InverterSN.value":"123456789"}}, true)
+ * *****************************************************************************************/
+function updateDataID(json, highlight) {
+  if (json["data-id"]) {
+    for (const key in json["data-id"]) {
+      const elements = document.querySelectorAll(`[data-id="${key}"]`);
+      elements.forEach(element => {
+        element.innerHTML = json["data-id"][key];
+        if (highlight && element.classList.contains('ajaxchange')) { 
+        	element.classList.add('highlightOn');
+          setTimeout(function() {document.getElementById(element.id).classList.remove('highlightOn')}, 1000);
+        }
+        
+      });
+    }
+  }
+}
+
+/*****************************************************************************************
+ *
+ * definition of applying jsondata to html templates
+ * @param {*} _obj -> object to apply key
+ * @param {*} _key -> key to apply
+ * @param {*} _val -> value to apply
+ * @param {*} counter -> counter of array
+ * @param {*} tplHierarchie -> hierarchie of template
+ * @param {*} highlight -> highlight on/off
+ * @returns {*} void
+ *
+******************************************************************************************/
 function applyKey (_obj, _key, _val, counter, tplHierarchie, highlight) {
   if (_obj.id == _key || _obj.id == tplHierarchie +"."+ _key) {
 	  if (['SPAN', 'DIV', 'TD', 'DFN'].includes(_obj.tagName)) {
       if (highlight && _obj.classList.contains('ajaxchange')) {
         _obj.classList.add('highlightOn');
-        _obj.innerHTML = _val;
-      } if (!highlight && _obj.classList.contains('ajaxchange')) {
-         _obj.classList.remove('highlightOn');
-         _obj.innerHTML = _val;
-      } else {
-        _obj.innerHTML = _val;
-      }
+        setTimeout(function() {document.getElementById(_obj.id).classList.remove('highlightOn')}, 1000);
+      }  
+      _obj.innerHTML = _val;
+
     } else if (_obj.tagName == 'INPUT' && ['checkbox','radio'].includes(_obj.type)) {
       if (_val == true) _obj.checked = true;
     } else if (_obj.tagName == 'OPTION') {
@@ -58,19 +198,29 @@ function applyKey (_obj, _key, _val, counter, tplHierarchie, highlight) {
       _obj.value = _val;
     }
   } else {
-  	// using parenet object 
-    _obj[_key] = _val;
+  	// using parent object 
+    if (_key in _obj) {
+      if (highlight && _obj.classList.contains('ajaxchange')) { 
+        _obj.classList.add('highlightOn'); 
+        setTimeout(function() {document.getElementById(_obj.id).classList.remove('highlightOn')}, 1000);
+      }
+      
+      _obj[_key] = _val;
+    } else {
+      _obj.setAttribute(_key, _val);
+    }
   }
 }
 
-/*############################################################################
-json	-> der json teil der angewendet werden soll
-_tpl	-> das documentFragment auf welches das json agewendet werden soll
-ObjID -> ggf eine ID im _tpl auf die "key" und "value" des jsons agewendet werden soll
-					wenn diese undefinied ist, ist die ID = json[key]
-counter -> gesetzt, wenn innerhalb eines _tpl arrays die ID des Objektes hochgezählt wurde           
-highlight -> wenn in einem objekt die klasse "ajaxchange" gesetzt ist, so wird die Klasse "highlightOn" angewendet
-#############################################################################*/
+/*****************************************************************************************
+ * Apply a set of keys from an Array or an Object
+ * @param {*}  json	-> der json teil der angewendet werden soll
+ * @param {*}  _tpl	-> das documentFragment auf welches das json agewendet werden soll
+ * @param {*}  ObjID -> ggf eine ID im _tpl auf die "key" und "value" des jsons agewendet werden soll
+ *					wenn diese undefinied ist, ist die ID = json[key]
+ * @param {*}  counter -> gesetzt, wenn innerhalb eines _tpl arrays die ID des Objektes hochgezählt wurde           
+ * @param {*}  highlight -> wenn in einem objekt die klasse "ajaxchange" gesetzt ist, so wird die Klasse "highlightOn" angewendet
+*****************************************************************************************/
 
 function applyKeys(json, _tpl, ObjID, counter, tplHierarchie, highlight) {
   for (var key in json) {
@@ -109,6 +259,15 @@ function applyKeys(json, _tpl, ObjID, counter, tplHierarchie, highlight) {
   }
 }
 
+/*****************************************************************************************
+ * apply template to document
+ * @param {*} TemplateJson: json object to apply
+ * @param {*} templateID: id of template to apply
+ * @param {*} doc: document to apply
+ * @param {*} tplHierarchie: hierarchie of template
+ * @param {*} highlight: highlight on/off
+ * @returns {*} void
+*****************************************************************************************/
 function applyTemplate(TemplateJson, templateID, doc, tplHierarchie, highlight) {
   if (Array.isArray(TemplateJson)) {
     for (var i=0; i < TemplateJson.length; i++) {
@@ -148,21 +307,37 @@ function applyTemplate(TemplateJson, templateID, doc, tplHierarchie, highlight) 
   }
 }
 
+/*****************************************************************************************
+ * apply Javascript variables to the window object from a JSON object
+ * @param {*} json: JSON object containing the variables to apply
+ * @returns {*} void
+ * @example applyJS({"myVar": "myValue"})
+ * *****************************************************************************************/
 function applyJS(json) {
 	for (var key in json) {
   	window[key] = json[key];
   }
 }
 
-function handleJsonItems(json, highlight, callbackFn) {
-  if ('data' in json) {
+/*****************************************************************************************
+ * Main function to handle JSON response
+ * @param {*} json: JSON object containing the response data
+ * @returns {*} void
+ * @example handleJsonItems({"data-id": {"InverterSN": "123456789"}, "cmd": {"action": "GetInitData", "subaction": "status", "callbackFn": "MyCallback"}, "
+ *                          "response": {"status": 1, "text": "OK"}})
+ * *****************************************************************************************/
+export function handleJsonItems(json) {
+  const callbackFn = (typeof json['cmd'] !== 'undefined' && typeof json['cmd']['callbackFn'] !== 'undefined') ? json['cmd']['callbackFn'] : undefined; 
+  const highlight = (typeof json['cmd'] !== 'undefined' && typeof json['cmd']['highlight'] !== 'undefined') ? json['cmd']['highlight'] : false;
+
+  if ("data" in json) {
     applyKeys(json.data, document, undefined, undefined, '', highlight);
   }
 
-	if ('js' in json) { 
+  if ('js' in json) { 
   	applyJS(json.js);
   }
-  
+
   if ('response' in json) {
     try {
       if (json.response.status == 1) {setResponse(true, json.response.text);}
@@ -170,17 +345,22 @@ function handleJsonItems(json, highlight, callbackFn) {
     } catch(e) {setResponse(false, 'unknow error');}
   }
 
+  if ("data-id" in json) {
+    updateDataID(json, highlight);
+  }
+
 	// DOM objects now ready
-  handleRadioSelections();
-	if (callbackFn) {callbackFn();}
+  if (callbackFn && typeof combinedFunctionMap[callbackFn] === 'function') {
+    combinedFunctionMap[callbackFn](json);
+  }
 }
 
-// ***********************************
-// show response
-// b => bool => true = OK; false = Error
-// s => String => text to show
-// ***********************************
-function setResponse(b, s) {
+/*****************************************************************************************
+ * show response
+ * @param {*} b (bool):  true = OK; false = Error
+ * @param {*} s (String): text to show
+*****************************************************************************************/
+export function setResponse(b, s) {
   try {
   	// clear if previous timer still run
     clearTimeout(timer);
@@ -197,18 +377,15 @@ function setResponse(b, s) {
   } catch(e) {}
 }
 
-/*############################################################
-#
-# definition of creating selectionlists from input fields
-# querySelector -> select input fields to convert
-# jsonLists -> define multiple predefined lists to set as option as array
-# blacklist -> simple list of ports (numbers) to set as disabled option 
-#
-# example: 
-# CreateSelectionListFromInputField('input[type=number][id^=AllePorts], input[type=number][id^=GpioPin]', 
-#                                    [gpio, gpio_analog], gpio_disabled);
-############################################################*/
-function CreateSelectionListFromInputField(querySelector, jsonLists, blacklist) {
+/******************************************************************************************
+ * definition of creating selectionlists from input fields
+ * @param {*} querySelector -> select input fields to convert
+ * @param {*} jsonLists -> define multiple predefined lists to set as option as array
+ * @param {*}blacklist -> simple list of ports (numbers) to set as disabled option 
+ * @example 
+ * CreateSelectionListFromInputField('input[type=number][id^=AllePorts], input[type=number][id^=GpioPin]', [gpio, gpio_analog], gpio_disabled);
+******************************************************************************************/
+export function CreateSelectionListFromInputField(querySelector, jsonLists, blacklist) {
 	var _parent, _select, _option, i, j, k;
   var objects = document.querySelectorAll(querySelector);
   for( j=0; j< objects.length; j++) {
@@ -216,46 +393,40 @@ function CreateSelectionListFromInputField(querySelector, jsonLists, blacklist) 
     _select = document.createElement('select');
     _select.id = objects[j].id;
     _select.name = objects[j].name;
-    for ( k = 0; k < jsonLists.length; k += 1 ) {  
-      for ( i = 0; i < jsonLists[k].length; i += 1 ) {
+    for ( k = 0; k < jsonLists.length; k++ ) {  
+      for ( i = 0; i < jsonLists[k].length; i++ ) {
           _option = document.createElement( 'option' );
-          var p,v;
-          if (jsonLists[k][i] instanceof Object) {
-          	p = jsonLists[k][i].port;
-            v = jsonLists[k][i].name;
-          } else {
-          	p = v = jsonLists[k][i];
-          }
-          _option.value = p; 
-          _option.text  = v;
-          if(objects[j].value == p) { _option.selected = true;}
-          if(blacklist && blacklist.indexOf(p)>=0) {
-            _option.disabled = true;
+          _option.value = jsonLists[k][i].port; 
+          _option.text  = jsonLists[k][i].name;
+          if(objects[j].value == jsonLists[k][i].port) { _option.selected = true;}
+          if(blacklist && blacklist.indexOf(jsonLists[k][i].port)>=0) {
+          	_option.disabled = true;
           }
           _select.add( _option ); 
       }
     }
-    _parent.replaceChild(_select, objects[j])
+    _parent.removeChild( objects[j] );
+    _parent.appendChild( _select );
   }
 }
 
-/*############################################################
-# returns, if a element is visible or not
-############################################################*/
+/*****************************************************************************************
+ * returns, if a element is visible or not
+****************************************************************************************/
 function isVisible(_obj) {
 	var ret = true;
-	if (_obj && (_obj.style.display == "none" || _obj.classList.contains('hide'))) { ret = false;}
+	if (_obj && _obj.style.display == "none") { ret = false;}
   else if (_obj && _obj.parentNode && _obj.tagName != "HTML") ret = isVisible(_obj.parentNode);
   return ret;
 }
 
-/*******************************
+/****************************************************************************************
 separator: 
 regex of item ID to identify first element in row
   - if set, returned json is an array, all elements per row, example: "^myonoffswitch.*"
   - if emty, all elements at one level together, ONLY for small json´s (->memory issue)
-*******************************/
-function onSubmit(DataForm, separator='') {
+****************************************************************************************/
+export function onSubmit(DataForm, separator='') {
   // init json Objects
   var JsonData, tempData; 
   
@@ -309,7 +480,7 @@ function onSubmit(DataForm, separator='') {
   var textToSaveAsBlob = new Blob([JSON.stringify(JsonData)], {type:"text/plain"});
   
   const formData = new FormData();
-  formData.append(filename + ".json", textToSaveAsBlob, '/' + filename + ".json");
+  formData.append(filename + ".json", textToSaveAsBlob, '/config/' + filename + ".json");
     
     fetch('/doUpload', {
       method: 'POST',
@@ -321,35 +492,20 @@ function onSubmit(DataForm, separator='') {
       })
       .then (() => {  
         var data = {};
-        data['action'] = "ReloadConfig";
-        data['subaction'] = filename;
-        requestData(JSON.stringify(data), false);
+        data['cmd'] = {};
+        data['cmd']['action'] = "ReloadConfig";
+        data['cmd']['subaction'] = filename;
+        requestData(data);
       }); 
 }
 
-/**************************************
- * Upload a blob as file
-***************************************/
-async function UploadFile(blob, filename, filepath) {
-  const formData = new FormData();
-  formData.append(filename, blob, filepath + "/" + filename);
-    
-  await fetch('/doUpload', {
-    method: 'POST',
-    body: formData,
-  })
-    .then (response => response.json())
-    .then (json =>  {
-      setResponse(true, json.text)
-    });
-}
-
-/*******************************
-blendet Zeilen der Tabelle aus
-  show: Array of shown IDs return true;
-  hide: Array of hidden IDs 
-*******************************/
-function radioselection(show, hide) {
+/****************************************************************************************
+ * blendet Zeilen der Tabelle aus
+ * @param {*} show: Array of shown IDs return true;
+ * @param {*} hide: Array of hidden IDs 
+ * @example radioselection(["row1", "row2"], ["row3", "row4"])
+****************************************************************************************/
+export function radioselection(show, hide) {
   for(var i = 0; i < show.length; i++){
     if (document.getElementById(show[i])) {document.getElementById(show[i]).style.display = 'table-row';}
   }
@@ -358,3 +514,112 @@ function radioselection(show, hide) {
   }
 }
 
+/****************************************************************************************
+ * Show elements on checkbox is set, otherwise hide elements
+ * @param {*} checkbox object of the checkbox
+ * @param {*} show Array of shown IDs if checkbox is checked
+ * @param {*} hide Array of hidden IDs if checkbox is checked
+ * @returns {*} void
+ ****************************************************************************************/
+export function onCheckboxSelection(checkbox, show, hide) {
+  if (checkbox.checked) {
+    radioselection(show, hide);
+  } else {
+    radioselection(hide, show);
+  }
+}
+
+/****************************************************************************************
+ * Transforms all checkboxes in the document that are not within a div with the style class "onoffswitch".
+ * 
+ * This function searches for all input elements of type checkbox that do not have the class "onoffswitch-checkbox".
+ * For each of these checkboxes, it creates a new div element with the class "onoffswitch", clones the checkbox into this div,
+ * and adds a label with the necessary span elements for styling. Finally, it replaces the original checkbox with the new div element.
+ ****************************************************************************************/
+export function transformCheckboxes() {
+  // Alle Checkboxen im Dokument suchen deren elternelement kein div mit der Style class "onoffswitch" ist
+  const checkboxes = document.querySelectorAll("input[type='checkbox']:not(.onoffswitch-checkbox)");
+
+  for (var i = 0; i < checkboxes.length; i++) {
+    // Eltern-Element der Checkbox
+    const parent = checkboxes[i].parentElement;
+    
+    // Neues Div-Element erstellen
+    const div = document.createElement('div');
+    div.className = 'onoffswitch';
+
+    // Checkbox in das neue Div-Element kopieren
+    const newCheckbox = checkboxes[i].cloneNode(true)
+    
+    newCheckbox.className = 'onoffswitch-checkbox';
+    div.appendChild(newCheckbox);
+     
+    // Neues Label-Element erstellen
+    const label = document.createElement('label');
+    label.className = 'onoffswitch-label';
+    label.setAttribute('for', checkboxes[i].id);
+
+    // Span-Elemente für das Label erstellen
+    const spanInner = document.createElement('span');
+    spanInner.className = 'onoffswitch-inner';
+
+    const spanSwitch = document.createElement('span');
+    spanSwitch.className = 'onoffswitch-switch';
+
+    // Span-Elemente zum Label hinzufügen
+    label.appendChild(spanInner);
+    label.appendChild(spanSwitch);
+
+    // Label zum Div-Element hinzufügen
+    div.appendChild(label);
+    
+    // Neues Div-Element anstelle der ursprünglichen Checkbox einfügen
+    parent.replaceChild(div, checkboxes[i]);
+
+  }
+}
+
+/****************************************************************************************
+ * Get all form data values as a string
+ * @param {*} formElement: id of the form element
+ * 
+ * @returns {*} string containing all form data values
+ * ****************************************************************************************/
+export function getFormData(formElement) {
+  const form = document.getElementById(formElement);
+  if (form) {
+    const formData = new FormData(form);
+    let dataString = '';
+    formData.forEach((value, key) => {
+      dataString += `${key}=${value}|`;
+    });
+    // Remove the last '|' character
+    dataString = dataString.slice(0, -1);
+    return dataString;
+  }
+}
+
+/****************************************************************************************
+ * Show a dialog if the values of items in formdata has been changed
+ * ****************************************************************************************/
+export function showMustSaveDialog() {
+  if (document.getElementById('needToSave') && datavalues !== getFormData("DataForm")) {
+    document.getElementById('needToSave').classList.remove('hide');
+  } else {
+    document.getElementById('needToSave').classList.add('hide');
+  }
+}
+
+/****************************************************************************************
+ * Save the current form data values in the variable "datavalues" to check on every change 
+ * if the form data has been changed. If the form data has been changed, show a dialog.
+ * ****************************************************************************************/
+export function initDataValues() {
+  datavalues = getFormData("DataForm");
+  
+  if (document.getElementById('needToSave')) {
+    document.getElementById('needToSave').classList.add('hide');
+  }
+}
+/****************************************************************************************
+****************************************************************************************/

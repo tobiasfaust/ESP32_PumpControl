@@ -19,7 +19,7 @@ class ow2408 {
     bool        isValidPort(uint8_t port);
     uint8_t     findDevices();
     const uint8_t& GetCountDevices() const {return device_count;}
-    void        GetInitData(AsyncResponseStream *response);
+    void        GetInitData(JsonDocument& json);
     
   private:
     DS2408* ow;

@@ -85,10 +85,7 @@ bool ow2408::isValidPort(uint8_t port)  {
 }
 
 
-void ow2408::GetInitData(AsyncResponseStream *response) {
-  String ret;
-  JsonDocument json;
-  
+void ow2408::GetInitData(JsonDocument& json) {
   json["data"].to<JsonObject>();
   JsonArray row = json["data"]["row"].to<JsonArray>();
   
@@ -104,7 +101,4 @@ void ow2408::GetInitData(AsyncResponseStream *response) {
   json["response"].to<JsonObject>();
   json["response"]["status"] = 1;
   json["response"]["text"] = "successful";
-
-  serializeJson(json, ret);
-  response->print(ret);
 }

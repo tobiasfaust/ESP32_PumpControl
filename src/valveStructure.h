@@ -32,8 +32,8 @@ class valveStructure {
     void      SetEnable(uint8_t Port, bool state);
     uint8_t   CountActiveThreads();
     
-    void      GetInitData(AsyncResponseStream* response);
-    void      GetInitData1Wire(AsyncResponseStream* response);
+    void      GetInitData(JsonDocument& json);
+    void      GetInitData1Wire(JsonDocument& json);
 
     void      LoadJsonConfig();
     void      getWebJsParameter(AsyncResponseStream *response);
