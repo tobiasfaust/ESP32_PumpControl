@@ -1,7 +1,7 @@
 #ifndef OLED_H
 #define OLED_H
 
-#include "CommonLibs.h"
+#include "commonlibs.h"
 #include <Wire.h>
 #include "baseconfig.h"
 

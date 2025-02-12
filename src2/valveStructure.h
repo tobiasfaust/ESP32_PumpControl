@@ -2,12 +2,12 @@
 #ifndef VALVESTRUCTURE_H
 #define VALVESTRUCTURE_H
 
-#include "CommonLibs.h"
+#include "commonlibs.h"
 #include <ArduinoJson.h>
 #include "baseconfig.h"
 #include "valveRelation.h"
 #include "valve.h"
-#include "MyMqtt.h"
+#include "mymqtt.h"
 
 extern BaseConfig* Config;
 extern valveRelation* ValveRel;

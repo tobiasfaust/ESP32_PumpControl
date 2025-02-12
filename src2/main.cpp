@@ -2,8 +2,8 @@
 #include "commonlibs.h"
 #include "baseconfig.h"
 #include "valveStructure.h"
-#include "MyMqtt.h"
-#include "MyWebServer.h"
+#include "mymqtt.h"
+#include "mywebserver.h"
 #include "sensor.h"
 
 #ifdef USE_OLED

@@ -1,7 +1,7 @@
 #ifndef HANDLEFILES_H
 #define HANDLEFILES_H
 
-#include "CommonLibs.h"
+#include "commonlibs.h"
 #include "baseconfig.h"
 
 class handleFiles {

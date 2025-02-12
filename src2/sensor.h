@@ -1,10 +1,10 @@
 #ifndef SENSOR_H
 #define SENSOR_H
 
-#include "CommonLibs.h"
+#include "commonlibs.h"
 #include <ArduinoJson.h>
 #include <vector>
-#include "MyMqtt.h"
+#include "mymqtt.h"
 #include "valveStructure.h"
 #include "baseconfig.h"
 

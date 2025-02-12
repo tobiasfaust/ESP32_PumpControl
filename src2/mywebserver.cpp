@@ -1,4 +1,4 @@
-#include "MyWebServer.h" 
+#include "mywebserver.h" 
 
 MyWebServer::MyWebServer(AsyncWebServer *server, DNSServer* dns): server(server), dns(dns), DoReboot(false) {
   
@@ -326,9 +326,9 @@ void MyWebServer::GetInitDataStatus(AsyncResponseStream *response) {
   }
 
   #ifdef ESP32
-  String rssi = (String)(Config->GetUseETH()?ETH.linkSpeed():WiFi.RSSI());
-  if (Config->GetUseETH()) rssi.concat(" Mbps");  
-  json["data"]["rssi"] = rssi;
+    String rssi = (String)(Config->GetUseETH()?ETH.linkSpeed():WiFi.RSSI());
+    if (Config->GetUseETH()) rssi.concat(" Mbps");  
+    json["data"]["rssi"] = rssi;
   #else
     json["data"]["rssi"] = WiFi.RSSI();
   #endif

@@ -1,7 +1,7 @@
 #ifndef BASECONFIG_H
 #define BASECONFIG_H
 
-#include "CommonLibs.h"
+#include "commonlibs.h"
 #include "ArduinoJson.h"
 #include <StreamUtils.h>
 #include <iomanip>  // needed by setw / setfill

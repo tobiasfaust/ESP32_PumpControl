@@ -1,4 +1,4 @@
-#include "TB6612.h"
+#include "tb6612.h"
 
 tb6612::tb6612() {  
 }

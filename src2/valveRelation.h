@@ -1,10 +1,10 @@
 #ifndef VALVERELATION_H
 #define VALVERELATION_H
 
-#include "CommonLibs.h"
+#include "commonlibs.h"
 #include <vector>
 #include <ArduinoJson.h>
-#include "MyMqtt.h"
+#include "mymqtt.h"
 
 class valveRelation {
 

@@ -1,7 +1,7 @@
 #ifndef VALVEHARDWARE_H
 #define VALVEHARDWARE_H
   
-#include "CommonLibs.h"
+#include "commonlibs.h"
 #include "baseconfig.h"
 #include <vector>
 #include <Wire.h>
@@ -11,11 +11,11 @@
 #endif
 
 #ifdef USE_TB6612
-  #include "TB6612.h"
+  #include "tb6612.h"
 #endif
 
 #ifdef USE_ONEWIRE
-  #include "OW2408.h"
+  #include "ow2408.h"
 #endif
 
 extern BaseConfig* Config;
