@@ -345,7 +345,7 @@ void MQTT::ClearSubscriptions() {
 
 void MQTT::loop() {
   improvSerial.loop();
-
+  
   #ifdef ESP8266
     if (WiFi.status() == WL_CONNECTED) {
       this->ConnectStatusWifi = true;

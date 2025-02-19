@@ -45,8 +45,7 @@ class MyWebServer {
     void      handleNotFound(AsyncWebServerRequest *request);
     void      handleRoot(AsyncWebServerRequest *request);
     bool      handleReset();
-    void      handleJSParam(AsyncWebServerRequest *request);
-    
+        
     void      GetInitDataStatus(JsonDocument& json);
     void      GetInitDataNavi(JsonDocument& json);
 
