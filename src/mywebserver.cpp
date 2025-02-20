@@ -3,6 +3,12 @@
 MyWebServer::MyWebServer(AsyncWebServer *server, DNSServer* dns): server(server), dns(dns), DoReboot(false) {
   
   fsfiles = new handleFiles(server);
+  //fsfiles->registerLogCallback([this](int loglevel, const char* format, va_list args) {
+  //  Config->logN(loglevel, format, args);
+  //});
+
+  fsfiles->registerLogCallback(std::bind(&BaseConfig::logN, Config, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+
   ws = new AsyncWebSocket("/ajaxws");
 
   ElegantOTA.begin(server);
