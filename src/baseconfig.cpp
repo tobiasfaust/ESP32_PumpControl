@@ -184,9 +184,11 @@ void BaseConfig::logN(const int loglevel, const char* format, ...) {
   vsnprintf(buffer, sizeof(buffer), format, args);
   #ifdef USE_WEBSERIAL
     WebSerial.printf("[Log %d] ", loglevel);
+    //if (this->GetDebugLevel() >= 4) { WebSerial.printf("FreeHeap: %d Bytes\n ", ESP.getFreeHeap()); }
     WebSerial.println(buffer);
   #else
     Serial.printf("[Log %d] ", loglevel);
+    //if (this->GetDebugLevel() >= 4) { Serial.printf("FreeHeap: %d Bytes\n ", ESP.getFreeHeap()); }
     Serial.println(buffer);
   #endif
   va_end(args);

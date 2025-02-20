@@ -255,22 +255,18 @@ void valveStructure::GetInitData1Wire(JsonDocument& json) {
   if (Config->Enabled1Wire()) { ValveHW->GetInitData1Wire(json); }
 }
 
-void valveStructure::getWebJsParameter(AsyncResponseStream *response) {
-  
-  // bereits belegte Ports, können nicht ausgewählt werden (zb.i2c-ports)
-  // const gpio_disabled = Array(0,4);
-  response->printf("const gpio_disabled = [%d,%d,%d];\n", Config->GetPinSDA() + 200, Config->GetPinSCL() + 200, (Config->Enabled1Wire()?Config->GetPin1Wire() + 200:0));
+void valveStructure::getWebJsParameter(JsonDocument& json) {
+  json["js"]["gpio_disabled"] = String("[") + String(Config->GetPinSDA() + 200) + "," + String(Config->GetPinSCL() + 200) + "," + (Config->Enabled1Wire()?String(Config->GetPin1Wire() + 200):"0") + "]";
 
-  // anhand gefundener I2C Devices die verfügbaren Ports bereit stellen
-  //const availablePorts = [65,72];
-  response->println("const availablePorts = [");
+  String availablePorts("[");
+  
 #ifdef USE_I2C
   uint8_t count=0;
   for (uint8_t p=1; p<=254; p++) {
     if (ValveHW->IsValidPort(p) && (I2Cdetect->i2cIsPresent(ValveHW->GetI2CAddress(p)) || ValveHW->GetI2CAddress(p) == 0x01) && (!Config->EnabledOled() || Config->GetI2cOLED()!=ValveHW->GetI2CAddress(p))) {
       // i2cDetect muss den ic2Port finden oder es ist 0x01 OneWire 
       //ohne die OLED i2c Adresse
-      response->printf("%s%d", (count>0?",":"") , p);
+      availablePorts += String((count>0?",":"")) + String(p);
       count++;
     }
   }
@@ -280,19 +276,22 @@ void valveStructure::getWebJsParameter(AsyncResponseStream *response) {
     if (ValveHW->IsValidPort(p) && ValveHW->GetI2CAddress(p) == 0x01 && (!Config->EnabledOled() || Config->GetI2cOLED()!=ValveHW->GetI2CAddress(p))) {
       // i2cDetect muss den ic2Port finden oder es ist 0x01 OneWire 
       //ohne die OLED i2c Adresse
-      response->printf("%s%d", (count>0?",":"") , p);
+      availablePorts += String((count>0?",":"")) + String(p);
       count++;
     }
   }
 #endif
 
-  response->println("];\n");
+  availablePorts.concat("]");
+  json["js"]["availablePorts"] = availablePorts;
 
   //konfigurierte Ports / Namen
-  //const configuredPorts = [ {port:65, name:"Ventil1"}, {port:67, name:"Ventil2"}]
-  response->println("const configuredPorts = [");
+  String configuredPorts("[");
   for(uint8_t i=0; i < Valves->size(); i++) {
-    response->printf("{port:%d, name:'%s'}%s", Valves->at(i).GetPort1() ,Valves->at(i).subtopic.c_str(), (i<Valves->size()-1?",":""));
+    configuredPorts += String("{\"port\":") + String(Valves->at(i).GetPort1()) + String(", \"name\":\"") + Valves->at(i).subtopic + String("\"}") + String((i<Valves->size()-1?",":""));
   }
-  response->println("];\n");
+  configuredPorts.concat("]");
+
+  json["js"]["configuredPorts"] = configuredPorts;
+
 }

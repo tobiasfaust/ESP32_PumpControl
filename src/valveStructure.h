@@ -36,7 +36,7 @@ class valveStructure {
     void      GetInitData1Wire(JsonDocument& json);
 
     void      LoadJsonConfig();
-    void      getWebJsParameter(AsyncResponseStream *response);
+    void      getWebJsParameter(JsonDocument& json);
     void      ReceiveMQTT(String topic, int value);
     uint8_t   Get1WireCountDevices();
     uint8_t   Refresh1WireDevices();

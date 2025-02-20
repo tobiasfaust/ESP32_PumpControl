@@ -31,6 +31,7 @@ function GetInitData() {
 function checkUpdate() {
   // get deviceinfo the know where releases.json is
   fetch("/getdeviceinfo")
+  //fetch("http://192.168.10.253/getdeviceinfo")
     .then(response => response.json())
     .then(data => {
       fetch("https://"+ data.owner + ".github.io/" + data.repository + "/firmware/releases.json")

@@ -19,17 +19,17 @@
 
 import { functionMap as statusFunctionMap } from './status.js';
 import { functionMap as baseconfigFunctionMap } from './baseconfig.js';
-import { functionMap as mbconfigFunctionMap } from './modbusconfig.js';
-import { functionMap as mbitemconfigFunctionMap } from './modbusitemconfig.js';
-import { functionMap as rawdataFunctionMap } from './rawdata.js';
+import { functionMap as sensorconfigFunctionMap } from './sensorconfig.js';
+import { functionMap as valveconfigFunctionMap } from './valveconfig.js';
+import { functionMap as relationsFunctionMap } from './relations.js';
 import { functionMap as filesFunctionMap } from './handlefiles.js';
 
 const combinedFunctionMap = {
   ...statusFunctionMap,
   ...baseconfigFunctionMap,
-  ...mbconfigFunctionMap,
-  ...mbitemconfigFunctionMap,
-  ...rawdataFunctionMap,
+  ...sensorconfigFunctionMap,
+  ...valveconfigFunctionMap,
+  ...relationsFunctionMap,
   ...filesFunctionMap
 };
 
@@ -69,7 +69,7 @@ export function connectWebSocket() {
   }
 
   ws = new WebSocket(location.origin.replace(/^http/, 'ws') + '/ajaxws');
-  //ws = new WebSocket('ws://10.0.2.150/ajaxws'); 
+  //ws = new WebSocket('ws://192.168.10.253/ajaxws'); 
   var wsStatus = document.getElementById('ws-status');
 
   ws.onopen = function() {
@@ -413,7 +413,7 @@ export function CreateSelectionListFromInputField(querySelector, jsonLists, blac
 /*****************************************************************************************
  * returns, if a element is visible or not
 ****************************************************************************************/
-function isVisible(_obj) {
+export function isVisible(_obj) {
 	var ret = true;
 	if (_obj && _obj.style.display == "none") { ret = false;}
   else if (_obj && _obj.parentNode && _obj.tagName != "HTML") ret = isVisible(_obj.parentNode);

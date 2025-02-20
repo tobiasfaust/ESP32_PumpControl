@@ -1,6 +1,10 @@
 #include "mywebserver.h" 
 
-MyWebServer::MyWebServer(AsyncWebServer *server, DNSServer* dns): server(server), dns(dns), DoReboot(false) {
+MyWebServer::MyWebServer(AsyncWebServer *server, DNSServer* dns): 
+        server(server), 
+        dns(dns), 
+        DoReboot(false),
+        RequestRebootTime(0) {
   
   fsfiles = new handleFiles(server);
   //fsfiles->registerLogCallback([this](int loglevel, const char* format, va_list args) {
@@ -22,7 +26,6 @@ MyWebServer::MyWebServer(AsyncWebServer *server, DNSServer* dns): server(server)
 
   server->on("/", HTTP_GET, std::bind(&MyWebServer::handleRoot, this, std::placeholders::_1));
   server->onNotFound(std::bind(&MyWebServer::handleNotFound, this, std::placeholders::_1));
-  server->on("/parameter.js", HTTP_GET, std::bind(&MyWebServer::handleJSParam, this, std::placeholders::_1));
   
   ws->onEvent(std::bind(&MyWebServer::onWsEvent, this, std::placeholders::_1, 
     std::placeholders::_2, 
@@ -78,12 +81,18 @@ void MyWebServer::handleRoot(AsyncWebServerRequest *request) {
 void MyWebServer::loop() {
   //delay(1); // slow response Issue: https://github.com/espressif/arduino-esp32/issues/4348#issuecomment-695115885
   if (this->DoReboot) {
-    Config->logN(1, "Rebooting...");
-    delay(100);
-    ESP.restart();
+    if (this->RequestRebootTime == 0) {
+      this->RequestRebootTime = millis();
+      Config->logN(1, "Request to Reboot, wait 5sek ...");
+    }
+    if (millis() - this->RequestRebootTime > 5000) { // wait 3sek until reboot
+      Config->logN(1, "Rebooting...");
+      ESP.restart();
+    }
   }
 
   ElegantOTA.loop();
+  ws->cleanupClients();
 }
 
 void MyWebServer::handleNotFound(AsyncWebServerRequest *request) {
@@ -115,15 +124,6 @@ bool MyWebServer::handleReset() {
   return ret;
 }
 
-void MyWebServer::handleJSParam(AsyncWebServerRequest *request) {
-  AsyncResponseStream *response = request->beginResponseStream("text/javascript");
-  response->addHeader("Server","ESP Async Web Server");
-
-  VStruct->getWebJsParameter(response);
-  request->send(response);
-}
-
-
 void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len) {
   if (type == WS_EVT_CONNECT) {
     Config->logN(2, "[Client: %u] WebSocket client connected", client->id());
@@ -136,12 +136,6 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
     for (size_t i = 0; i < len; i++) { msg += (char)data[i]; } msg += '\0';
     Config->logN(2, "[Client: %u] WebSocket data received: %s", client->id(), msg.c_str()); 
 
-    // message json request format: {"cmd": {"action": "GetInitData", "subaction": "status"}} // subaction optional
-    // message json response format: die Antwort wird im json ergänzt, so weiß der Requestor zu welchem Command die Antwort gehört: 
-    // Example: {"cmd": {"action": "GetInitData", "subaction": "status"}, "response": {"status": 1, "text": "successful"}, "data": {"ipaddress": "", "wifiname": "", "macaddress": "", "rssi": "", "bssid": "", "mqtt_status": "", "inverter_type": "", "inverter_serial": "", "uptime": "", "freeheapmem": ""}}
-    // Ausnahme: kontinuierliches Streaming der modbuswerte, hier wird kein response und nicht das ursprüngliche Command zurückgegeben
-    // example: {"data-id":{ "registername": "value", "registername": "value", ...}}
-
     String action(""), subaction(""), item("");
     bool newState = false;
     uint8_t port = 0;
@@ -149,10 +143,10 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
     DeserializationError error = deserializeJson(json, msg.c_str());
     if (!error) {
       if (json["cmd"]) {
-        if (json["action"])   {action    = json["action"].as<String>();}
-        if (json["subaction"]){subaction = json["subaction"].as<String>();}
-        if (json["cmd"]["newState"]) {newState  = (json["cmd"]["newState"].as<String>() == "true"?true:false);}
-        if (json["port"])     { port = json["port"].as<int>(); }
+        if (json["cmd"]["action"])      { action    = json["cmd"]["action"].as<String>();}
+        if (json["cmd"]["subaction"])   { subaction = json["cmd"]["subaction"].as<String>();}
+        if (json["cmd"]["newState"])    { newState  = json["cmd"]["newState"].as<bool>();}
+        if (json["cmd"]["port"])        { port = json["cmd"]["port"].as<int>(); }
         
       }
 
@@ -175,18 +169,24 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
       if(action && action == "GetInitData")  {
         if (subaction && subaction == "status") {
           this->GetInitDataStatus(json);
+          VStruct->getWebJsParameter(json);
         } else if (subaction && subaction == "navi") {
           this->GetInitDataNavi(json);
         } else if (subaction && subaction == "baseconfig") {
           Config->GetInitData(json);
+          VStruct->getWebJsParameter(json);
         } else if (subaction && subaction == "valveconfig") {
           VStruct->GetInitData(json);
+          VStruct->getWebJsParameter(json);
         } else if (subaction && subaction == "1wireconfig") {
           VStruct->GetInitData1Wire(json);
+          VStruct->getWebJsParameter(json);
         } else if (subaction && subaction == "sensorconfig") {
           LevelSensor->GetInitData(json);
+          VStruct->getWebJsParameter(json);
         } else if (subaction && subaction == "relations") {
           ValveRel->GetInitData(json);
+          VStruct->getWebJsParameter(json);
         }
       }
 
@@ -214,7 +214,7 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
           json["response"]["status"] = 0; 
           json["response"]["text"] = "Requested Port not enabled. Please enable first!";
         }
-        else if (newState && port && port > 0 )  { 
+        else if (port && port > 0 )  { 
           if (newState) {
             VStruct->SetOn(port); 
           } else { 
@@ -228,7 +228,7 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
       }
 
       if(action && action == "EnableValve") {
-        if (port && port > 0 && newState) {
+        if (port && port > 0) {
           if (newState) VStruct->SetEnable(port, true);
           if (!newState) VStruct->SetEnable(port, false);
           json["response"]["status"] = 1;
@@ -303,6 +303,7 @@ void MyWebServer::GetInitDataStatus(JsonDocument& json) {
   json["data"]["uptime"] = uptime_formatter::getUptime();
   json["data"]["freeheapmem"] = ESP.getFreeHeap();
   json["data"]["ValvesCount"] = VStruct->CountActiveThreads();
+  json["data"]["fragmentation"] = Config->getFragmentation();
   
   #ifdef USE_I2C
     json["data"]["showI2C"] = I2Cdetect->i2cGetAddresses();

@@ -118,7 +118,7 @@ void sensor::loop_hcsr04() {
       adsdev_t ads;
       ads.device = ADS1115_WE(i2c);
       
-      if(!ads.device.init()){
+      if(!ads.device.init()) {
         Config->logN(1, "Could not connect to ADS1115 at i2cAddress 0x%02x, ignore it!", i2c );
       } else {
         Config->logN(3, "Initialize ADS1115 at i2cAddress 0x%02x with channel %d", i2c, port);
