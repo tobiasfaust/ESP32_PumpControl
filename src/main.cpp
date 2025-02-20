@@ -6,24 +6,32 @@
 #include "mywebserver.h"
 #include "sensor.h"
 
+#ifdef USE_FLOWERCARE
+  #include "flowercare.h"
+#endif
+
 #ifdef USE_OLED
   #include "oled.h"
-  OLED* oled = NULL;
+  OLED* oled = nullptr;
 #endif
 
 #ifdef USE_I2C
-  i2cdetect* I2Cdetect = NULL;
+  i2cdetect* I2Cdetect = nullptr;
 #endif
 
 AsyncWebServer server(80);
 DNSServer dns;
 
-BaseConfig* Config = NULL;
-valveRelation* ValveRel = NULL;
-valveStructure* VStruct = NULL;
-MyMQTT* mqtt = NULL;
-sensor* LevelSensor = NULL;
-MyWebServer* mywebserver = NULL;
+BaseConfig* Config = nullptr;
+valveRelation* ValveRel = nullptr;
+valveStructure* VStruct = nullptr;
+MyMQTT* mqtt = nullptr;
+sensor* LevelSensor = nullptr;
+MyWebServer* mywebserver = nullptr;
+
+#ifdef USE_FLOWERCARE
+  FlowerCare* flowerCare = nullptr;
+#endif
 
 /* debugmodes --> in der WebUI -> Basisconfig einstellbar
     0 -> nothing
@@ -123,6 +131,11 @@ void setup() {
   Config->logN(1, "Starting Valve Structure");
   VStruct = new valveStructure(Config->GetPinSDA(), Config->GetPinSCL());
 
+  #ifdef USE_FLOWERCARE
+    Config->logN(1, "Starting FlowerCare");
+    flowerCare = new FlowerCare();
+  #endif
+
   Config->logN(1, "attempting to start WebServer");
   mywebserver = new MyWebServer(&server, &dns);
 
@@ -137,6 +150,12 @@ void loop() {
   LevelSensor->loop();
   mywebserver->loop();
 
+  #ifdef USE_FLOWERCARE
+    if (flowerCare) {
+      flowerCare->loop();
+    }
+  #endif
+  
   #ifdef USE_OLED
     oled->loop();  
   #endif

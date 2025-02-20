@@ -287,7 +287,10 @@ void sensor::loop() {
 
 void sensor::LoadJsonConfig() {
   mqtt->ClearSubscriptions(MyMQTT::SENSOR);
-  this->ads1115_devices->clear();
+  
+  #ifdef USE_ADS1115
+    this->ads1115_devices->clear();
+  #endif
 
   String selection = "";
 
@@ -324,11 +327,14 @@ void sensor::LoadJsonConfig() {
           if (elem["selection"])            { selection = elem["selection"].as<String>(); }
           if (elem["sel_moisture"])         { if (elem["sel_moisture"].as<String>() == "on") {this->moistureEnabled = true;} else {this->moistureEnabled = false;}}
 
+        #ifdef USE_ADS1115
           if (elem["mqtttopic"] && 
               elem["ads_addr"] &&
               elem["ads_port"]) {
                 this->init_ads1115(strtoul(elem["ads_addr"].as<String>().c_str(), NULL, 16), elem["ads_port"].as<int>(), elem["mqtttopic"].as<String>());
               }
+        #endif
+        
         }
       } while (stream.findUntil(",","]"));
 

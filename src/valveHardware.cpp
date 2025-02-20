@@ -82,7 +82,7 @@ valveHardware::valveHardware(uint8_t sda, uint8_t scl)
   bool valveHardware::Get1WireActive() { return false;}
   uint8_t valveHardware::Get1WireCountDevices() { return 0;}
   uint8_t valveHardware::Refresh1WireDevices() { return 0; }
-  void valveHardware::GetInitData1Wire(AsyncResponseStream* response) {};
+  void valveHardware::GetInitData1Wire(JsonDocument& json) {};
 #endif
 
 void valveHardware::addI2CDevice(uint8_t i2cAddress) {
