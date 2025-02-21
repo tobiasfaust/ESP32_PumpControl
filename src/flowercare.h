@@ -62,7 +62,7 @@ private:
     void updateDeviceData(FlowerCareDevice& device);
     void updateBatteryLevel(FlowerCareDevice& device);
 
-    void printDebugHexValue(String value, int len);
+    void printDebugHexValue(const char* value, int len);
 };
 
 #endif // FLOWERCARE_H
