@@ -26,6 +26,7 @@ public:
     FlowerCare();
     void ScanBLE();
     void ReadSensors();
+    void addDevice(NimBLEAddress address);
     void loop();
 
 private:
@@ -33,11 +34,35 @@ private:
     std::vector<FlowerCareDevice> devices;
     unsigned long previousMillis;
     unsigned long previousBatteryMillis;
-    const unsigned long interval = 5 * 60 * 1000; // 5 minutes
+    const unsigned long interval = 1 * 60 * 1000; // 5 minutes
 
-    void addDevice(NimBLEAddress address);
+    class scanCallbacks : public NimBLEScanCallbacks {
+        public:
+            scanCallbacks(FlowerCare& flowerCare) : flowerCare(flowerCare) {}
+    
+            /** Initial discovery, advertisement data only. */
+            void onDiscovered(const NimBLEAdvertisedDevice* advertisedDevice) override {
+                if (advertisedDevice->haveServiceUUID() && advertisedDevice->getServiceUUID().equals(NimBLEUUID("0000fe95-0000-1000-8000-00805f9b34fb"))) {
+                    flowerCare.addDevice(advertisedDevice->getAddress());
+                }
+            }
+    
+            /** onScanEnd */
+            void onScanEnd(const NimBLEScanResults& results, int reason) override {
+                flowerCare.ReadSensors();
+                //flowerCare.ReadBatteryLevels();
+            }
+    
+        private:
+            FlowerCare& flowerCare;
+    };
+    
+    scanCallbacks scanCallbacksInstance;
+
     void updateDeviceData(FlowerCareDevice& device);
     void updateBatteryLevel(FlowerCareDevice& device);
+
+    void printDebugHexValue(String value, int len);
 };
 
 #endif // FLOWERCARE_H
