@@ -75,7 +75,7 @@ class valveHardware {
     
     void    setHWType(HWdev_t* dev);
     void    ConnectHWdevice(HWdev_t* dev);
-    void    PortMapping(PortMap_t* Map);
+    void    PortMapping(PortMap_t& Map);
     void    addI2CDevice(uint8_t i2cAddress);
     bool    I2CIsPresent(uint8_t i2cAddress);
 

@@ -15,6 +15,10 @@
 
 #include <ElegantOTA.h>
 
+#ifdef USE_FLOWERCARE
+  #include "flowercare.h"
+#endif
+
 extern sensor* LevelSensor;
 extern valveStructure* VStruct;
 extern valveRelation* ValveRel;
@@ -41,6 +45,11 @@ class MyWebServer {
     unsigned long ota_progress_millis = 0;
 
     handleFiles* fsfiles;
+
+    #ifdef USE_FLOWERCARE
+      FlowerCare* flowerCare = nullptr;
+    #endif
+
     
     void      handleNotFound(AsyncWebServerRequest *request);
     void      handleRoot(AsyncWebServerRequest *request);
@@ -49,11 +58,16 @@ class MyWebServer {
     void      GetInitDataStatus(JsonDocument& json);
     void      GetInitDataNavi(JsonDocument& json);
 
+    #ifdef USE_FLOWERCARE
+    void      GetInitDataFlowerCare(JsonDocument& json);
+    #endif
+    
     void      onOTAStart();
     void      onOTAProgress(size_t current, size_t final);
     void      onOTAEnd(bool success);
     void      onImprovWiFiConnectedCb(const char *ssid, const char *password);
     void      onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len);
+    void      flowerCareGetValuesCallback(JsonDocument& json);
 };
 
 #endif

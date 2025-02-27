@@ -10,7 +10,7 @@ valveStructure::valveStructure(uint8_t sda, uint8_t scl) :
   // loading twice, 1st valve is corrupted after 1st load, has to be investigate
   // TODO
   LoadJsonConfig();
-  LoadJsonConfig();
+  //LoadJsonConfig();
 }
 
 void valveStructure::OnForTimer(String SubTopic, int duration) {
@@ -180,7 +180,8 @@ void valveStructure::LoadJsonConfig() {
           Valves->push_back(myValve);
         }
 
-      } while (stream.findUntil(",","]"));
+      } while (stream.findUntil(",","]"));    
+      configFile.close(); 
     } else {
       loadDefaultConfig = true;
       Config->logN(1, "failed to load valveconfig.json, load default config");
@@ -194,13 +195,13 @@ void valveStructure::LoadJsonConfig() {
     Config->logN(3, "lade Ventile DefaultConfig");
     valve myValve;
     
-    myValve.init(this->ValveHW, 203, "Valve1");
+    myValve.init(this->ValveHW, 216, "Valve1");
     this->Valves->push_back(myValve);
     
-    myValve.init(this->ValveHW, 204, "Valve2");
+    myValve.init(this->ValveHW, 217, "Valve2");
     this->Valves->push_back(myValve);
   }
-  Config->logN(3, "%d valves are now loaded ", Valves->size());
+  Config->logN(3, "%d valves are now loaded ", this->Valves->size());
 }
 
 /**************************************

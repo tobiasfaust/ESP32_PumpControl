@@ -347,10 +347,11 @@ void MQTT::loop() {
   improvSerial.loop();
   
   #ifdef ESP8266
-    if (WiFi.status() == WL_CONNECTED) {
+    if (WiFi.status() == WL_CONNECTED && !this->ConnectStatusWifi) {
       this->ConnectStatusWifi = true;
       this->ipadresse = WiFi.localIP();
-    } else {
+    } 
+    if (WiFi.status() != WL_CONNECTED && this->ConnectStatusWifi) {
       this->ConnectStatusWifi = false;
       this->ipadresse = (0, 0, 0, 0);
     }
@@ -386,9 +387,10 @@ void MQTT::loop() {
     PubSubClient::loop();
   }
 
-  if (PubSubClient::connected()) {
+  if (PubSubClient::connected() && !this->ConnectStatusMqtt) {
     this->ConnectStatusMqtt = true;
-  } else {
+  } 
+  if (!PubSubClient::connected() && this->ConnectStatusMqtt) {
     this->ConnectStatusMqtt = false;
   }
 

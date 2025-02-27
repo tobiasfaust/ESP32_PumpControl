@@ -7,11 +7,14 @@ MyWebServer::MyWebServer(AsyncWebServer *server, DNSServer* dns):
         RequestRebootTime(0) {
   
   fsfiles = new handleFiles(server);
-  //fsfiles->registerLogCallback([this](int loglevel, const char* format, va_list args) {
-  //  Config->logN(loglevel, format, args);
-  //});
-
   fsfiles->registerLogCallback(std::bind(&BaseConfig::logN, Config, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+
+  #ifdef USE_FLOWERCARE
+    Config->logN(1, "Starting FlowerCare");
+    flowerCare = new FlowerCare();
+    flowerCare->onLog(std::bind(&BaseConfig::logN, Config, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+    flowerCare->onValues(std::bind(&MyWebServer::flowerCareGetValuesCallback, this, std::placeholders::_1));
+  #endif
 
   ws = new AsyncWebSocket("/ajaxws");
 
@@ -74,6 +77,11 @@ void MyWebServer::onOTAEnd(bool success) {
   }
 }
 
+void MyWebServer::flowerCareGetValuesCallback(JsonDocument& json) {
+  // sending over MQTT
+  serializeJson(json, Serial); Serial.println();
+}
+
 void MyWebServer::handleRoot(AsyncWebServerRequest *request) {
   request->redirect("/web/index.html");
 }
@@ -93,6 +101,12 @@ void MyWebServer::loop() {
 
   ElegantOTA.loop();
   ws->cleanupClients();
+
+  #ifdef USE_FLOWERCARE
+    if (flowerCare) {
+      flowerCare->loop();
+    }
+  #endif
 }
 
 void MyWebServer::handleNotFound(AsyncWebServerRequest *request) {
@@ -187,6 +201,15 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
         } else if (subaction && subaction == "relations") {
           ValveRel->GetInitData(json);
           VStruct->getWebJsParameter(json);
+        } else if (subaction && subaction == "flowercare") {
+          #ifdef USE_FLOWERCARE
+            if (flowerCare) {
+              this->GetInitDataFlowerCare(json);
+            }
+          #endif
+        } else {
+          json["response"]["status"] = 0;
+          json["response"]["text"] = "unknown subaction";
         }
       }
 
@@ -288,6 +311,11 @@ void MyWebServer::GetInitDataNavi(JsonDocument& json){
     json["data"]["1wireconfig"]["className"] = "hide";
   #endif
 
+  #ifndef USE_FLOWERCARE
+    json["data"]["td_flowercare_0"]["className"] = "hide";
+    json["data"]["flowercare"]["className"] = "hide";
+  #endif
+
   json["response"].to<JsonObject>();
   json["response"]["status"] = 1;
   json["response"]["text"] = "successful";
@@ -350,3 +378,27 @@ void MyWebServer::GetInitDataStatus(JsonDocument& json) {
   json["response"]["text"] = "successful";
 }
 
+#ifdef USE_FLOWERCARE
+void MyWebServer::GetInitDataFlowerCare(JsonDocument& json) {
+  json["data"].to<JsonObject>();
+
+  const std::vector<FlowerCareDevice>* devices = flowerCare->getDevices();
+  for (auto& device : *devices) {
+    json["data"]["flowercare"]["address"] = device.address.toString();
+    json["data"]["flowercare"]["battery"] = device.battery;
+    json["data"]["flowercare"]["firmwareVersion"] = device.firmwareVersion;
+    json["data"]["flowercare"]["temperature"] = device.temperature;
+    json["data"]["flowercare"]["moisture"] = device.moisture;
+    json["data"]["flowercare"]["brightness"] = device.brightness;
+    json["data"]["flowercare"]["fertility"] = device.fertility;
+    json["data"]["flowercare"]["lastLiveDataUpdate"] = device.lastLiveDataUpdate;
+    json["data"]["flowercare"]["lastBatteryUpdate"] = device.lastBatteryUpdate;
+    json["data"]["flowercare"]["failedReads"] = device.failedReads;
+    json["data"]["flowercare"]["active"] = device.active;
+  }
+  
+  json["response"].to<JsonObject>();
+  json["response"]["status"] = 1;
+  json["response"]["text"] = "successful";
+}
+#endif
