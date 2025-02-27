@@ -243,7 +243,7 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
         if (subaction && subaction == "setactive") {
           if (flowerCare->setActive(item, newState)) {
             json["response"]["status"] = 1;
-            json["response"]["text"] = "device set active";
+            json["response"]["text"] = String("device set to ") + (newState ? "active" : "inactive");
           } else {
             json["response"]["status"] = 0;
             json["response"]["text"] = "device not found";
@@ -417,7 +417,8 @@ void MyWebServer::GetInitDataFlowerCare(JsonDocument& json) {
       o["lastLiveDataUpdate"] = device.lastLiveDataUpdate;
       o["lastBatteryUpdate"] = device.lastBatteryUpdate;
       o["failedReads"] = device.failedReads;
-      o["active"] = device.active;
+      o["active"]["checked"] = device.active;
+      o["active"]["name"] = device.address.toString();
     }
     
     json["response"].to<JsonObject>();

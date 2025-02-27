@@ -9,11 +9,12 @@
     <script language='javascript' type='module' src='/web/Javascript.js'></script>
     
     <script type='module'>
-      import { init, scanBLE } from './flowercare.js';
+      import { init, scanBLE, ChangeActiveStatus } from './flowercare.js';
       import { onSubmit, initDataValues } from './Javascript.js';
       window.onSubmit = onSubmit;
       window.initDataValues = initDataValues;
       window.scanBLE = scanBLE;
+      window.ChangeActiveStatus = ChangeActiveStatus;
 
       window.addEventListener('DOMContentLoaded', init, false);
     </script>
@@ -34,15 +35,25 @@
       <table id='maintable' class='editorDemoTable'>
         <thead>
           <tr>
-            <td style='width: 250px;'>Adresse</td>
-            <td style='width: 200px;'>Moisture</td>
+            <td style='width: 50px;'>Aktiv</td>
+            <td style='width: 150px;'>Adresse</td>
+            <td style='width: 50px;'>Feuchte</td>
+            <td style='width: 50px;'>Licht</td>
+            <td style='width: 50px;'>Temperatur</td>
+            <td style='width: 50px;'>Nährstoff</td>
+            <td style='width: 50px;'>Batterie</td>
           </tr>
         </thead>
         <tbody>
           <template id='flowercare'>
             <tr>
+              <td><input type='checkbox' onclick='ChangeActiveStatus(this.id)' id='active'></td>
               <td><span id='address'></span></td>
-              <td><span id='moisture'></span></td>
+              <td><span id='moisture'></span>%</td>
+              <td><span id='brightness'></span> lux</td>
+              <td><span id='temperature'></span>°C</td>
+              <td><span id='fertility'></span>µS/cm</td>
+              <td><span id='battery'></span>%</td>
             </tr>
           </template>
         </tbody>

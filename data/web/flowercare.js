@@ -46,6 +46,7 @@ function MyCallback(json) {
   //global.CreateSelectionListFromInputField('input[type=number][id^=GpioPin]', [gpio]);
   //global.CreateSelectionListFromInputField('input[type=number][id*=ConfiguredPort]', [JSON.parse(configuredPorts)]);
   //global.handleRadioSelections();
+  global.transformCheckboxes();
 
   document.querySelectorAll('#DataForm input:not([type=checkbox]):not([type=radio]), #DataForm select').forEach(element => {
     element.addEventListener('blur', global.showMustSaveDialog);
@@ -59,4 +60,18 @@ function MyCallback(json) {
   
   document.querySelector("#loader").style.visibility = "hidden";
   document.querySelector("body").style.visibility = "visible";
+}
+
+// ************************************************
+export function ChangeActiveStatus(id) {
+  var obj = document.getElementById(id);
+  
+  var data = {};
+  data['cmd'] = {};
+  data['cmd']['action'] = "flowercare";
+  data['cmd']['subaction'] = "setactive";
+  data['cmd']['newState'] = (obj.checked?1:0);
+  data['cmd']["item"] = obj.name;
+  
+  global.requestData(data);
 }
