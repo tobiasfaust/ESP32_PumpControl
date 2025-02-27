@@ -152,7 +152,6 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
 
     String action(""), subaction(""), item("");
     bool newState = false;
-    uint8_t port = 0;
     JsonDocument json;
     DeserializationError error = deserializeJson(json, msg.c_str());
     if (!error) {
@@ -160,7 +159,7 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
         if (json["cmd"]["action"])      { action    = json["cmd"]["action"].as<String>();}
         if (json["cmd"]["subaction"])   { subaction = json["cmd"]["subaction"].as<String>();}
         if (json["cmd"]["newState"])    { newState  = json["cmd"]["newState"].as<bool>();}
-        if (json["cmd"]["port"])        { port = json["cmd"]["port"].as<int>(); }
+        if (json["cmd"]["item"])        { item      = json["cmd"]["item"].as<String>(); }
         
       }
 
@@ -232,12 +231,34 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
         fsfiles->HandleRequest(json);
       }
 
+
+      #ifdef USE_FLOWERCARE
+      if (flowercare && action && action == "flowercare") {
+        if (subaction && subaction == "scan") {
+          flowerCare->ScanBLE();
+          json["response"]["status"] = 1;
+          json["response"]["text"] = "scan started";
+        }
+
+        if (subaction && subaction == "setactive") {
+          if (flowerCare->setActive(item, newState)) {
+            json["response"]["status"] = 1;
+            json["response"]["text"] = "device set active";
+          } else {
+            json["response"]["status"] = 0;
+            json["response"]["text"] = "device not found";
+          }
+        }
+      }
+      #endif
+
       if(action && action == "SetValve") {
-        if (newState && port && port > 0 && !VStruct->GetEnabled(port)) { 
+        uint8_t port = item.toInt();
+        if (newState && item && port > 0 && !VStruct->GetEnabled(port)) { 
           json["response"]["status"] = 0; 
           json["response"]["text"] = "Requested Port not enabled. Please enable first!";
         }
-        else if (port && port > 0 )  { 
+        else if (item && port > 0 )  { 
           if (newState) {
             VStruct->SetOn(port); 
           } else { 
@@ -251,7 +272,8 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
       }
 
       if(action && action == "EnableValve") {
-        if (port && port > 0) {
+        uint8_t port = item.toInt();
+        if (item && port > 0) {
           if (newState) VStruct->SetEnable(port, true);
           if (!newState) VStruct->SetEnable(port, false);
           json["response"]["status"] = 1;

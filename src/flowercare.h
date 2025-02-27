@@ -66,8 +66,9 @@ class FlowerCare {
      * @brief set the active state of a device
      * @param String the mac address of the device like c4:7c:8d:64:42:d0
      * @param bool set the active state
+     * @return bool true if successful
      ************************/
-    void setActive(String macaddress, bool active);
+    bool setActive(String macaddress, bool active);
 
     /************************
      * @brief get the device by address

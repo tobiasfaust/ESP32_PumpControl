@@ -178,9 +178,10 @@ void FlowerCare::setActive(String macaddress, bool active) {
         if (device.address.toString() == macaddress.c_str()) {
             device.active = active;
             log(3, "Setting device %s to active: %d", macaddress.c_str(), active);
-            return;
+            return true;
         }
     }
+    return false;
 }
 
 void FlowerCare::loop() {

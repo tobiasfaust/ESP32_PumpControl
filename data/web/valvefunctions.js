@@ -93,7 +93,7 @@ export function ChangeEnabled(object) {
   data['cmd'] = {};
   data['cmd']['action'] = "EnableValve";
   data['cmd']['newState'] = object.checked;
-  data['cmd']['port'] = GetPortOfRow(object);
+  data['cmd']['item'] = GetPortOfRow(object);
         
   global.requestData(data); 
 }
@@ -109,7 +109,7 @@ export function ChangeValve(object) {
   data['cmd']['action'] = "SetValve";
   data['cmd']['subaction'] = object.id;
   data['cmd']['newState'] = btn.value.replace(/^Set\ (.*)/, "$1");
-  data['cmd']['port'] = GetPortOfRow(object);
+  data['cmd']['item'] = GetPortOfRow(object);
         
   global.requestData(data); 
 }
