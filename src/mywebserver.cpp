@@ -12,7 +12,7 @@ MyWebServer::MyWebServer(AsyncWebServer *server, DNSServer* dns):
   #ifdef USE_FLOWERCARE
     Config->logN(1, "Starting FlowerCare");
     flowerCare = new FlowerCare();
-    flowerCare->onLog(std::bind(&BaseConfig::logN, Config, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+    //flowerCare->onLog(std::bind(&BaseConfig::logN, Config, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
     flowerCare->onValues(std::bind(&MyWebServer::flowerCareGetValuesCallback, this, std::placeholders::_1));
   #endif
 
@@ -233,7 +233,7 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
 
 
       #ifdef USE_FLOWERCARE
-      if (flowercare && action && action == "flowercare") {
+      if (flowerCare && action && action == "flowercare") {
         if (subaction && subaction == "scan") {
           flowerCare->ScanBLE();
           json["response"]["status"] = 1;
@@ -402,25 +402,27 @@ void MyWebServer::GetInitDataStatus(JsonDocument& json) {
 
 #ifdef USE_FLOWERCARE
 void MyWebServer::GetInitDataFlowerCare(JsonDocument& json) {
-  json["data"].to<JsonObject>();
-
   const std::vector<FlowerCareDevice>* devices = flowerCare->getDevices();
-  for (auto& device : *devices) {
-    json["data"]["flowercare"]["address"] = device.address.toString();
-    json["data"]["flowercare"]["battery"] = device.battery;
-    json["data"]["flowercare"]["firmwareVersion"] = device.firmwareVersion;
-    json["data"]["flowercare"]["temperature"] = device.temperature;
-    json["data"]["flowercare"]["moisture"] = device.moisture;
-    json["data"]["flowercare"]["brightness"] = device.brightness;
-    json["data"]["flowercare"]["fertility"] = device.fertility;
-    json["data"]["flowercare"]["lastLiveDataUpdate"] = device.lastLiveDataUpdate;
-    json["data"]["flowercare"]["lastBatteryUpdate"] = device.lastBatteryUpdate;
-    json["data"]["flowercare"]["failedReads"] = device.failedReads;
-    json["data"]["flowercare"]["active"] = device.active;
+  if (devices->size() > 0) {
+    JsonArray f = json["data"]["flowercare"].to<JsonArray>();
+    for (auto& device : *devices) {
+      JsonObject o = f.add<JsonObject>();
+      o["address"] = device.address.toString();
+      o["battery"] = device.battery;
+      o["firmwareVersion"] = device.firmwareVersion;
+      o["temperature"] = device.temperature;
+      o["moisture"] = device.moisture;
+      o["brightness"] = device.brightness;
+      o["fertility"] = device.fertility;
+      o["lastLiveDataUpdate"] = device.lastLiveDataUpdate;
+      o["lastBatteryUpdate"] = device.lastBatteryUpdate;
+      o["failedReads"] = device.failedReads;
+      o["active"] = device.active;
+    }
+    
+    json["response"].to<JsonObject>();
+    json["response"]["status"] = 1;
+    json["response"]["text"] = "successful";
   }
-  
-  json["response"].to<JsonObject>();
-  json["response"]["status"] = 1;
-  json["response"]["text"] = "successful";
 }
 #endif

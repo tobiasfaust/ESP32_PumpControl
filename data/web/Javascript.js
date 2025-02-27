@@ -23,6 +23,7 @@ import { functionMap as sensorconfigFunctionMap } from './sensorconfig.js';
 import { functionMap as valveconfigFunctionMap } from './valveconfig.js';
 import { functionMap as relationsFunctionMap } from './relations.js';
 import { functionMap as filesFunctionMap } from './handlefiles.js';
+import { functionMap as flowercareFunctionMap } from './flowercare.js';
 
 const combinedFunctionMap = {
   ...statusFunctionMap,
@@ -30,7 +31,8 @@ const combinedFunctionMap = {
   ...sensorconfigFunctionMap,
   ...valveconfigFunctionMap,
   ...relationsFunctionMap,
-  ...filesFunctionMap
+  ...filesFunctionMap,
+  ...flowercareFunctionMap
 };
 
 export let ws;    // websocket handle

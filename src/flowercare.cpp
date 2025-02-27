@@ -173,7 +173,7 @@ void FlowerCare::printDebugHexValue(const char* value, int len) {
   log(4, "Value length n = %d, Hex: %s", len, str.c_str());
 }
 
-void FlowerCare::setActive(String macaddress, bool active) {
+bool FlowerCare::setActive(String macaddress, bool active) {
     for (auto& device : devices) {
         if (device.address.toString() == macaddress.c_str()) {
             device.active = active;

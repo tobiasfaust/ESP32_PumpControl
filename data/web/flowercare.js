@@ -31,7 +31,18 @@ function GetInitData() {
 }
 
 // ************************************************
-function MyCallback() {
+export function scanBLE() {
+  var data = {};
+  data['cmd'] = {};
+  data['cmd']['action'] = "flowercare";
+  data['cmd']['subaction'] = "scan";
+  data['cmd']['callbackFn'] = "flowercare_Callback";
+    
+  global.requestData(data); 
+}
+
+// ************************************************
+function MyCallback(json) {
   //global.CreateSelectionListFromInputField('input[type=number][id^=GpioPin]', [gpio]);
   //global.CreateSelectionListFromInputField('input[type=number][id*=ConfiguredPort]', [JSON.parse(configuredPorts)]);
   //global.handleRadioSelections();
