@@ -161,9 +161,8 @@ void valveStructure::LoadJsonConfig() {
 
           valve myValve;
             
-          String type = GetJsonKeyMatch(&elem, "type");
           if (elem["port_a"] && elem["port_a"].as<int>() > 0) { myValve.AddPort1(this->ValveHW, elem["port_a"].as<int>()); }
-          if (elem[type]) {myValve.SetValveType(elem[type].as<String>()); }
+          if (elem["type"]) {myValve.SetValveType(elem["type"].as<String>()); }
           if (elem["active"] && elem["active"] == 1) {myValve.SetActive(true);} else {myValve.SetActive(false);}
           if (elem["mqtttopic"]) {myValve.subtopic = elem["mqtttopic"].as<String>();}
           if (elem["port_b"] && elem["port_b"].as<int>() > 0) { myValve.AddPort2(ValveHW, elem["port_b"].as<int>());}
@@ -204,19 +203,6 @@ void valveStructure::LoadJsonConfig() {
   Config->logN(3, "%d valves are now loaded ", this->Valves->size());
 }
 
-/**************************************
- lookup with a pattern for a key
- returns the first matched key 
-***************************************/
-String valveStructure::GetJsonKeyMatch(JsonDocument* doc, String key) {
-  for (JsonPair kv : doc->as<JsonObject>()) {
-    if (strstr(kv.key().c_str(), key.c_str())) { 
-      return (String)kv.key().c_str();
-    }
-  }
-  return "";
-}
-
 void valveStructure::GetInitData(JsonDocument& json) {
   json["data"].to<JsonObject>();
   JsonArray row = json["data"]["rows"].to<JsonArray>();
@@ -237,11 +223,9 @@ void valveStructure::GetInitData(JsonDocument& json) {
     row[i]["imp_b"] = Valves->at(i).port2ms;
     row[i]["AllePorts"] = Valves->at(i).GetPort1(); 
 
-    String type_name("type_"); type_name.concat(i);
-    row[i]["SelType_n"]["checked"] = (Valves->at(i).GetValveType()=="n"?1:0);
-    row[i]["SelType_n"]["name"] = type_name; 
-    row[i]["SelType_b"]["checked"] = (Valves->at(i).GetValveType()=="b"?1:0);
-    row[i]["SelType_b"]["name"] = type_name;
+    row[i]["type_opt_n"] = (Valves->at(i).GetValveType()=="n"?1:0);
+    row[i]["type_opt_b"] = (Valves->at(i).GetValveType()=="b"?1:0);
+
     row[i]["reverse"] = (Valves->at(i).GetReverse()?1:0);
     row[i]["autooff"] = Valves->at(i).GetAutoOff();
     row[i]["action"] = (Valves->at(i).GetActive()?"Set Off":"Set On");

@@ -95,14 +95,10 @@
         </td>
   
         <td>
-          <div class='inline'>
-            <input type='radio' id='SelType_n' name='type' value='n' onclick='ChangeType(this)' />
-            <label for='SelType_n'>normal</label>
-          </div>
-          <div class='inline'>
-            <input type='radio' id='SelType_b' name='type' value='b' onclick='ChangeType(this)' />
-            <label for='SelType_b'>bistabil</label>
-          </div>
+          <select id='type_select' name='type' onchange='ChangeType(this)'>
+            <option id='type_opt_n' value='n'>normal</option>
+            <option id='type_opt_b' value='b'>bistabil</option>
+          </select>         
         </td>
   
         <td>

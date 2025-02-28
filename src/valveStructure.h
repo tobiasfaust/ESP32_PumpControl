@@ -45,7 +45,6 @@ class valveStructure {
     valve*    GetValveItem(uint8_t Port);
     valve*    GetValveItem(String SubTopic);
     void      handleDeps(String topic, int value); //prueft die Relationen
-    String    GetJsonKeyMatch(JsonDocument* doc, String key);
 
     valveHardware* ValveHW = NULL;
     std::shared_ptr<std::vector<valve>> Valves;

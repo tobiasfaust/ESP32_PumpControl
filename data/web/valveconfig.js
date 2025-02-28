@@ -35,7 +35,7 @@ function GetInitData() {
 function MyCallback() {
   global.CreateSelectionListFromInputField('input[type=number][id*=AllePorts]', [gpio, JSON.parse(availablePorts)], JSON.parse(gpio_disabled));
   global.transformCheckboxes();
-  global.handleRadioSelections();
+  //global.handleRadioSelections();
   valveFn.validate_identifiers("maintable");
 
   document.querySelectorAll('#DataForm input:not([type=checkbox]):not([type=radio]), #DataForm select').forEach(element => {

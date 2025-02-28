@@ -117,8 +117,9 @@ int valve::ActiveTimeLeft() {
 }
 
 void valve::SetValveType(String type) {
+  type.toLowerCase();
   if (type == "n") { ValveType = NORMAL; }
-  else if (type=="b") { ValveType = BISTABIL; }
+  else if (type == "b") { ValveType = BISTABIL; }
   else { ValveType = NONE; }
 }
 
