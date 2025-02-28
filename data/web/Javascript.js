@@ -398,11 +398,21 @@ export function CreateSelectionListFromInputField(querySelector, jsonLists, blac
     for ( k = 0; k < jsonLists.length; k++ ) {  
       for ( i = 0; i < jsonLists[k].length; i++ ) {
           _option = document.createElement( 'option' );
-          _option.value = jsonLists[k][i].port; 
-          _option.text  = jsonLists[k][i].name;
-          if(objects[j].value == jsonLists[k][i].port) { _option.selected = true;}
-          if(blacklist && blacklist.indexOf(jsonLists[k][i].port)>=0) {
+            if (typeof jsonLists[k][i] === 'object') {
+              _option.value = jsonLists[k][i].port; 
+              _option.text  = jsonLists[k][i].name;
+            } else {
+              _option.value = jsonLists[k][i];
+              _option.text  = jsonLists[k][i];
+            }
+          if(objects[j].value == _option.value) { _option.selected = true;}
+          if(blacklist) {
+            if (typeof blacklist.indexOf(jsonLists[k][i]) === 'object' && blacklist.indexOf(jsonLists[k][i].port)>=0) {
           	_option.disabled = true;
+            }
+            if (typeof blacklist.indexOf(jsonLists[k][i]) === 'number' && blacklist.indexOf(jsonLists[k][i])>=0) {
+          	_option.disabled = true;
+            }
           }
           _select.add( _option ); 
       }
