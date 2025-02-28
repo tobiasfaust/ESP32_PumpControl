@@ -66,12 +66,16 @@ void setup() {
   //LittleFS.format();
 
   Config = new BaseConfig();
-  
+
   #ifndef USE_WEBSERIAL
+    #ifdef ESP8266
+    Serial.begin(115200, SERIAL_8N1, SERIAL_FULL, Config->GetSerialTx());
+    #else
     Serial.begin(115200,
                  SERIAL_8N1,
                  Config->GetSerialRx(),
                  Config->GetSerialTx());  // RX, TX, zb.: 33, 32
+    #endif
     Serial.println("");
     Serial.println("ready");
   #endif

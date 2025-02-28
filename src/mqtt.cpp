@@ -408,9 +408,14 @@ void MQTT::loop() {
       snprintf(buffer, sizeof(buffer), "%d", WiFi.RSSI());
       this->Publish_String("rssi", buffer, false);
 
-      uint64_t uptimeMicroSeconds = esp_timer_get_time();
-      uint64_t uptimeSeconds = uptimeMicroSeconds / 1000000;
-      this->Publish_Int("uptime", uptimeSeconds, false);
+      unsigned long uptime = millis() / 1000;
+      unsigned int hours = uptime / 3600;
+      unsigned int minutes = (uptime % 3600) / 60;
+      unsigned int seconds = uptime % 60;
+      char uptimeStr[20];
+      snprintf(uptimeStr, sizeof(uptimeStr), "%02d:%02d:%02d", hours, minutes, seconds);
+
+      this->Publish_String("uptime", uptimeStr, false);
     }
   }
 }

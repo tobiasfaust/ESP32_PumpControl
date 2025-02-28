@@ -117,7 +117,7 @@ bool MyWebServer::handleReset() {
   bool ret = true;
   Config->logN(3, "deletion of all config files was requested ....");
   //LittleFS.format(); // Werkszustand -> nur die config dateien loeschen, die register dateien muessen erhalten bleiben
-  File root = LittleFS.open("/config/");
+  File root = LittleFS.open("/config/", "w");
   File file = root.openNextFile();
   while(file){
     String path("/config/"); path.concat(file.name());

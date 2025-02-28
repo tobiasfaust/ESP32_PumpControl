@@ -14,6 +14,7 @@
 
   #include <ESP8266WiFi.h>
   #include <ESPAsyncTCP.h>
+  #include <FS.h>
 #elif ESP32
   #include <WiFi.h> 
   #include <AsyncTCP.h>
