@@ -52,7 +52,11 @@ jobs:
             subvariant: standard
           - firmware: firmware_ESP32-WebSerial
             architecture: ESP32
-            subvariant: webSerial 
+            subvariant: webSerial
+          - firmware: firmware_ESP32-Flowercare
+            architecture: ESP32
+            subvariant: flowercare
+          
             
     steps:
       - name: checkout repository
