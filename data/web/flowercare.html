@@ -9,12 +9,15 @@
     <script language='javascript' type='module' src='/web/Javascript.js'></script>
     
     <script type='module'>
+      import { delrow, addrow } from './valvefunctions.js';
       import { init, scanBLE, ChangeActiveStatus } from './flowercare.js';
       import { onSubmit, initDataValues } from './Javascript.js';
       window.onSubmit = onSubmit;
       window.initDataValues = initDataValues;
       window.scanBLE = scanBLE;
       window.ChangeActiveStatus = ChangeActiveStatus;
+      window.addrow = addrow;
+      window.deleteRow = delrow;
 
       window.addEventListener('DOMContentLoaded', init, false);
     </script>
@@ -47,13 +50,52 @@
         <tbody>
           <template id='flowercare'>
             <tr>
-              <td><input type='checkbox' onclick='ChangeActiveStatus(this.id)' id='active'></td>
+              <td><input type='checkbox' onclick='ChangeActiveStatus(this.id)' id='active' name="active"></td>
               <td><span id='address'></span></td>
               <td><span id='moisture'></span>%</td>
               <td><span id='brightness'></span> lux</td>
               <td><span id='temperature'></span>°C</td>
               <td><span id='fertility'></span>µS/cm</td>
               <td><span id='battery'></span>%</td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+      
+      <button type="button" onclick="addrow('fc_relations_table')">add Row</button>
+      <table id="fc_relations_table" class="editorDemoTable">
+        <thead>
+          <tr>
+            <td style='width: 25px;'>Nr</td>
+            <td style='width: 50px;'>Aktiv</td>
+            <td style='width: 150px;'>MQTT-Topic</td>
+            <td style='width: 100px;'>Valve</td>
+            <td style='width: 100px;'>
+              <span title="turn valve on if moinsture is lower than this threshold">threshold
+                <i class="fa fa-question-circle" style="font-size: 12px; cursor: pointer;"></i>
+              </span>
+            </td>
+            <td style='width: 100px;'>
+              <span title="turn valve on for x seconds">duration
+                <i class="fa fa-question-circle" style="font-size: 12px; cursor: pointer;"></i>
+              </span>
+            </td>
+            <td style='width: 50px;'>delete</td>
+          </tr>
+        </thead>
+
+        <tbody>
+          <template id='fc_relations'>
+            <tr>
+              <td></td>
+              <td><input type='checkbox' onclick='ChangeActiveStatus(this.id)' id='active'></td>
+              <td><input type='text' id='topic' style='width: 150px;'></td>
+              <td><input id='ConfiguredPort' name='port' type='number' min='10' max='999'/></td>
+              <td><input type='number' id='treshold' name="treshold" style='width: 50px;'></td>
+              <td><input type='number' id='duration' name="duration" style='width: 50px;'></td>
+              <td><button type="button"  onclick='deleteRow(this)'>
+                <i class='fa fa-trash'></i>
+              </button></td>
             </tr>
           </template>
         </tbody>

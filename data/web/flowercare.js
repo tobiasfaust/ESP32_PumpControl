@@ -1,4 +1,5 @@
 import * as global from './Javascript.js';
+import * as valveFn from './valvefunctions.js';
 
 // ************************************************
 export function init() {
@@ -44,9 +45,11 @@ export function scanBLE() {
 // ************************************************
 function MyCallback(json) {
   //global.CreateSelectionListFromInputField('input[type=number][id^=GpioPin]', [gpio]);
-  //global.CreateSelectionListFromInputField('input[type=number][id*=ConfiguredPort]', [JSON.parse(configuredPorts)]);
+  global.CreateSelectionListFromInputField('input[type=number][id*=ConfiguredPort]', [JSON.parse(configuredPorts)]);
   //global.handleRadioSelections();
   global.transformCheckboxes();
+  valveFn.validate_identifiers("fc_relations_table");
+  
 
   document.querySelectorAll('#DataForm input:not([type=checkbox]):not([type=radio]), #DataForm select').forEach(element => {
     element.addEventListener('blur', global.showMustSaveDialog);
@@ -71,7 +74,7 @@ export function ChangeActiveStatus(id) {
   data['cmd']['action'] = "flowercare";
   data['cmd']['subaction'] = "setactive";
   data['cmd']['newState'] = (obj.checked?1:0);
-  data['cmd']["item"] = obj.name;
+  data['cmd']["item"] = obj.getAttribute('data-mac');
   
   global.requestData(data);
 }

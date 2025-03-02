@@ -79,7 +79,11 @@ void MyWebServer::onOTAEnd(bool success) {
 
 void MyWebServer::flowerCareGetValuesCallback(JsonDocument& json) {
   // sending over MQTT
+  json["host"] = Config->GetMqttRoot();
+  String topic = "flowercare/" + json["address"].as<String>();
+  Config->logN(4, "Sending FlowerCare data to MQTT: %s -> %s", topic.c_str(), json.as<String>().c_str());
   serializeJson(json, Serial); Serial.println();
+  mqtt->Publish_String(topic.c_str(), json.as<String>(), true);
 }
 
 void MyWebServer::handleRoot(AsyncWebServerRequest *request) {
@@ -408,6 +412,7 @@ void MyWebServer::GetInitDataFlowerCare(JsonDocument& json) {
     for (auto& device : *devices) {
       JsonObject o = f.add<JsonObject>();
       o["address"] = device.address.toString();
+      o["mqtttopic"] = String("flowercare/") + String(device.address.toString().c_str());
       o["battery"] = device.battery;
       o["firmwareVersion"] = device.firmwareVersion;
       o["temperature"] = device.temperature;
@@ -418,12 +423,26 @@ void MyWebServer::GetInitDataFlowerCare(JsonDocument& json) {
       o["lastBatteryUpdate"] = device.lastBatteryUpdate;
       o["failedReads"] = device.failedReads;
       o["active"]["checked"] = device.active;
-      o["active"]["name"] = device.address.toString();
+      o["active"]["data-mac"] = device.address.toString();
     }
-    
-    json["response"].to<JsonObject>();
-    json["response"]["status"] = 1;
-    json["response"]["text"] = "successful";
   }
+
+  // wenn keine gespeicherten flowercare_relationen existieren erstelle 2 Beispiele
+  //später nicht notwendig da bei loadConfig die defaultconfig 2 einträge anlegt
+  JsonArray f = json["data"]["fc_relations"].to<JsonArray>();
+  for (uint8_t i = 0; i < 2; i++) {
+      JsonObject o = f.add<JsonObject>();
+      o["active"]["checked"] = false;
+      o["treshold"] = 30;
+      o["duration"] = 60;
+  }
+
+
+  json["js"]["esp_uptime"] = millis();
+  VStruct->getWebJsParameter(json); // add JSParameter
+
+  json["response"].to<JsonObject>();
+  json["response"]["status"] = 1;
+  json["response"]["text"] = "successful";
 }
 #endif
