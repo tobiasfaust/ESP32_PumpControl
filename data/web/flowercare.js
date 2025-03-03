@@ -2,7 +2,6 @@ import * as global from './Javascript.js';
 import * as valveFn from './valvefunctions.js';
 
 // ************************************************
-
 export function init1() {
   var json = {
     "cmd": {
@@ -108,6 +107,7 @@ export function init() {
         GetInitData();
       }
     }, 100);
+
 }
 
 // ************************************************
@@ -144,6 +144,12 @@ function MyCallback(json) {
   //global.handleRadioSelections();
   global.transformCheckboxes();
   valveFn.validate_identifiers("fc_relations_table");
+
+  // anpassen der Update werte auf ein lesbares Format
+  const elements = document.querySelectorAll('[id$="lastLiveDataUpdate"], [id$="lastBatteryUpdate"]');
+  elements.forEach(element => {
+    formatDate(element);
+  });
   
 
   document.querySelectorAll('#DataForm input:not([type=checkbox]):not([type=radio]), #DataForm select').forEach(element => {
@@ -194,5 +200,17 @@ export function ActivateRelation(id) {
     global.requestData(data);
   } else {
     global.setResponse(false, "Please define a valid MQTT-Topic");
+  }
+}
+
+// ************************************************
+function formatDate(obj) {
+  const intValue = parseInt(obj.innerText, 10);
+  if (intValue > 0) {
+    var diff = esp_uptime - intValue;
+    var hours = Math.floor(diff / 3600000);
+    var minutes = Math.floor((diff % 3600000) / 60000);
+    var seconds = Math.floor((diff % 60000) / 1000);
+    obj.innerText = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   }
 }

@@ -68,10 +68,10 @@ void FlowerCare::ReadSensor(FlowerCareDevice& device, bool getBatteryLevel) {
         if (pRemoteService) {
             JsonDocument json;
             json["address"] = device.address.toString();
-            // get battery data
-            success = this->updateBatteryLevel(json, device, pRemoteService);
             // Send real-time data read request
             success = this->updateDeviceData(json, device, pRemoteService);
+            // get battery data
+            if (success && getBatteryLevel) this->updateBatteryLevel(json, device, pRemoteService);
             // Send data to callback function, if defined
             if (this->onValuesCallback) {
                 this->onValuesCallback(json);
@@ -193,7 +193,7 @@ void FlowerCare::loop() {
         
         for (auto& device : devices) {
             if (device.active && (device.lastLiveDataUpdate == 0 || currentMillis - device.lastLiveDataUpdate >= this->LiveDataInterval)) {                
-                if (millis() - device.lastBatteryUpdate >= this->batteryInterval) {
+                if (device.lastBatteryUpdate == 0 || millis() - device.lastBatteryUpdate >= this->batteryInterval) {
                     this->ReadSensor(device, true);
                 } else {
                     this->ReadSensor(device, false);

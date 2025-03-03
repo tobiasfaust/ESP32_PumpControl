@@ -116,8 +116,8 @@ class FlowerCare {
     std::vector<FlowerCareDevice> devices;
 
     unsigned long previousMillis;
-    const unsigned long LiveDataInterval = 5 * 60 * 1000; // 5 minutes
-    const unsigned long batteryInterval =  60 * 60 * 1000; // 1 hour
+    const unsigned long LiveDataInterval = 5 * 60 * 1000; // default: 5 minutes
+    const unsigned long batteryInterval =  60 * 60 * 1000; // default: 1 hour
     const uint8_t maxFailedReads = 5; // Number of failed continously reads before marking device as inactive
     bool isScanActive;
 

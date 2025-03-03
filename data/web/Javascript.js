@@ -38,7 +38,7 @@ const combinedFunctionMap = {
 export let ws;    // websocket handle
 var datavalues;   // form data values as string to check, if "needToSave" Dialog should be shown
 
-var timer; // ID of setTimout Timer -> setResponse
+var timerSetResponse; // ID of setTimout Timer -> setResponse
 let reconnectInterval = 5000; // 5 seconds interval to reconnect websocket connection
 
 /******************************************************************************************
@@ -364,8 +364,8 @@ export function handleJsonItems(json) {
 *****************************************************************************************/
 export function setResponse(b, s) {
   try {
-  	// clear if previous timer still run
-    clearTimeout(timer);
+  	// clear if previous timerSetResponse still run
+    clearTimeout(timerSetResponse);
   } catch(e) {}
   
   try {
@@ -375,7 +375,7 @@ export function setResponse(b, s) {
 
     r.innerHTML = s;
     if (b) { r.className = "oktext"; } else {r.className = "errortext";}
-    timer = setTimeout(function() {document.getElementById("response").innerHTML=""}, 2000);
+    timerSetResponse = setTimeout(function() {document.getElementById("response").innerHTML=""}, 2000);
   } catch(e) {}
 }
 
