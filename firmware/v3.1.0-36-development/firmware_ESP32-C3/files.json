@@ -1,0 +1,30 @@
+{
+    "name": "ESP32_PumpControl (v3.1.0-development)",
+    "chipFamily": "ESP32-C3",
+    "stage": "development",
+    "build": 36,
+    "variant": "standard",
+    "version": "v3.1.0",
+    "parts": [
+        {
+            "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.1.0-36-development/firmware_ESP32-C3/bootloader.ESP32-C3.v3.1.0-36.standard.development.bin",
+            "offset": 4096,
+            "filetype": "bootloader"
+        },
+        {
+            "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.1.0-36-development/firmware_ESP32-C3/partitions.ESP32-C3.v3.1.0-36.standard.development.bin",
+            "offset": 32768,
+            "filetype": "partitions"
+        },
+        {
+            "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.1.0-36-development/firmware_ESP32-C3/littlefs.ESP32-C3.v3.1.0-36.standard.development.bin",
+            "offset": 3473408,
+            "filetype": "filesystem"
+        },
+        {
+            "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.1.0-36-development/firmware_ESP32-C3/firmware.ESP32-C3.v3.1.0-36.standard.development.bin",
+            "offset": 65536,
+            "filetype": "firmware"
+        }
+    ]
+}
