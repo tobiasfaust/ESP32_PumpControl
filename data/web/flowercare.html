@@ -10,12 +10,13 @@
     
     <script type='module'>
       import { delrow, addrow } from './valvefunctions.js';
-      import { init, scanBLE, ChangeActiveStatus } from './flowercare.js';
+      import { init, scanBLE, ActivateDevice, ActivateRelation } from './flowercare.js';
       import { onSubmit, initDataValues } from './Javascript.js';
       window.onSubmit = onSubmit;
       window.initDataValues = initDataValues;
       window.scanBLE = scanBLE;
-      window.ChangeActiveStatus = ChangeActiveStatus;
+      window.ActivateDevice = ActivateDevice;
+      window.ActivateRelation = ActivateRelation;
       window.addrow = addrow;
       window.deleteRow = delrow;
 
@@ -26,7 +27,7 @@
   </head>
   <body>
     <div id="loader"></div>
-    <button onclick="onSubmit('DataForm', '.*');initDataValues();" style="position: fixed; top: 0; left: 0;">Save</button>
+    <button onclick="onSubmit('DataForm', 'active.*');initDataValues();" style="position: fixed; top: 0; left: 0;">Save</button>
     <button onclick="scanBLE()" style="position: fixed; top: 0; left: 100px;">Scan for BLE Devices</button>
 
     <div id="needToSave" class="hide needToSave">
@@ -50,8 +51,8 @@
         <tbody>
           <template id='flowercare'>
             <tr>
-              <td><input type='checkbox' onclick='ChangeActiveStatus(this.id)' id='active' name="active"></td>
-              <td><span id='address'></span></td>
+              <td><input type='checkbox' onclick='ActivateDevice(this.id)' id='active' name="active"></td>
+                <td><input type="text" id='address' name='address' readonly style='width: 150px;'></td>
               <td><span id='moisture'></span>%</td>
               <td><span id='brightness'></span> lux</td>
               <td><span id='temperature'></span>°C</td>
@@ -61,8 +62,8 @@
           </template>
         </tbody>
       </table>
-      
-      <button type="button" onclick="addrow('fc_relations_table')">add Row</button>
+      <p></p>
+      <button type="button" onclick="addrow('fc_relations_table')" style="position: fixed; left: 0;">add Row</button>
       <table id="fc_relations_table" class="editorDemoTable">
         <thead>
           <tr>
@@ -88,10 +89,10 @@
           <template id='fc_relations'>
             <tr>
               <td></td>
-              <td><input type='checkbox' onclick='ChangeActiveStatus(this.id)' id='active'></td>
-              <td><input type='text' id='topic' style='width: 150px;'></td>
+              <td><input type='checkbox' onclick='ActivateRelation(this.id)' id='active' name='active'></td>
+              <td><input type='text' name='mqtttopic' id='mqtttopic' style='width: 150px;'></td>
               <td><input id='ConfiguredPort' name='port' type='number' min='10' max='999'/></td>
-              <td><input type='number' id='treshold' name="treshold" style='width: 50px;'></td>
+              <td><input type='number' id='threshold' name="threshold" style='width: 50px;'></td>
               <td><input type='number' id='duration' name="duration" style='width: 50px;'></td>
               <td><button type="button"  onclick='deleteRow(this)'>
                 <i class='fa fa-trash'></i>

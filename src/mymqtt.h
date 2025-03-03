@@ -14,7 +14,7 @@
 class MyMQTT: public MQTT {
   
   public:
-    enum MqttSubscriptionType_t {RELATION, SENSOR};
+    enum MqttSubscriptionType_t {RELATION, SENSOR, FLOWERCARE};
     
     typedef struct {
       String subscription = "";

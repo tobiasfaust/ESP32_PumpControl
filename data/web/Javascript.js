@@ -433,10 +433,11 @@ export function isVisible(_obj) {
 }
 
 /****************************************************************************************
-separator: 
-regex of item ID to identify first element in row
-  - if set, returned json is an array, all elements per row, example: "^myonoffswitch.*"
-  - if emty, all elements at one level together, ONLY for small json´s (->memory issue)
+* separator: 
+* regex of item ID to identify first element in row
+  - if set, returned json is an array, all elements per row, 
+  - example: "^myonoffswitch.*"
+  - if empty, all elements at one level together, ONLY for small json´s (->memory issue)
 ****************************************************************************************/
 export function onSubmit(DataForm, separator='') {
   // init json Objects

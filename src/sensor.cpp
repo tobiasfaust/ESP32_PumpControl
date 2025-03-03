@@ -319,8 +319,8 @@ void sensor::LoadJsonConfig() {
           if (elem["pinhcsr04trigger"])     { this->pinTrigger = elem["pinhcsr04trigger"].as<int>() - 200;}
           if (elem["pinhcsr04echo"])        { this->pinEcho = elem["pinhcsr04echo"].as<int>() - 200;}
           if (elem["pinanalog"])            { this->pinAnalog = elem["pinanalog"].as<int>() - 200;}
-          if (elem["treshold_min"])         { this->threshold_min = elem["treshold_min"].as<int>();}
-          if (elem["treshold_max"])         { this->threshold_max = elem["treshold_max"].as<int>();}
+          if (elem["threshold_min"])         { this->threshold_min = elem["threshold_min"].as<int>();}
+          if (elem["threshold_max"])         { this->threshold_max = elem["threshold_max"].as<int>();}
           if (elem["ads1115_i2c"])          { this->ads1115_i2c = strtoul(elem["ads1115_i2c"].as<String>().c_str(), NULL, 16);} // hex convert to dec 
           if (elem["ads1115_port"])         { this->ads1115_port = elem["ads1115_port"].as<int>();}
           if (elem["externalSensor"])       { this->externalSensor = elem["externalSensor"].as<String>();}
@@ -446,8 +446,8 @@ void sensor::GetInitData(JsonDocument& json) {
   json["data"]["a_measureDistMin"] = this->measureDistMin;
   json["data"]["a_measureDistMax"] = this->measureDistMax;
   json["data"]["externalSensor"] = this->externalSensor;
-  json["data"]["treshold_min"] = this->threshold_min;
-  json["data"]["treshold_max"] = this->threshold_max;
+  json["data"]["threshold_min"] = this->threshold_min;
+  json["data"]["threshold_max"] = this->threshold_max;
 
   json["response"].to<JsonObject>();
   json["response"]["status"] = 1;

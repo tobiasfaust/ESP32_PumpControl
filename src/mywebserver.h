@@ -29,6 +29,14 @@ extern valveRelation* ValveRel;
 
 class MyWebServer {
 
+  typedef struct {
+    bool enabled;
+    String TriggerTopic = "";
+    uint8_t ActorPort; 
+    unsigned int threshold;
+    unsigned int duration;
+  } FlowercareRelation_t;
+
   public:
     MyWebServer(AsyncWebServer *server, DNSServer* dns);
 
@@ -48,6 +56,7 @@ class MyWebServer {
 
     #ifdef USE_FLOWERCARE
       FlowerCare* flowerCare = nullptr;
+      std::vector<FlowercareRelation_t>* _relationen  = NULL;
     #endif
 
     
@@ -60,6 +69,8 @@ class MyWebServer {
 
     #ifdef USE_FLOWERCARE
     void      GetInitDataFlowerCare(JsonDocument& json);
+    void      flowerCareGetValuesCallback(JsonDocument& json);
+    void      LoadFlowerCareConfig();
     #endif
     
     void      onOTAStart();
@@ -67,7 +78,6 @@ class MyWebServer {
     void      onOTAEnd(bool success);
     void      onImprovWiFiConnectedCb(const char *ssid, const char *password);
     void      onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len);
-    void      flowerCareGetValuesCallback(JsonDocument& json);
 };
 
 #endif

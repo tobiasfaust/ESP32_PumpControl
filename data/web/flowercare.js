@@ -3,7 +3,7 @@ import * as valveFn from './valvefunctions.js';
 
 // ************************************************
 
-export function init() {
+export function init1() {
   var json = {
     "cmd": {
         "action": "GetInitData",
@@ -69,14 +69,14 @@ export function init() {
                 "active": {
                     "checked": false
                 },
-                "treshold": 30,
+                "threshold": 30,
                 "duration": 60
             },
             {
                 "active": {
                     "checked": false
                 },
-                "treshold": 30,
+                "threshold": 30,
                 "duration": 60
             }
         ]
@@ -96,7 +96,8 @@ export function init() {
   MyCallback(json);
 }
 
-export function init1() {
+// ************************************************
+export function init() {
   // Initiale Verbindung aufbauen
     global.connectWebSocket();
   
@@ -160,15 +161,38 @@ function MyCallback(json) {
 }
 
 // ************************************************
-export function ChangeActiveStatus(id) {
+export function ActivateDevice(id) {
   var obj = document.getElementById(id);
   
   var data = {};
   data['cmd'] = {};
   data['cmd']['action'] = "flowercare";
-  data['cmd']['subaction'] = "setactive";
+  data['cmd']['subaction'] = "activateDevice";
   data['cmd']['newState'] = (obj.checked?1:0);
   data['cmd']["item"] = obj.getAttribute('data-mac');
   
   global.requestData(data);
+}
+
+// ************************************************
+export function ActivateRelation(id) {
+  var obj = document.getElementById(id);
+  
+  // id = fc_relations_0.active
+  var objMqttTopic = document.getElementById(id.replace("active", "mqtttopic"));
+  var objPort = document.getElementById(id.replace("active", "ConfiguredPort"));
+
+  if (objMqttTopic.value != "" && objPort.value != "") {
+    var data = {};
+    data['cmd'] = {};
+    data['cmd']['action'] = "flowercare";
+    data['cmd']['subaction'] = "activateRelation";
+    data['cmd']['newState'] = (obj.checked?1:0);
+    data['cmd']["item"] = objMqttTopic.value;
+    data['cmd']["item2"] = objPort.value;
+    
+    global.requestData(data);
+  } else {
+    global.setResponse(false, "Please define a valid MQTT-Topic");
+  }
 }

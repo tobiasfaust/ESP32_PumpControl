@@ -39,7 +39,7 @@ void FlowerCare::onValues(std::function<void(JsonDocument&)> callback) {
     this->onValuesCallback = callback;
 }
 
-void FlowerCare::onLog(std::function<void(int, const char*, va_list)> logCallback) {
+void FlowerCare::onLog(std::function<void(int, const char*)> logCallback) {
     this->onlogCallback = logCallback;
 }
 
@@ -47,7 +47,9 @@ void FlowerCare::log(int loglevel, const char* format, ...) {
     if (this->onlogCallback) {
         va_list args;
         va_start(args, format);
-        this->onlogCallback(loglevel, format, args);
+        char buffer[256];
+        vsnprintf(buffer, sizeof(buffer), format, args);
+        onlogCallback(loglevel, buffer);
         va_end(args);
     }
 }

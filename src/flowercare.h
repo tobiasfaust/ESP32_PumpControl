@@ -99,7 +99,7 @@ class FlowerCare {
      * @brief Callback for logging
      * @param function(const int, const char*, ...) the callback function
      ************************/
-    void onLog(std::function<void(int, const char*, va_list)> onlogCallback);
+    void onLog(std::function<void(int, const char*)> onlogCallback);
 
     /************************
      * @brief Callback for scan end
@@ -152,7 +152,7 @@ class FlowerCare {
     void printDebugHexValue(const char* value, int len);
 
     void log(int loglevel, const char* format, ...);
-    std::function<void(int, const char*, va_list)> onlogCallback; // Callback function pointer
+    std::function<void(int, const char*)> onlogCallback; // Callback function pointer
     std::function<void(JsonDocument&)> onValuesCallback; // Callback function pointer
 };
 

@@ -7,13 +7,15 @@ MyWebServer::MyWebServer(AsyncWebServer *server, DNSServer* dns):
         RequestRebootTime(0) {
   
   fsfiles = new handleFiles(server);
-  fsfiles->registerLogCallback(std::bind(&BaseConfig::logN, Config, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+  fsfiles->registerLogCallback(std::bind(&BaseConfig::logN, Config, std::placeholders::_1, std::placeholders::_2));
 
   #ifdef USE_FLOWERCARE
     Config->logN(1, "Starting FlowerCare");
     flowerCare = new FlowerCare();
-    //flowerCare->onLog(std::bind(&BaseConfig::logN, Config, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+    _relationen = new std::vector<FlowercareRelation_t>();
+    flowerCare->onLog(std::bind(&BaseConfig::logN, Config, std::placeholders::_1, std::placeholders::_2));
     flowerCare->onValues(std::bind(&MyWebServer::flowerCareGetValuesCallback, this, std::placeholders::_1));
+    this->LoadFlowerCareConfig();
   #endif
 
   ws = new AsyncWebSocket("/ajaxws");
@@ -75,15 +77,6 @@ void MyWebServer::onOTAEnd(bool success) {
   } else {
     Config->logN(3, "There was an error during OTA update!");
   }
-}
-
-void MyWebServer::flowerCareGetValuesCallback(JsonDocument& json) {
-  // sending over MQTT
-  json["host"] = Config->GetMqttRoot();
-  String topic = "flowercare/" + json["address"].as<String>();
-  Config->logN(4, "Sending FlowerCare data to MQTT: %s -> %s", topic.c_str(), json.as<String>().c_str());
-  serializeJson(json, Serial); Serial.println();
-  mqtt->Publish_String(topic.c_str(), json.as<String>(), true);
 }
 
 void MyWebServer::handleRoot(AsyncWebServerRequest *request) {
@@ -154,7 +147,7 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
     for (size_t i = 0; i < len; i++) { msg += (char)data[i]; } msg += '\0';
     Config->logN(2, "[Client: %u] WebSocket data received: %s", client->id(), msg.c_str()); 
 
-    String action(""), subaction(""), item("");
+    String action(""), subaction(""), item(""), item2("");
     bool newState = false;
     JsonDocument json;
     DeserializationError error = deserializeJson(json, msg.c_str());
@@ -164,6 +157,7 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
         if (json["cmd"]["subaction"])   { subaction = json["cmd"]["subaction"].as<String>();}
         if (json["cmd"]["newState"])    { newState  = json["cmd"]["newState"].as<bool>();}
         if (json["cmd"]["item"])        { item      = json["cmd"]["item"].as<String>(); }
+        if (json["cmd"]["item2"])       { item2     = json["cmd"]["item2"].as<String>(); }
         
       }
 
@@ -219,13 +213,25 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
       if(action && action == "ReloadConfig")  {
         if (subaction && subaction == "baseconfig") {
           Config->LoadJsonConfig();
-        } else if (subaction && subaction == "valveconfig") {
+        } 
+        
+        if (subaction && subaction == "valveconfig") {
           VStruct->LoadJsonConfig();
-        } else if (subaction && subaction == "sensorconfig") {
+        } 
+        
+        if (subaction && subaction == "sensorconfig") {
           LevelSensor->LoadJsonConfig();
-        } else if (subaction && subaction == "relations") {
+        } 
+        
+        if (subaction && subaction == "relations") {
           ValveRel->LoadJsonConfig();
         }
+
+        #ifdef USE_FLOWERCARE
+        if (subaction && subaction == "flowercare") {
+          this->LoadFlowerCareConfig();
+        }
+        #endif
       
         json["response"]["status"] = 1;
         json["response"]["text"] = "new config reloaded sucessfully";
@@ -244,13 +250,31 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
           json["response"]["text"] = "scan started";
         }
 
-        if (subaction && subaction == "setactive") {
+        if (subaction && subaction == "activateDevice") {
           if (flowerCare->setActive(item, newState)) {
             json["response"]["status"] = 1;
             json["response"]["text"] = String("device set to ") + (newState ? "active" : "inactive");
           } else {
             json["response"]["status"] = 0;
             json["response"]["text"] = "device not found";
+          }
+        }
+
+        if (subaction && subaction == "activateRelation") {
+          if (item && item2 && newState) {
+            // item -> mqtttopic, item2 -> port
+            for (uint8_t i=0; i<_relationen->size(); i++) {
+              if (_relationen->at(i).TriggerTopic == item && _relationen->at(i).ActorPort == item2.toInt()) {
+                _relationen->at(i).enabled = newState;
+                if (newState) mqtt->Subscribe(item, MyMQTT::FLOWERCARE); // do not unsubscribe, because it is possible that the same topic is used by another relation
+                json["response"]["status"] = 1;
+                json["response"]["text"] = (newState ? "relation activated" : "relation deactivated");
+                break;
+              } else {
+                json["response"]["status"] = 0;
+                json["response"]["text"] = "relation not found, please save first";
+              }
+            }
           }
         }
       }
@@ -427,22 +451,100 @@ void MyWebServer::GetInitDataFlowerCare(JsonDocument& json) {
     }
   }
 
-  // wenn keine gespeicherten flowercare_relationen existieren erstelle 2 Beispiele
-  //später nicht notwendig da bei loadConfig die defaultconfig 2 einträge anlegt
   JsonArray f = json["data"]["fc_relations"].to<JsonArray>();
-  for (uint8_t i = 0; i < 2; i++) {
-      JsonObject o = f.add<JsonObject>();
-      o["active"]["checked"] = false;
-      o["treshold"] = 30;
-      o["duration"] = 60;
+  for (uint8_t i = 0; i < _relationen->size(); i++) {
+    JsonObject o = f.add<JsonObject>();
+    o["active"]["checked"] = _relationen->at(i).enabled;
+    o["mqtttopic"] = _relationen->at(i).TriggerTopic;
+    o["port"] = _relationen->at(i).ActorPort;
+    o["threshold"] = _relationen->at(i).threshold;
+    o["duration"] = _relationen->at(i).duration;
   }
-
-
+  
   json["js"]["esp_uptime"] = millis();
   VStruct->getWebJsParameter(json); // add JSParameter
 
   json["response"].to<JsonObject>();
   json["response"]["status"] = 1;
   json["response"]["text"] = "successful";
+}
+
+void MyWebServer::flowerCareGetValuesCallback(JsonDocument& json) {
+  // sending over MQTT
+  json["host"] = Config->GetMqttRoot();
+  String topic = "flowercare/" + json["address"].as<String>();
+  Config->logN(4, "Sending FlowerCare data to MQTT: %s -> %s", topic.c_str(), json.as<String>().c_str());
+  serializeJson(json, Serial); Serial.println();
+  mqtt->Publish_String(topic.c_str(), json.as<String>(), true);
+}
+
+void MyWebServer::LoadFlowerCareConfig() {
+ _relationen->clear(); // leere den Vector bevor neu befuellt wird
+ mqtt->ClearSubscriptions(MyMQTT::FLOWERCARE);
+
+  bool loadDefaultConfig = false;
+
+  if (LittleFS.exists("/config/flowercare.json")) {
+    //file exists, reading and loading
+    Config->logN(3, "reading flowercare.json file....");
+    File configFile = LittleFS.open("/config/flowercare.json", "r");
+    if (configFile) {
+      Config->logN(3, "flowercare.json is now open");
+
+      ReadBufferingStream stream{configFile, 64};
+      stream.find("\"data\":[");
+      do {
+        JsonDocument elem;
+        DeserializationError error = deserializeJson(elem, stream); 
+
+        if (error) {
+          loadDefaultConfig = true;
+          Config->logN(1, "Failed to parse flowercare.json data: %s, load default config", error.c_str()); 
+        } else {
+          // Print the result
+          Config->logN(4, "parsing JSON ok");
+          Config->log(5, elem);
+
+          if (elem["mqtttopic"] && elem["port"] && elem["port"].as<int>() > 0) {
+            FlowercareRelation_t rel;
+
+            rel.enabled = elem["active"].as<bool>();
+            rel.TriggerTopic = elem["mqtttopic"].as<String>();
+            rel.threshold = elem["threshold"].as<unsigned int>();
+            rel.duration = elem["duration"].as<unsigned int>();
+            rel.ActorPort = elem["port"].as<uint8_t>();
+            
+            _relationen->push_back(rel);
+            mqtt->Subscribe(rel.TriggerTopic, MyMQTT::FLOWERCARE);
+          } else {
+            // activation of known Flowercare devices
+            flowerCare->addDevice(NimBLEAddress(elem["address"].as<String>().c_str(), BLE_ADDR_PUBLIC));
+            flowerCare->setActive(elem["address"].as<String>(), elem["active"].as<bool>());
+          }
+        }
+      } while (stream.findUntil(",","]"));
+    } else {
+      loadDefaultConfig = true;
+      Config->logN(1, "failed to load flowercare.json, load default config");
+    }
+  } else {
+    loadDefaultConfig = true;
+    Config->logN(3, "flowercare.json File not exists, load default config");
+  }
+  
+  if (loadDefaultConfig) {
+    Config->logN(3, "load flowercare DefaultConfig");
+    FlowercareRelation_t rel;
+    rel.enabled = false;
+    rel.TriggerTopic = "flowercare/00:00:00:00:00:00";
+    rel.threshold = 30;
+    rel.duration = 60;
+    rel.ActorPort = 0;
+     _relationen->push_back(rel);
+  }
+  Config->logN(3, "%d flowercare relations are now loaded ", _relationen->size());
+
+  _relationen->shrink_to_fit();
+  
 }
 #endif
