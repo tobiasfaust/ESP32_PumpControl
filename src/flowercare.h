@@ -22,6 +22,7 @@ class FlowerCareDevice {
     unsigned long lastLiveDataUpdate;
     unsigned long lastBatteryUpdate;
     uint8_t failedReads;
+    unsigned long lastRead;
 
     FlowerCareDevice(NimBLEAddress addr) : 
         address(addr),
@@ -34,6 +35,7 @@ class FlowerCareDevice {
         firmwareVersion(""),
         lastLiveDataUpdate(0),
         lastBatteryUpdate(0),
+        lastRead(0),
         failedReads(0)
         {}
 };

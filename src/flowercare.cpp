@@ -60,6 +60,8 @@ void FlowerCare::onScanEnd(std::function<void()> OnScanEndCallback) {
 
 void FlowerCare::ReadSensor(FlowerCareDevice& device, bool getBatteryLevel) {
     bool success = false;
+    device.lastRead = millis();
+
     NimBLEClient* pClient = NimBLEDevice::createClient();
     log(4, "Connecting to %s for updating data (%d bytes free Heap)", device.address.toString().c_str(), ESP.getFreeHeap());
     
@@ -87,7 +89,6 @@ void FlowerCare::ReadSensor(FlowerCareDevice& device, bool getBatteryLevel) {
 
     if (!success) {
         device.failedReads++;
-        device.lastLiveDataUpdate = millis();
         if (device.failedReads >= this->maxFailedReads) {
             device.active = false;
             log(2, "Marking device %s as inactive", device.address.toString().c_str());
@@ -192,7 +193,7 @@ void FlowerCare::loop() {
         previousMillis = currentMillis;
         
         for (auto& device : devices) {
-            if (device.active && (device.lastLiveDataUpdate == 0 || currentMillis - device.lastLiveDataUpdate >= this->LiveDataInterval)) {                
+            if (device.active && (device.lastRead == 0 || currentMillis - device.lastRead >= this->LiveDataInterval)) {                
                 if (device.lastBatteryUpdate == 0 || millis() - device.lastBatteryUpdate >= this->batteryInterval) {
                     this->ReadSensor(device, true);
                 } else {
