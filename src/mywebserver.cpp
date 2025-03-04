@@ -138,15 +138,15 @@ bool MyWebServer::handleReset() {
 
 void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len) {
   if (type == WS_EVT_CONNECT) {
-    Config->logN(2, "[Client: %u] WebSocket client connected", client->id());
+    Config->logN(4, "[Client: %u] WebSocket client connected", client->id());
   
   } else if (type == WS_EVT_DISCONNECT) {
-    Config->logN(2, "[Client: %u] WebSocket client disconnected", client->id());
+    Config->logN(4, "[Client: %u] WebSocket client disconnected", client->id());
   
   } else if (type == WS_EVT_DATA) {
     String msg(""); msg.reserve(len + 1);
     for (size_t i = 0; i < len; i++) { msg += (char)data[i]; } msg += '\0';
-    Config->logN(2, "[Client: %u] WebSocket data received: %s", client->id(), msg.c_str()); 
+    Config->logN(4, "[Client: %u] WebSocket data received: %s", client->id(), msg.c_str()); 
 
     String action(""), subaction(""), item(""), item2("");
     bool newState = false;
