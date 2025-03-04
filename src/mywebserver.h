@@ -39,8 +39,11 @@ class MyWebServer {
 
   public:
     MyWebServer(AsyncWebServer *server, DNSServer* dns);
-
     void      loop();
+
+    #ifdef USE_FLOWERCARE
+      void  flowerCareOnMqttMessage(String& topic, String& JsonMsg);
+    #endif
 
   private:
 
@@ -57,6 +60,10 @@ class MyWebServer {
     #ifdef USE_FLOWERCARE
       FlowerCare* flowerCare = nullptr;
       std::vector<FlowercareRelation_t>* _relationen  = NULL;
+
+      void      GetInitDataFlowerCare(JsonDocument& json);
+      void      flowerCareGetValuesCallback(JsonDocument& json);
+      void      LoadFlowerCareConfig();      
     #endif
 
     
@@ -66,12 +73,6 @@ class MyWebServer {
         
     void      GetInitDataStatus(JsonDocument& json);
     void      GetInitDataNavi(JsonDocument& json);
-
-    #ifdef USE_FLOWERCARE
-    void      GetInitDataFlowerCare(JsonDocument& json);
-    void      flowerCareGetValuesCallback(JsonDocument& json);
-    void      LoadFlowerCareConfig();
-    #endif
     
     void      onOTAStart();
     void      onOTAProgress(size_t current, size_t final);

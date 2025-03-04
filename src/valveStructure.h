@@ -23,6 +23,7 @@ class valveStructure {
     valveStructure(uint8_t sda, uint8_t scl);
     void      loop();
     void      OnForTimer(String SubTopic, int duration);
+    void      OnForTimer(uint8_t Port, int duration);
     void      SetOn(String SubTopic);
     void      SetOn(uint8_t Port);
     void      SetOff(String SubTopic);

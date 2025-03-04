@@ -20,6 +20,13 @@ void valveStructure::OnForTimer(String SubTopic, int duration) {
   }
 }
 
+void valveStructure::OnForTimer(uint8_t Port, int duration) {
+  valve* v = this->GetValveItem(Port);
+  if (v && v->OnForTimer(duration)) {
+    if (mqtt) {mqtt->Publish_Int("Threads", (int)this->CountActiveThreads(), false); }
+  }
+}
+
 void valveStructure::SetOff(String SubTopic) {
   valve* v = this->GetValveItem(SubTopic);
   if (v) { this->SetOff(GetValveItem(SubTopic)->GetPort1()); }

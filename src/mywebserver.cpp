@@ -104,6 +104,7 @@ void MyWebServer::loop() {
       flowerCare->loop();
     }
   #endif
+
 }
 
 void MyWebServer::handleNotFound(AsyncWebServerRequest *request) {
@@ -474,7 +475,6 @@ void MyWebServer::flowerCareGetValuesCallback(JsonDocument& json) {
   json["host"] = Config->GetMqttRoot();
   String topic = "flowercare/" + json["address"].as<String>();
   Config->logN(4, "Sending FlowerCare data to MQTT: %s -> %s", topic.c_str(), json.as<String>().c_str());
-  serializeJson(json, Serial); Serial.println();
   mqtt->Publish_String(topic.c_str(), json.as<String>(), true);
 }
 
@@ -545,6 +545,38 @@ void MyWebServer::LoadFlowerCareConfig() {
   Config->logN(3, "%d flowercare relations are now loaded ", _relationen->size());
 
   _relationen->shrink_to_fit();
-  
 }
+
+void MyWebServer::flowerCareOnMqttMessage(String& topic, String& JsonMsg) {
+  Config->logN(4, "FlowerCare MQTT Message received: %s", JsonMsg.c_str());
+  // lade JsonMsg als JsonDocument
+  JsonDocument json;
+  DeserializationError error = deserializeJson(json, JsonMsg.c_str());
+  if (error) {
+    Config->logN(1, "Failed to parse MQTT message: %s", error.c_str());
+    return;
+  }
+
+  if (json["address"]) {
+    if (json["moisture"].as<int>() == 0) {
+      Config->logN(4, "FlowerCare %s: moisture: %d%% -> do nothing because moisture value is 0\n",
+        json["address"].as<String>().c_str(),
+        json["moisture"].as<int>());
+      return;
+    }
+    for (uint8_t i = 0; i < _relationen->size(); i++) {
+      if (_relationen->at(i).TriggerTopic == topic && _relationen->at(i).enabled) {
+        if (json["moisture"].as<int>() < _relationen->at(i).threshold) {
+          VStruct->OnForTimer(_relationen->at(i).ActorPort, _relationen->at(i).duration);
+          Config->logN(3, "FlowerCare %s (moisture: %d%%) triggered valve %d for %d seconds", 
+              json["address"].as<String>(),
+              json["moisture"].as<int>(),
+              _relationen->at(i).ActorPort,
+              _relationen->at(i).duration);
+        }
+      }
+    }
+  }
+}
+
 #endif

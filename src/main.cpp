@@ -36,12 +36,13 @@ MyWebServer* mywebserver = nullptr;
 
 void myMQTTCallBack(char* topic, byte* payload, unsigned int length) {
   String msg;
-  
+  String topicStr = topic;
+
   for (u_int16_t i = 0; i < length; i++) {
     msg.concat((char)payload[i]);
   }
   
-  Config->logN(4, "Message arrived [%s]\nMessage: %s", topic, msg.c_str()); 
+  Config->logN(4, "Message arrived [%s] -> Message: %s", topic, msg.c_str()); 
 
   if (LevelSensor->GetExternalSensor() && (strcmp(LevelSensor->GetExternalSensor().c_str(), topic)==0)) {
     LevelSensor->SetLvl(atoi(msg.c_str()));
@@ -49,8 +50,15 @@ void myMQTTCallBack(char* topic, byte* payload, unsigned int length) {
   else if (strstr(topic, "/raw") ||  strstr(topic, "/level") ||  strstr(topic, "/mem") ||  strstr(topic, "/rssi")) {
     /*SensorMeldungen - ignore!*/
   }
+
+  #ifdef USE_FLOWERCARE
+    else if (strstr(topic, "flowercare/")) {
+      mywebserver->flowerCareOnMqttMessage(topicStr, msg);
+    }
+  #endif  
+  
   else {
-    VStruct->ReceiveMQTT((String)topic, atoi(msg.c_str()));
+    VStruct->ReceiveMQTT(topicStr, atoi(msg.c_str()));
   }
 }
 
@@ -135,19 +143,7 @@ void setup() {
   Config->logN(1, "Setup finished");
 }
 
-//unsigned long lastMillis = 0;
 void loop() {
-/*  
-  if (millis() - lastMillis >= 1000) {
-    lastMillis = millis();
-    unsigned long uptime = millis() / 1000;
-    unsigned int hours = uptime / 3600;
-    unsigned int minutes = (uptime % 3600) / 60;
-    unsigned int seconds = uptime % 60;
-    Serial.printf("uptime: %02d:%02d:%02d\n", hours, minutes, seconds);
-  }
-*/
-
   VStruct->loop();
   mqtt->loop();
   LevelSensor->loop();
