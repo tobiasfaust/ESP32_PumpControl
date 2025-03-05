@@ -28,7 +28,7 @@
   <body>
     <div id="loader"></div>
     <button onclick="onSubmit('DataForm', 'active.*');initDataValues();" style="position: fixed; top: 0; left: 0;">Save</button>
-    <button onclick="scanBLE()" style="position: fixed; top: 0; left: 100px;">Scan for BLE Devices</button>
+    <button onclick="scanBLE()" id="btn_scan" class="hide" style="position: fixed; top: 0; left: 100px;">Scan for BLE Devices</button>
 
     <div id="needToSave" class="hide needToSave">
       <i class="fa fa-exclamation-triangle" style="color: gold; font-size: 20px;"></i>
@@ -36,7 +36,7 @@
     </div>
 
     <form id='DataForm'>
-      <table id='maintable' class='editorDemoTable'>
+      <table id='fc_devices_table' class='editorDemoTable hide'>
         <thead>
           <tr>
             <td style='width: 50px;'>activ</td>

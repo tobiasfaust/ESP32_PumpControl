@@ -23,7 +23,6 @@ import { functionMap as sensorconfigFunctionMap } from './sensorconfig.js';
 import { functionMap as valveconfigFunctionMap } from './valveconfig.js';
 import { functionMap as relationsFunctionMap } from './relations.js';
 import { functionMap as filesFunctionMap } from './handlefiles.js';
-import { functionMap as flowercareFunctionMap } from './flowercare.js';
 
 const combinedFunctionMap = {
   ...statusFunctionMap,
@@ -31,14 +30,13 @@ const combinedFunctionMap = {
   ...sensorconfigFunctionMap,
   ...valveconfigFunctionMap,
   ...relationsFunctionMap,
-  ...filesFunctionMap,
-  ...flowercareFunctionMap
+  ...filesFunctionMap
 };
 
 export let ws;    // websocket handle
 var datavalues;   // form data values as string to check, if "needToSave" Dialog should be shown
 
-var timerSetResponse; // ID of setTimout Timer -> setResponse
+var timer; // ID of setTimout Timer -> setResponse
 let reconnectInterval = 5000; // 5 seconds interval to reconnect websocket connection
 
 /******************************************************************************************
@@ -71,7 +69,7 @@ export function connectWebSocket() {
   }
 
   ws = new WebSocket(location.origin.replace(/^http/, 'ws') + '/ajaxws');
-  //ws = new WebSocket('ws://172.20.10.4/ajaxws'); 
+  //ws = new WebSocket('ws://192.168.10.253/ajaxws'); 
   var wsStatus = document.getElementById('ws-status');
 
   ws.onopen = function() {
@@ -364,8 +362,8 @@ export function handleJsonItems(json) {
 *****************************************************************************************/
 export function setResponse(b, s) {
   try {
-  	// clear if previous timerSetResponse still run
-    clearTimeout(timerSetResponse);
+  	// clear if previous timer still run
+    clearTimeout(timer);
   } catch(e) {}
   
   try {
@@ -375,7 +373,7 @@ export function setResponse(b, s) {
 
     r.innerHTML = s;
     if (b) { r.className = "oktext"; } else {r.className = "errortext";}
-    timerSetResponse = setTimeout(function() {document.getElementById("response").innerHTML=""}, 2000);
+    timer = setTimeout(function() {document.getElementById("response").innerHTML=""}, 2000);
   } catch(e) {}
 }
 
@@ -398,21 +396,11 @@ export function CreateSelectionListFromInputField(querySelector, jsonLists, blac
     for ( k = 0; k < jsonLists.length; k++ ) {  
       for ( i = 0; i < jsonLists[k].length; i++ ) {
           _option = document.createElement( 'option' );
-            if (typeof jsonLists[k][i] === 'object') {
-              _option.value = jsonLists[k][i].port; 
-              _option.text  = jsonLists[k][i].name;
-            } else {
-              _option.value = jsonLists[k][i];
-              _option.text  = jsonLists[k][i];
-            }
-          if(objects[j].value == _option.value) { _option.selected = true;}
-          if(blacklist) {
-            if (typeof blacklist.indexOf(jsonLists[k][i]) === 'object' && blacklist.indexOf(jsonLists[k][i].port)>=0) {
+          _option.value = jsonLists[k][i].port; 
+          _option.text  = jsonLists[k][i].name;
+          if(objects[j].value == jsonLists[k][i].port) { _option.selected = true;}
+          if(blacklist && blacklist.indexOf(jsonLists[k][i].port)>=0) {
           	_option.disabled = true;
-            }
-            if (typeof blacklist.indexOf(jsonLists[k][i]) === 'number' && blacklist.indexOf(jsonLists[k][i])>=0) {
-          	_option.disabled = true;
-            }
           }
           _select.add( _option ); 
       }
@@ -427,17 +415,16 @@ export function CreateSelectionListFromInputField(querySelector, jsonLists, blac
 ****************************************************************************************/
 export function isVisible(_obj) {
 	var ret = true;
-  if (_obj && (_obj.style.display == "none" || _obj.classList.contains("hide"))) { ret = false; }
+	if (_obj && _obj.style.display == "none") { ret = false;}
   else if (_obj && _obj.parentNode && _obj.tagName != "HTML") ret = isVisible(_obj.parentNode);
   return ret;
 }
 
 /****************************************************************************************
-* separator: 
-* regex of item ID to identify first element in row
-  - if set, returned json is an array, all elements per row, 
-  - example: "^myonoffswitch.*"
-  - if empty, all elements at one level together, ONLY for small json´s (->memory issue)
+separator: 
+regex of item ID to identify first element in row
+  - if set, returned json is an array, all elements per row, example: "^myonoffswitch.*"
+  - if emty, all elements at one level together, ONLY for small json´s (->memory issue)
 ****************************************************************************************/
 export function onSubmit(DataForm, separator='') {
   // init json Objects

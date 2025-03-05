@@ -41,9 +41,7 @@ class MyWebServer {
     MyWebServer(AsyncWebServer *server, DNSServer* dns);
     void      loop();
 
-    #ifdef USE_FLOWERCARE
-      void  flowerCareOnMqttMessage(String& topic, String& JsonMsg);
-    #endif
+    void  flowerCareOnMqttMessage(String& topic, String& JsonMsg);
 
   private:
 
@@ -54,16 +52,13 @@ class MyWebServer {
     bool      DoReboot;
     unsigned long RequestRebootTime;
     unsigned long ota_progress_millis = 0;
-
+    std::vector<FlowercareRelation_t>* _relationen  = NULL;
+      
     handleFiles* fsfiles;
 
     #ifdef USE_FLOWERCARE
       FlowerCare* flowerCare = nullptr;
-      std::vector<FlowercareRelation_t>* _relationen  = NULL;
-
-      void      GetInitDataFlowerCare(JsonDocument& json);
       void      flowerCareGetValuesCallback(JsonDocument& json);
-      void      LoadFlowerCareConfig();      
     #endif
 
     
@@ -79,6 +74,9 @@ class MyWebServer {
     void      onOTAEnd(bool success);
     void      onImprovWiFiConnectedCb(const char *ssid, const char *password);
     void      onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len);
+
+    void      GetInitDataFlowerCare(JsonDocument& json);
+    void      LoadFlowerCareConfig();      
 };
 
 #endif
