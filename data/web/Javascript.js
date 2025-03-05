@@ -23,6 +23,7 @@ import { functionMap as sensorconfigFunctionMap } from './sensorconfig.js';
 import { functionMap as valveconfigFunctionMap } from './valveconfig.js';
 import { functionMap as relationsFunctionMap } from './relations.js';
 import { functionMap as filesFunctionMap } from './handlefiles.js';
+import { functionMap as flowercareFunctionMap } from './flowercare.js';
 
 const combinedFunctionMap = {
   ...statusFunctionMap,
@@ -30,7 +31,8 @@ const combinedFunctionMap = {
   ...sensorconfigFunctionMap,
   ...valveconfigFunctionMap,
   ...relationsFunctionMap,
-  ...filesFunctionMap
+  ...filesFunctionMap,
+  ...flowercareFunctionMap
 };
 
 export let ws;    // websocket handle
@@ -68,8 +70,8 @@ export function connectWebSocket() {
     return;
   }
 
-  ws = new WebSocket(location.origin.replace(/^http/, 'ws') + '/ajaxws');
-  //ws = new WebSocket('ws://192.168.10.253/ajaxws'); 
+  //ws = new WebSocket(location.origin.replace(/^http/, 'ws') + '/ajaxws');
+  ws = new WebSocket('ws://10.0.2.174/ajaxws'); 
   var wsStatus = document.getElementById('ws-status');
 
   ws.onopen = function() {
@@ -415,7 +417,7 @@ export function CreateSelectionListFromInputField(querySelector, jsonLists, blac
 ****************************************************************************************/
 export function isVisible(_obj) {
 	var ret = true;
-	if (_obj && _obj.style.display == "none") { ret = false;}
+	if (_obj && (_obj.style.display == "none" || _obj.classList.contains("hide"))) { ret = false; }
   else if (_obj && _obj.parentNode && _obj.tagName != "HTML") ret = isVisible(_obj.parentNode);
   return ret;
 }
