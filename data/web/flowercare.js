@@ -18,7 +18,8 @@ export function init() {
 
 // ************************************************
 export const functionMap = {
-  flowercare_Callback: MyCallback
+  flowercare_Callback: MyCallback,
+  onBleUpdate_Callback: onBleUpdate_cb
 };
 
 // ************************************************
@@ -52,11 +53,7 @@ function MyCallback(json) {
   valveFn.validate_identifiers("fc_relations_table");
 
   // anpassen der Update werte auf ein lesbares Format
-  const elements = document.querySelectorAll('[id$="lastLiveDataUpdate"], [id$="lastBatteryUpdate"]');
-  elements.forEach(element => {
-    formatDate(element);
-  });
-  
+  formatAllDates();  
 
   document.querySelectorAll('#DataForm input:not([type=checkbox]):not([type=radio]), #DataForm select').forEach(element => {
     element.addEventListener('blur', global.showMustSaveDialog);
@@ -70,6 +67,20 @@ function MyCallback(json) {
   
   document.querySelector("#loader").style.visibility = "hidden";
   document.querySelector("body").style.visibility = "visible";
+}
+
+// ************************************************
+// wird aufgerufen aus MyWebServer::flowerCareGetValuesCallback()
+function onBleUpdate_cb(json) {
+  formatAllDates();
+}
+
+// ************************************************
+function formatAllDates() {
+  const elements = document.querySelectorAll('[id$="lastLiveDataUpdate"], [id$="lastBatteryUpdate"]');
+  elements.forEach(element => {
+    formatDate(element);
+  });
 }
 
 // ************************************************

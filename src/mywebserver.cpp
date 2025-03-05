@@ -591,16 +591,16 @@ void MyWebServer::flowerCareGetValuesCallback(JsonDocument& json) {
   wsjson["data-id"][String(json["address"].as<String>()) + "_moist"] = json["moisture"];
   wsjson["data-id"][String(json["address"].as<String>()) + "_bright"] = json["brightness"];
   wsjson["data-id"][String(json["address"].as<String>()) + "_fert"] = json["fertility"];
-  wsjson["data-id"][String(json["address"].as<String>()) + "_liveupd"] = json["lastLiveDataUpdate"];
+  wsjson["data-id"][String(json["address"].as<String>()) + "_liveupd"] = millis()-2000;  //updatetime 2sec ago
   
-  if (json["battery"])
+  if (json["battery"]) {
     wsjson["data-id"][String(json["address"].as<String>()) + "_bat"] = json["battery"];
-  if (json["firmwareVersion"])
     wsjson["data-id"][String(json["address"].as<String>()) + "_fw"] = json["firmwareVersion"];
-  if (json["lastBatteryUpdate"])
-    wsjson["data-id"][String(json["address"].as<String>()) + "_batupd"] = json["lastBatteryUpdate"];
+    wsjson["data-id"][String(json["address"].as<String>()) + "_batupd"] = millis()-2000;  // updatetime 2sec ago
+  } 
 
-  wsjson["cmd"]["callbackFn"] = "flowercare_Callback";
+  wsjson["js"]["esp_uptime"] = millis();
+  wsjson["cmd"]["callbackFn"] = "onBleUpdate_Callback";
   wsjson["cmd"]["highlight"] = "true";
 
   ws->textAll(wsjson.as<String>());
