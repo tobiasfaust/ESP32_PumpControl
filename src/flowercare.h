@@ -4,7 +4,6 @@
 #include <vector>
 #include <Arduino.h>
 #include <ArduinoJson.h>
-
 #include <NimBLEDevice.h>
 #include <NimBLEUtils.h>
 #include <NimBLEScan.h>

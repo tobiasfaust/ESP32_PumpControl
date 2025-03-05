@@ -1,6 +1,8 @@
 Release 3.1.0:
   - exchange debug variable to common log-function
   - change backend ajax-communication to websocket
+  - add flowercare support to request moisture of Xiaomi flowercare BLE devices
+  - add functionality to switch on valves by incomimg mqtt moisture messages
   
 Release 3.0.1:
   - add: initialize bistable valves at start to prevent open valves
