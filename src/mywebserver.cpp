@@ -17,6 +17,7 @@ MyWebServer::MyWebServer(AsyncWebServer *server, DNSServer* dns):
     flowerCare = new FlowerCare();
     flowerCare->onLog(std::bind(&BaseConfig::logN, Config, std::placeholders::_1, std::placeholders::_2));
     flowerCare->onValues(std::bind(&MyWebServer::flowerCareGetValuesCallback, this, std::placeholders::_1));
+    flowerCare->onScanEnd(std::bind(&MyWebServer::flowerCareOnScanEndCallback, this));
   #endif
 
   ws = new AsyncWebSocket("/ajaxws");
@@ -242,7 +243,7 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
         if (flowerCare && subaction && subaction == "scan") {
           flowerCare->ScanBLE();
           json["response"]["status"] = 1;
-          json["response"]["text"] = "scan started";
+          json["response"]["text"] = "scan started, please wait 10sec .....";
         }
 
         if (flowerCare && subaction && subaction == "activateDevice") {
@@ -459,14 +460,22 @@ void MyWebServer::GetInitDataFlowerCare(JsonDocument& json) {
       JsonObject o = f.add<JsonObject>();
       o["address"] = device.address.toString();
       o["mqtttopic"] = String("flowercare/") + String(device.address.toString().c_str());
-      o["battery"] = device.battery;
-      o["firmwareVersion"] = device.firmwareVersion;
-      o["temperature"] = device.temperature;
-      o["moisture"] = device.moisture;
-      o["brightness"] = device.brightness;
-      o["fertility"] = device.fertility;
-      o["lastLiveDataUpdate"] = device.lastLiveDataUpdate;
-      o["lastBatteryUpdate"] = device.lastBatteryUpdate;
+      o["battery"]["innerHTML"] = device.battery;
+      o["battery"]["data-id"] = String(device.address.toString().c_str()) + "_bat";
+      o["firmwareVersion"]["innerHTML"] = device.firmwareVersion;
+      o["firmwareVersion"]["data-id"] = String(device.address.toString().c_str()) + "_fw";
+      o["temperature"]["innerHTML"] = device.temperature;
+      o["temperature"]["data-id"] = String(device.address.toString().c_str()) + "_temp";
+      o["moisture"]["innerHTML"] = device.moisture;
+      o["moisture"]["data-id"] = String(device.address.toString().c_str()) + "_moist";
+      o["brightness"]["innerHTML"] = device.brightness;
+      o["brightness"]["data-id"] = String(device.address.toString().c_str()) + "_bright";
+      o["fertility"]["innerHTML"] = device.fertility;
+      o["fertility"]["data-id"] = String(device.address.toString().c_str()) + "_fert";
+      o["lastLiveDataUpdate"]["innerHTML"] = device.lastLiveDataUpdate;
+      o["lastLiveDataUpdate"]["data-id"] = String(device.address.toString().c_str()) + "_liveupd";
+      o["lastBatteryUpdate"]["innerHTML"] = device.lastBatteryUpdate;
+      o["lastBatteryUpdate"]["data-id"] = String(device.address.toString().c_str()) + "_batupd";
       o["failedReads"] = device.failedReads;
       o["active"]["checked"] = device.active;
       o["active"]["data-mac"] = device.address.toString();
@@ -575,5 +584,36 @@ void MyWebServer::flowerCareGetValuesCallback(JsonDocument& json) {
   String topic = "flowercare/" + json["address"].as<String>();
   Config->logN(4, "Sending FlowerCare data to MQTT: %s -> %s", topic.c_str(), json.as<String>().c_str());
   mqtt->Publish_String(topic.c_str(), json.as<String>(), true);
+
+  // sending over WebSocket, has to reformat the json
+  JsonDocument wsjson;
+  wsjson["data-id"][String(json["address"].as<String>()) + "_temp"] = json["temperature"];
+  wsjson["data-id"][String(json["address"].as<String>()) + "_moist"] = json["moisture"];
+  wsjson["data-id"][String(json["address"].as<String>()) + "_bright"] = json["brightness"];
+  wsjson["data-id"][String(json["address"].as<String>()) + "_fert"] = json["fertility"];
+  wsjson["data-id"][String(json["address"].as<String>()) + "_liveupd"] = json["lastLiveDataUpdate"];
+  
+  if (json["battery"])
+    wsjson["data-id"][String(json["address"].as<String>()) + "_bat"] = json["battery"];
+  if (json["firmwareVersion"])
+    wsjson["data-id"][String(json["address"].as<String>()) + "_fw"] = json["firmwareVersion"];
+  if (json["lastBatteryUpdate"])
+    wsjson["data-id"][String(json["address"].as<String>()) + "_batupd"] = json["lastBatteryUpdate"];
+
+  wsjson["cmd"]["callbackFn"] = "flowercare_Callback";
+  wsjson["cmd"]["highlight"] = "true";
+
+  ws->textAll(wsjson.as<String>());
+}
+
+void MyWebServer::flowerCareOnScanEndCallback() {
+  Config->logN(3, "FlowerCare scan ended");
+  JsonDocument json;
+  this->GetInitDataFlowerCare(json);
+
+  json["response"]["status"] = 1;
+  json["response"]["text"] = "scan ended";
+  
+  ws->textAll(json.as<String>());
 }
 #endif
