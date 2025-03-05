@@ -2,12 +2,15 @@
 #define FLOWERCARE_H
 
 #include <vector>
-#include <NimBLEDevice.h>
-#include <NimBLEUtils.h>
-#include <NimBLEScan.h>
-#include <NimBLEAdvertisedDevice.h>
 #include <Arduino.h>
 #include <ArduinoJson.h>
+
+#ifdef USE_FLOWERCARE
+  #include <NimBLEDevice.h>
+  #include <NimBLEUtils.h>
+  #include <NimBLEScan.h>
+  #include <NimBLEAdvertisedDevice.h>
+#endif
 
 class FlowerCareDevice {
  public:
