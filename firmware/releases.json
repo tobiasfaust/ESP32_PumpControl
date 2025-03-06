@@ -1,0 +1,215 @@
+[
+    {
+        "manifest": "https://github.com/tobiasfaust/ESP32_PumpControl/releases/download/v.3.1.0-PRE-13701784314/manifestAll-webSerial.json",
+        "version": "v3.1.0",
+        "stage": "prelive",
+        "variant": "webSerial",
+        "build": 49,
+        "chipFamilies": [
+            "ESP32"
+        ],
+        "builds": [
+            {
+                "chipFamily": "ESP32",
+                "parts": [
+                    {
+                        "path": "https://github.com/tobiasfaust/ESP32_PumpControl/releases/download/v.3.1.0-PRE-13701784314/bootloader.ESP32.v3.1.0-49.webSerial.prelive.bin",
+                        "offset": 4096,
+                        "filetype": "bootloader",
+                        "asset_apiUrl": "https://api.github.com/repos/tobiasfaust/ESP32_PumpControl/releases/assets/235161105"
+                    },
+                    {
+                        "path": "https://github.com/tobiasfaust/ESP32_PumpControl/releases/download/v.3.1.0-PRE-13701784314/partitions.ESP32.v3.1.0-49.webSerial.prelive.bin",
+                        "offset": 32768,
+                        "filetype": "partitions",
+                        "asset_apiUrl": "https://api.github.com/repos/tobiasfaust/ESP32_PumpControl/releases/assets/235161126"
+                    },
+                    {
+                        "path": "https://github.com/tobiasfaust/ESP32_PumpControl/releases/download/v.3.1.0-PRE-13701784314/littlefs.ESP32.v3.1.0-49.webSerial.prelive.bin",
+                        "offset": 3473408,
+                        "filetype": "filesystem",
+                        "asset_apiUrl": "https://api.github.com/repos/tobiasfaust/ESP32_PumpControl/releases/assets/235161120"
+                    },
+                    {
+                        "path": "https://github.com/tobiasfaust/ESP32_PumpControl/releases/download/v.3.1.0-PRE-13701784314/firmware.ESP32.v3.1.0-49.webSerial.prelive.bin",
+                        "offset": 65536,
+                        "filetype": "firmware",
+                        "asset_apiUrl": "https://api.github.com/repos/tobiasfaust/ESP32_PumpControl/releases/assets/235161119"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "manifest": "https://github.com/tobiasfaust/ESP32_PumpControl/releases/download/v.3.1.0-PRE-13701784314/manifestAll-standard.json",
+        "version": "v3.1.0",
+        "stage": "prelive",
+        "variant": "standard",
+        "build": 49,
+        "chipFamilies": [
+            "ESP32-S3",
+            "ESP32-C3",
+            "ESP32",
+            "ESP32-S2"
+        ],
+        "builds": [
+            {
+                "chipFamily": "ESP32-S2",
+                "parts": [
+                    {
+                        "path": "https://github.com/tobiasfaust/ESP32_PumpControl/releases/download/v.3.1.0-PRE-13701784314/bootloader.ESP32-S2.v3.1.0-49.standard.prelive.bin",
+                        "offset": 4096,
+                        "filetype": "bootloader",
+                        "asset_apiUrl": "https://api.github.com/repos/tobiasfaust/ESP32_PumpControl/releases/assets/235161130"
+                    },
+                    {
+                        "path": "https://github.com/tobiasfaust/ESP32_PumpControl/releases/download/v.3.1.0-PRE-13701784314/partitions.ESP32-S2.v3.1.0-49.standard.prelive.bin",
+                        "offset": 32768,
+                        "filetype": "partitions",
+                        "asset_apiUrl": "https://api.github.com/repos/tobiasfaust/ESP32_PumpControl/releases/assets/235161146"
+                    },
+                    {
+                        "path": "https://github.com/tobiasfaust/ESP32_PumpControl/releases/download/v.3.1.0-PRE-13701784314/littlefs.ESP32-S2.v3.1.0-49.standard.prelive.bin",
+                        "offset": 3473408,
+                        "filetype": "filesystem",
+                        "asset_apiUrl": "https://api.github.com/repos/tobiasfaust/ESP32_PumpControl/releases/assets/235161136"
+                    },
+                    {
+                        "path": "https://github.com/tobiasfaust/ESP32_PumpControl/releases/download/v.3.1.0-PRE-13701784314/firmware.ESP32-S2.v3.1.0-49.standard.prelive.bin",
+                        "offset": 65536,
+                        "filetype": "firmware",
+                        "asset_apiUrl": "https://api.github.com/repos/tobiasfaust/ESP32_PumpControl/releases/assets/235161132"
+                    }
+                ]
+            },
+            {
+                "chipFamily": "ESP32-S3",
+                "parts": [
+                    {
+                        "path": "https://github.com/tobiasfaust/ESP32_PumpControl/releases/download/v.3.1.0-PRE-13701784314/bootloader.ESP32-S3.v3.1.0-49.standard.prelive.bin",
+                        "offset": 4096,
+                        "filetype": "bootloader",
+                        "asset_apiUrl": "https://api.github.com/repos/tobiasfaust/ESP32_PumpControl/releases/assets/235161177"
+                    },
+                    {
+                        "path": "https://github.com/tobiasfaust/ESP32_PumpControl/releases/download/v.3.1.0-PRE-13701784314/partitions.ESP32-S3.v3.1.0-49.standard.prelive.bin",
+                        "offset": 32768,
+                        "filetype": "partitions",
+                        "asset_apiUrl": "https://api.github.com/repos/tobiasfaust/ESP32_PumpControl/releases/assets/235161245"
+                    },
+                    {
+                        "path": "https://github.com/tobiasfaust/ESP32_PumpControl/releases/download/v.3.1.0-PRE-13701784314/littlefs.ESP32-S3.v3.1.0-49.standard.prelive.bin",
+                        "offset": 3473408,
+                        "filetype": "filesystem",
+                        "asset_apiUrl": "https://api.github.com/repos/tobiasfaust/ESP32_PumpControl/releases/assets/235161239"
+                    },
+                    {
+                        "path": "https://github.com/tobiasfaust/ESP32_PumpControl/releases/download/v.3.1.0-PRE-13701784314/firmware.ESP32-S3.v3.1.0-49.standard.prelive.bin",
+                        "offset": 65536,
+                        "filetype": "firmware",
+                        "asset_apiUrl": "https://api.github.com/repos/tobiasfaust/ESP32_PumpControl/releases/assets/235161181"
+                    }
+                ]
+            },
+            {
+                "chipFamily": "ESP32",
+                "parts": [
+                    {
+                        "path": "https://github.com/tobiasfaust/ESP32_PumpControl/releases/download/v.3.1.0-PRE-13701784314/bootloader.ESP32.v3.1.0-49.standard.prelive.bin",
+                        "offset": 4096,
+                        "filetype": "bootloader",
+                        "asset_apiUrl": "https://api.github.com/repos/tobiasfaust/ESP32_PumpControl/releases/assets/235161246"
+                    },
+                    {
+                        "path": "https://github.com/tobiasfaust/ESP32_PumpControl/releases/download/v.3.1.0-PRE-13701784314/partitions.ESP32.v3.1.0-49.standard.prelive.bin",
+                        "offset": 32768,
+                        "filetype": "partitions",
+                        "asset_apiUrl": "https://api.github.com/repos/tobiasfaust/ESP32_PumpControl/releases/assets/235161264"
+                    },
+                    {
+                        "path": "https://github.com/tobiasfaust/ESP32_PumpControl/releases/download/v.3.1.0-PRE-13701784314/littlefs.ESP32.v3.1.0-49.standard.prelive.bin",
+                        "offset": 3473408,
+                        "filetype": "filesystem",
+                        "asset_apiUrl": "https://api.github.com/repos/tobiasfaust/ESP32_PumpControl/releases/assets/235161254"
+                    },
+                    {
+                        "path": "https://github.com/tobiasfaust/ESP32_PumpControl/releases/download/v.3.1.0-PRE-13701784314/firmware.ESP32.v3.1.0-49.standard.prelive.bin",
+                        "offset": 65536,
+                        "filetype": "firmware",
+                        "asset_apiUrl": "https://api.github.com/repos/tobiasfaust/ESP32_PumpControl/releases/assets/235161250"
+                    }
+                ]
+            },
+            {
+                "chipFamily": "ESP32-C3",
+                "parts": [
+                    {
+                        "path": "https://github.com/tobiasfaust/ESP32_PumpControl/releases/download/v.3.1.0-PRE-13701784314/bootloader.ESP32-C3.v3.1.0-49.standard.prelive.bin",
+                        "offset": 4096,
+                        "filetype": "bootloader",
+                        "asset_apiUrl": "https://api.github.com/repos/tobiasfaust/ESP32_PumpControl/releases/assets/235161268"
+                    },
+                    {
+                        "path": "https://github.com/tobiasfaust/ESP32_PumpControl/releases/download/v.3.1.0-PRE-13701784314/partitions.ESP32-C3.v3.1.0-49.standard.prelive.bin",
+                        "offset": 32768,
+                        "filetype": "partitions",
+                        "asset_apiUrl": "https://api.github.com/repos/tobiasfaust/ESP32_PumpControl/releases/assets/235161278"
+                    },
+                    {
+                        "path": "https://github.com/tobiasfaust/ESP32_PumpControl/releases/download/v.3.1.0-PRE-13701784314/littlefs.ESP32-C3.v3.1.0-49.standard.prelive.bin",
+                        "offset": 3473408,
+                        "filetype": "filesystem",
+                        "asset_apiUrl": "https://api.github.com/repos/tobiasfaust/ESP32_PumpControl/releases/assets/235161272"
+                    },
+                    {
+                        "path": "https://github.com/tobiasfaust/ESP32_PumpControl/releases/download/v.3.1.0-PRE-13701784314/firmware.ESP32-C3.v3.1.0-49.standard.prelive.bin",
+                        "offset": 65536,
+                        "filetype": "firmware",
+                        "asset_apiUrl": "https://api.github.com/repos/tobiasfaust/ESP32_PumpControl/releases/assets/235161270"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "manifest": "https://github.com/tobiasfaust/ESP32_PumpControl/releases/download/v.3.1.0-PRE-13701784314/manifestAll-flowercare.json",
+        "version": "v3.1.0",
+        "stage": "prelive",
+        "variant": "flowercare",
+        "build": 49,
+        "chipFamilies": [
+            "ESP32"
+        ],
+        "builds": [
+            {
+                "chipFamily": "ESP32",
+                "parts": [
+                    {
+                        "path": "https://github.com/tobiasfaust/ESP32_PumpControl/releases/download/v.3.1.0-PRE-13701784314/bootloader.ESP32.v3.1.0-49.flowercare.prelive.bin",
+                        "offset": 4096,
+                        "filetype": "bootloader",
+                        "asset_apiUrl": "https://api.github.com/repos/tobiasfaust/ESP32_PumpControl/releases/assets/235161152"
+                    },
+                    {
+                        "path": "https://github.com/tobiasfaust/ESP32_PumpControl/releases/download/v.3.1.0-PRE-13701784314/partitions.ESP32.v3.1.0-49.flowercare.prelive.bin",
+                        "offset": 32768,
+                        "filetype": "partitions",
+                        "asset_apiUrl": "https://api.github.com/repos/tobiasfaust/ESP32_PumpControl/releases/assets/235161173"
+                    },
+                    {
+                        "path": "https://github.com/tobiasfaust/ESP32_PumpControl/releases/download/v.3.1.0-PRE-13701784314/littlefs.ESP32.v3.1.0-49.flowercare.prelive.bin",
+                        "offset": 3473408,
+                        "filetype": "filesystem",
+                        "asset_apiUrl": "https://api.github.com/repos/tobiasfaust/ESP32_PumpControl/releases/assets/235161161"
+                    },
+                    {
+                        "path": "https://github.com/tobiasfaust/ESP32_PumpControl/releases/download/v.3.1.0-PRE-13701784314/firmware.ESP32.v3.1.0-49.flowercare.prelive.bin",
+                        "offset": 65536,
+                        "filetype": "firmware",
+                        "asset_apiUrl": "https://api.github.com/repos/tobiasfaust/ESP32_PumpControl/releases/assets/235161155"
+                    }
+                ]
+            }
+        ]
+    }
+]
