@@ -1,7 +1,7 @@
 #ifndef OW2408_H
 #define OW2408_H
 
-#include "CommonLibs.h"
+#include "commonlibs.h"
 #include "baseconfig.h"
 #include "DS2408.h"     // https://github.com/queezythegreat/arduino-ds2408
                         // https://github.com/PaulStoffregen/OneWire
@@ -19,7 +19,7 @@ class ow2408 {
     bool        isValidPort(uint8_t port);
     uint8_t     findDevices();
     const uint8_t& GetCountDevices() const {return device_count;}
-    void        GetInitData(AsyncResponseStream *response);
+    void        GetInitData(JsonDocument& json);
     
   private:
     DS2408* ow;

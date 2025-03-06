@@ -10,21 +10,21 @@ void OLED::init(uint8_t sda, uint8_t scl, uint8_t i2cAddress) {
   this->i2cAddress = i2cAddress;
   this->type = Config->GetOledType();
 
-  if (Config->GetDebugLevel() >=4) dbg.printf("Starting OLED: I2c: 0x%02X, SDA: %d, SCL: %d, Type: %d )\n", this->i2cAddress, this->pin_sda, pin_scl, this->type);
+  Config->logN(4, "Starting OLED: I2c: 0x%02X, SDA: %d, SCL: %d, Type: %d )", this->i2cAddress, this->pin_sda, pin_scl, this->type);
   
   ssd = new OLEDWrapper(this->pin_sda, this->pin_scl, this->i2cAddress);
   
   if (this->ssd->init()) {
     this->ssd->flipScreenVertically();
-    if (Config->GetDebugLevel() >=3) dbg.println("OLED Ready");
+    Config->logN(3, "OLED Ready");
   } else {
-    if (Config->GetDebugLevel() >=1) dbg.println("OLED failed to initialize");
+    Config->logN(1, "OLED failed to initialize");
   }
   this->enabled = false;
 }
 
 void OLED::Enable(bool e) {
-  if (Config->GetDebugLevel() >=3) dbg.println((e?"OLED enabled":"OLED disabled"));
+  Config->logN(3, (e?"OLED enabled":"OLED disabled"));
   this->enabled = e;
 }
 
@@ -67,7 +67,7 @@ void OLED::SetWiFiConnected(bool c) {
   if(this->WiFiConnected != c) {
     this->WiFiConnected = c;
     UpdateAll(); 
-    if (Config->GetDebugLevel() >=3) { dbg.print(F("OLED: Change WiFi Connect Status to ")); dbg.println(c);}
+    Config->logN(3, "OLED: Change WiFi Connect Status to %s", c?"true":"false");
   }
 }
 
@@ -75,13 +75,13 @@ void OLED::SetMqttConnected(bool c) {
   if(this->MqttConnected != c) {
     this->MqttConnected = c;
     if (this->enabled) { display_MqttConnectInfo(); }
-    if (Config->GetDebugLevel() >=3) { dbg.print(F("OLED: Change MQTT Connect Status to ")); dbg.println(c);}
+    Config->logN(3, "OLED: Change MQTT Connect Status to %s", c?"true":"false");
   }
 }
 
 void OLED::UpdateAll() {
   if (ssd && this->enabled) {
-    if (Config->GetDebugLevel() >=4) dbg.println("OLED Update All");
+    Config->logN(4, "OLED Update All");
     ssd->clear();
     display_header();
     display_wifibars();

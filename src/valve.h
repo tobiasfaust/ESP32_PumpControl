@@ -1,9 +1,9 @@
 #ifndef VALVE_H
 #define VALVE_H
 
-#include "CommonLibs.h"
+#include "commonlibs.h"
 #include "valveHardware.h"
-#include "MyMqtt.h"
+#include "mymqtt.h"
 
 class valve {
 

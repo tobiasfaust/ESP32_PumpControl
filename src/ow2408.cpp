@@ -1,4 +1,4 @@
-#include "OW2408.h"
+#include "ow2408.h"
 
 ow2408::ow2408(){  }
 
@@ -6,7 +6,7 @@ void ow2408::init(uint8_t pin) {
   this->ow = new DS2408(pin); 
   this->findDevices();
   this->setup_devices();
-  if (Config->GetDebugLevel() >=3) dbg.printf("OneWire DS2408 with %d devices initialized \n", this->device_count);
+  Config->logN(3, "OneWire DS2408 with %d devices initialized ", this->device_count);
 }
 
 uint8_t ow2408::findDevices() {
@@ -30,7 +30,8 @@ String ow2408::print_device(uint8_t index) {
 
 void ow2408::print_byte(uint8_t data) {
     for(int index=0; index<8; index++) {
-        dbg.print(data & 1, BIN);
+        //dbg.print(data & 1, BIN);
+        Config->logN(5, "%d", data & 1);
         data = data >> 1;
     }
 }
@@ -53,13 +54,13 @@ bool ow2408::handlePort(uint8_t port, bool state) {
   bool ret;
   
   if ((index+1) > this->device_count) {
-    if (Config->GetDebugLevel() >=2) { dbg.printf("requested OnWire index %d out of range\n", index); }
+    Config->logN(2, "requested OnWire index %d out of range", index);
     return false; 
   }
-  if (Config->GetDebugLevel() >=4) { dbg.printf("Schalte Device #%d  Port %d (%s)\n", index, DevPort, this->print_device(index).c_str()); }
+  Config->logN(4, "Schalte Device #%d  Port %d (%s)", index, DevPort, this->print_device(index).c_str());
 
   uint8_t currentstate = (this->ow->get_last_state(this->devices[index]));
-  if (Config->GetDebugLevel() >=5)  { dbg.print(" STATE ALT="); print_byte(currentstate); }
+  Config->logN(5, " STATE ALT="); print_byte(currentstate);
 
   if(state) {
     // set ON
@@ -70,7 +71,7 @@ bool ow2408::handlePort(uint8_t port, bool state) {
   }
 
   ret = this->ow->set_state(this->devices[index], currentstate);
-  if (Config->GetDebugLevel() >=5) { dbg.print(" STATE NEU ="); print_byte(currentstate); dbg.println(""); }
+  Config->logN(5, " STATE NEU ="); print_byte(currentstate);
 
   return ret;
 }
@@ -84,10 +85,7 @@ bool ow2408::isValidPort(uint8_t port)  {
 }
 
 
-void ow2408::GetInitData(AsyncResponseStream *response) {
-  String ret;
-  JsonDocument json;
-  
+void ow2408::GetInitData(JsonDocument& json) {
   json["data"].to<JsonObject>();
   JsonArray row = json["data"]["row"].to<JsonArray>();
   
@@ -96,14 +94,11 @@ void ow2408::GetInitData(AsyncResponseStream *response) {
 
     JsonArray ports = row[i]["ports"].to<JsonArray>();
     for(uint8_t j=0; j<8; j++) {
-      ports[j]["port"] = j + " -> " + 140+(i*8)+j;
+      ports[j]["port"] = String(j) + " -> " + String(140 + (i * 8) + j);
     }
   }
 
   json["response"].to<JsonObject>();
   json["response"]["status"] = 1;
   json["response"]["text"] = "successful";
-
-  serializeJson(json, ret);
-  response->print(ret);
 }

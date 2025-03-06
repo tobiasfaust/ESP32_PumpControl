@@ -1,10 +1,12 @@
+import * as global from './Javascript.js';
+
 /*******************************
 copy first row of table and add it as clone 
 *******************************/
-function addrow(tableID) { 
+export function addrow(tableID) { 
   var _table = document.getElementById(tableID);
   var firstrow;
-  for( i=0; i< _table.rows.length; i++) { 
+  for( var i=0; i< _table.rows.length; i++) { 
     if (GetParentObject(_table.rows[i], "THEAD")) continue;
     firstrow = i;
   }
@@ -19,11 +21,11 @@ function addrow(tableID) {
 /*******************************
 delete a row in table
 *******************************/
-function delrow(object) { 
+export function delrow(object) { 
   var table = GetParentObject(object, 'TABLE');
   var rowIndex = GetParentObject(object, 'TR').rowIndex;
   var rowFirst=0;
-  for( i=0; i< table.rows.length; i++) { 
+  for( var i=0; i< table.rows.length; i++) { 
     if (GetParentObject(table.rows[i], "THEAD")) continue;
     rowFirst = i; break;
   }
@@ -38,16 +40,16 @@ function delrow(object) {
 /*******************************
 recalculate all id´s, name´s
 *******************************/
-function validate_identifiers(tableID) {
-  table = document.getElementById(tableID); 
+export function validate_identifiers(tableID) {
+  var table = document.getElementById(tableID); 
   var counter=1;
-  for( i=0; i< table.rows.length; i++) { 
-    row = table.rows[i];
+  for( var i=0; i< table.rows.length; i++) { 
+    var row = table.rows[i];
     if (GetParentObject(row, "THEAD")) continue;
     
     row.cells[0].innerHTML = counter;
-    objects = row.querySelectorAll('label, input, select, div, td');
-    for( j=0; j< objects.length; j++) {
+    var objects = row.querySelectorAll('label, input, select, div, td');
+    for( var j=0; j< objects.length; j++) {
       if (objects[j].name) {objects[j].name = objects[j].name.replace(/(\d+)/, counter-1);}
       if (objects[j].id) {objects[j].id = objects[j].id.replace(/(\d+)/, counter-1);}
       if (objects[j].htmlFor) {objects[j].htmlFor = objects[j].htmlFor.replace(/(\d+)/, counter-1);}
@@ -75,7 +77,7 @@ function GetPortOfRow(object) {
   var objects = document.querySelectorAll('select[id*=AllePorts][name=port_a]');
 
   for( var i=0; i< objects.length; i++) {
-    if(isVisible(objects[i]) && row == GetParentObject(objects[i], 'TR')) {
+    if(global.isVisible(objects[i]) && row == GetParentObject(objects[i], 'TR')) {
       port = objects[i].value;
     }
   }
@@ -86,38 +88,39 @@ function GetPortOfRow(object) {
 /************************************************
 the "active" checkbox has pressed
 *************************************************/
-function ChangeEnabled(object) {
+export function ChangeEnabled(object) {
   var data = {};
-
-  data['action'] = "EnableValve"
-  data['newState'] = object.checked;
-  data['port'] = GetPortOfRow(object);
-
-  requestData(JSON.stringify(data));
+  data['cmd'] = {};
+  data['cmd']['action'] = "EnableValve";
+  data['cmd']['newState'] = object.checked;
+  data['cmd']['item'] = GetPortOfRow(object);
+        
+  global.requestData(data); 
 }
 
 /************************************************
 the valbve type has changed
 *************************************************/
-function ChangeValve(object) {
+export function ChangeValve(object) {
   btn = document.getElementById(object.id);
-  var data = {};
 
-  data['action'] = "SetValve";
-  data['subaction'] = object.id;
-  data['newState'] = btn.value.replace(/^Set\ (.*)/, "$1");
-  data['port'] = GetPortOfRow(object);
-  
-  requestData(JSON.stringify(data), false);
+  var data = {};
+  data['cmd'] = {};
+  data['cmd']['action'] = "SetValve";
+  data['cmd']['subaction'] = object.id;
+  data['cmd']['newState'] = btn.value.replace(/^Set\ (.*)/, "$1");
+  data['cmd']['item'] = GetPortOfRow(object);
+        
+  global.requestData(data); 
 }
 
 /************************************************
 the "active" checkbox was press
 *************************************************/
-function ChangeType(object) {
+export function ChangeType(object) {
   var _obj_n, _obj_b; 
   var row = GetParentObject(object, 'TR')
-  val = object.value;
+  var val = object.value;
 
   var objects = document.querySelectorAll('div[id*=typ_]');
 

@@ -2,12 +2,12 @@
 #ifndef VALVESTRUCTURE_H
 #define VALVESTRUCTURE_H
 
-#include "CommonLibs.h"
+#include "commonlibs.h"
 #include <ArduinoJson.h>
 #include "baseconfig.h"
 #include "valveRelation.h"
 #include "valve.h"
-#include "MyMqtt.h"
+#include "mymqtt.h"
 
 extern BaseConfig* Config;
 extern valveRelation* ValveRel;
@@ -23,6 +23,7 @@ class valveStructure {
     valveStructure(uint8_t sda, uint8_t scl);
     void      loop();
     void      OnForTimer(String SubTopic, int duration);
+    void      OnForTimer(uint8_t Port, int duration);
     void      SetOn(String SubTopic);
     void      SetOn(uint8_t Port);
     void      SetOff(String SubTopic);
@@ -32,11 +33,11 @@ class valveStructure {
     void      SetEnable(uint8_t Port, bool state);
     uint8_t   CountActiveThreads();
     
-    void      GetInitData(AsyncResponseStream* response);
-    void      GetInitData1Wire(AsyncResponseStream* response);
+    void      GetInitData(JsonDocument& json);
+    void      GetInitData1Wire(JsonDocument& json);
 
     void      LoadJsonConfig();
-    void      getWebJsParameter(AsyncResponseStream *response);
+    void      getWebJsParameter(JsonDocument& json);
     void      ReceiveMQTT(String topic, int value);
     uint8_t   Get1WireCountDevices();
     uint8_t   Refresh1WireDevices();
@@ -45,7 +46,6 @@ class valveStructure {
     valve*    GetValveItem(uint8_t Port);
     valve*    GetValveItem(String SubTopic);
     void      handleDeps(String topic, int value); //prueft die Relationen
-    String    GetJsonKeyMatch(JsonDocument* doc, String key);
 
     valveHardware* ValveHW = NULL;
     std::shared_ptr<std::vector<valve>> Valves;

@@ -1,7 +1,7 @@
 #ifndef VALVEHARDWARE_H
 #define VALVEHARDWARE_H
   
-#include "CommonLibs.h"
+#include "commonlibs.h"
 #include "baseconfig.h"
 #include <vector>
 #include <Wire.h>
@@ -11,11 +11,11 @@
 #endif
 
 #ifdef USE_TB6612
-  #include "TB6612.h"
+  #include "tb6612.h"
 #endif
 
 #ifdef USE_ONEWIRE
-  #include "OW2408.h"
+  #include "ow2408.h"
 #endif
 
 extern BaseConfig* Config;
@@ -56,7 +56,7 @@ class valveHardware {
     uint8_t   Get1WireCountDevices();
     uint8_t   Refresh1WireDevices();
     
-    void      GetInitData1Wire(AsyncResponseStream* response);
+    void      GetInitData1Wire(JsonDocument& json);
     
     const uint8_t& GetPin1wire()      const {return pin_1wire;}
     
@@ -75,7 +75,7 @@ class valveHardware {
     
     void    setHWType(HWdev_t* dev);
     void    ConnectHWdevice(HWdev_t* dev);
-    void    PortMapping(PortMap_t* Map);
+    void    PortMapping(PortMap_t& Map);
     void    addI2CDevice(uint8_t i2cAddress);
     bool    I2CIsPresent(uint8_t i2cAddress);
 

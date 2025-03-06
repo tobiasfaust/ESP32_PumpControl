@@ -1,8 +1,9 @@
 #ifndef TB6612_H
 #define TB6612_H
 
-#include "CommonLibs.h"
+#include "commonlibs.h"
 #include "WEMOS_Motor.h"
+#include "baseconfig.h"
 
 class tb6612 {
   

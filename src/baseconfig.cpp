@@ -16,9 +16,9 @@ BaseConfig::BaseConfig():
   enable_3wege(false),
   ventil3wege_port(0),
   max_parallel(0),
-  enable_autoupdate(false),
-  autoupdate_stage((stage_t)PROD),
-  useETH(0)
+  useETH(0),
+  serial_rx(3),
+  serial_tx(1)
   {
   
   #ifdef ESP8266
@@ -28,19 +28,17 @@ BaseConfig::BaseConfig():
     this->pin_sda = 21;
     this->pin_scl = 22,
   #endif
-
-  ESPUpdate = new updater;
   
   LoadJsonConfig();
 }
 
 void BaseConfig::LoadJsonConfig() {
-  if (LittleFS.exists("/baseconfig.json")) {
+  if (LittleFS.exists("/config/baseconfig.json")) {
     //file exists, reading and loading
-    dbg.println(F("reading baseconfig.json file"));
-    File configFile = LittleFS.open("/baseconfig.json", "r");
+    this->logN(3, "reading baseconfig.json file");
+    File configFile = LittleFS.open("/config/baseconfig.json", "r");
     if (configFile) {
-      if (this->GetDebugLevel() >=3) dbg.println(F("baseconfig.json is now open"));
+      this->logN(3, "baseconfig.json is now open");
       ReadBufferingStream stream{configFile, 64};
       stream.find("\"data\":[");
       do {
@@ -48,55 +46,40 @@ void BaseConfig::LoadJsonConfig() {
         JsonDocument elem;
         DeserializationError error = deserializeJson(elem, stream); 
         if (error) {
-          if (this->GetDebugLevel() >=1) {
-            dbg.printf("Failed to parse baseconfig.json data: %s, load default config\n", error.c_str()); 
-          } 
+          this->logN(1, "Failed to parse baseconfig.json data: %s, load default config", error.c_str()); 
         } else {
           // Print the result
-          if (this->GetDebugLevel() >=5) {dbg.println(F("parsing partial JSON of baseconfig.json ok")); }
-          if (this->GetDebugLevel() >=5) {serializeJsonPretty(elem, dbg);} 
+          this->logN(5, "parsing partial JSON of baseconfig.json ok"); 
+          this->log(5, elem);
           
-          if (elem.containsKey("mqttroot"))         { this->mqtt_root = elem["mqttroot"].as<String>();}
-          if (elem.containsKey("mqttserver"))       { this->mqtt_server = elem["mqttserver"].as<String>();}
-          if (elem.containsKey("mqttport"))         { this->mqtt_port = elem["mqttport"].as<int>();}
-          if (elem.containsKey("mqttuser"))         { this->mqtt_username = elem["mqttuser"].as<String>();}
-          if (elem.containsKey("mqttpass"))         { this->mqtt_password = elem["mqttpass"].as<String>();}
-          if (elem.containsKey("mqttbasepath"))     { this->mqtt_basepath = elem["mqttbasepath"].as<String>();}
-          if (elem.containsKey("sel_UseRandomClientID")){ if (strcmp(elem["sel_UseRandomClientID"], "none")==0) { this->mqtt_UseRandomClientID=false;} else {this->mqtt_UseRandomClientID=true;}}
-          if (elem.containsKey("keepalive"))        { if (elem["keepalive"].as<int>() == 0) { this->keepalive = 0;} else { this->keepalive = _max(elem["keepalive"].as<int>(), 10);}}
-          if (elem.containsKey("debuglevel"))       { this->debuglevel = _max(elem["debuglevel"].as<int>(), 0);}
-          if (elem.containsKey("pinsda"))           { this->pin_sda = (elem["pinsda"].as<int>()) - 200;}
-          if (elem.containsKey("pinscl"))           { this->pin_scl = (elem["pinscl"].as<int>()) - 200;}
-          if (elem.containsKey("pin1wire"))         { this->pin_1wire = (elem["pin1wire"].as<int>()) - 200;}
-          if (elem.containsKey("sel_oled"))         { if (strcmp(elem["sel_oled"], "none")==0) { this->enable_oled=false;} else {this->enable_oled=true;}}
-          if (elem.containsKey("sel_1wire"))        { if (strcmp(elem["sel_1wire"], "none")==0) { this->enable_1wire=false;} else {this->enable_1wire=true;}}
-          if (elem.containsKey("sel_3wege"))        { if (strcmp(elem["sel_3wege"], "none")==0) { this->enable_3wege=false;} else {this->enable_3wege=true;}}
-          if (elem.containsKey("sel_update"))       { if (strcmp(elem["sel_update"], "manu")==0) { this->enable_autoupdate=false;} else {this->enable_autoupdate=true;}}
-          if (elem.containsKey("autoupdate_url"))   { this->autoupdate_url = elem["autoupdate_url"].as<String>(); }                   
-          if (elem.containsKey("autoupdate_stage")) { if (elem["autoupdate_stage"] == "PROD") { this->autoupdate_stage = (stage_t)PROD; }
-                                                      if (elem["autoupdate_stage"] == "PRE")  { this->autoupdate_stage = (stage_t)PRE; }
-                                                      if (elem["autoupdate_stage"] == "DEV")  { this->autoupdate_stage = (stage_t)DEV; }             
-                                                    }
-          if (elem.containsKey("i2coled"))          { this->i2caddress_oled = strtoul(elem["i2coled"], NULL, 16);} // hex convert to dec    
-          if (elem.containsKey("oled_type"))        { this->oled_type = elem["oled_type"].as<int>();} 
-          if (elem.containsKey("ventil3wege_port")) { this->ventil3wege_port = elem["ventil3wege_port"].as<int>();}
+          if (elem["mqttroot"])         { this->mqtt_root = elem["mqttroot"].as<String>();}
+          if (elem["mqttserver"])       { this->mqtt_server = elem["mqttserver"].as<String>();}
+          if (elem["mqttport"])         { this->mqtt_port = elem["mqttport"].as<int>();}
+          if (elem["mqttuser"])         { this->mqtt_username = elem["mqttuser"].as<String>();}
+          if (elem["mqttpass"])         { this->mqtt_password = elem["mqttpass"].as<String>();}
+          if (elem["mqttbasepath"])     { this->mqtt_basepath = elem["mqttbasepath"].as<String>();}
+          if (elem["sel_UseRandomClientID"]){ if (strcmp(elem["sel_UseRandomClientID"], "none")==0) { this->mqtt_UseRandomClientID=false;} else {this->mqtt_UseRandomClientID=true;}}
+          if (elem["keepalive"])        { if (elem["keepalive"].as<int>() == 0) { this->keepalive = 0;} else { this->keepalive = _max(elem["keepalive"].as<int>(), 10);}}
+          if (elem["debuglevel"])       { this->debuglevel = _max(elem["debuglevel"].as<int>(), 0);}
+          if (elem["pinsda"])           { this->pin_sda = (elem["pinsda"].as<int>()) - 200;}
+          if (elem["pinscl"])           { this->pin_scl = (elem["pinscl"].as<int>()) - 200;}
+          if (elem["pin1wire"])         { this->pin_1wire = (elem["pin1wire"].as<int>()) - 200;}
+          if (elem["sel_oled"])         { if (strcmp(elem["sel_oled"], "none")==0) { this->enable_oled=false;} else {this->enable_oled=true;}}
+          if (elem["sel_1wire"])        { if (strcmp(elem["sel_1wire"], "none")==0) { this->enable_1wire=false;} else {this->enable_1wire=true;}}
+          if (elem["sel_3wege"])        { if (strcmp(elem["sel_3wege"], "none")==0) { this->enable_3wege=false;} else {this->enable_3wege=true;}}
+          if (elem["i2coled"])          { this->i2caddress_oled = strtoul(elem["i2coled"], NULL, 16);} // hex convert to dec    
+          if (elem["oled_type"])        { this->oled_type = elem["oled_type"].as<int>();} 
+          if (elem["ventil3wege_port"]) { this->ventil3wege_port = elem["ventil3wege_port"].as<int>();}
+          if (elem["serial_rx"])        { this->serial_rx = (elem["serial_rx"].as<int>()) - 200;}
+          if (elem["serial_tx"])        { this->serial_tx = (elem["serial_tx"].as<int>()) - 200;}
         }
       } while (stream.findUntil(",","]"));
     } else {
-      dbg.println("cannot open existing baseconfig.json config File, load default BaseConfig"); // -> constructor
+      this->logN(1, "cannot open existing baseconfig.json config File, load default BaseConfig"); // -> constructor
     }
   } else {
-    dbg.println("baseconfig.json config File not exists, load default BaseConfig");
+    this->logN(1, "baseconfig.json config File not exists, load default BaseConfig");
   }
-
-  if (!this->autoupdate_url || this->autoupdate_url.length() < 10 ) {
-    this->autoupdate_url = UPDATE_URL;
-  }
-
-  ESPUpdate->setAutoMode(this->enable_autoupdate);
-  ESPUpdate->setIndexJson(this->autoupdate_url);
-  ESPUpdate->setStage(this->autoupdate_stage);
-  ESPUpdate->SetDebugLevel(this->debuglevel);
 
   // Data Cleaning
   if(this->mqtt_basepath.endsWith("/")) {
@@ -104,12 +87,8 @@ void BaseConfig::LoadJsonConfig() {
   }
 }
 
-String BaseConfig::GetReleaseName() {
-  return ESPUpdate->GetReleaseName();
-}
-
-void BaseConfig::loop() {
-  ESPUpdate->loop();  
+const String BaseConfig::GetReleaseName() {
+  return String(Release) + "(@" + String(GIT_BRANCH) + ")"; 
 }
 
 /* https://cpp4arduino.com/2018/11/06/what-is-heap-fragmentation.html*/
@@ -117,15 +96,11 @@ size_t BaseConfig::getFragmentation() {
   return 100 - ESP_GetMaxFreeAvailableBlock() * 100 / ESP.getFreeHeap();
 }
 
-void BaseConfig::GetInitData(AsyncResponseStream *response) {
-  String ret;
-  JsonDocument json;
-  
+void BaseConfig::GetInitData(JsonDocument& json) {
   std::ostringstream i2caddress_oled_hex;
   i2caddress_oled_hex << std::hex << std::uppercase << std::setw(2) << std::setfill('0') << (int)this->i2caddress_oled;
 
   json["data"].to<JsonObject>();
-  json["data"]["arch"] = ARCH;
   json["data"]["mqttroot"]    = this->mqtt_root;
   json["data"]["mqttserver"]  = this->mqtt_server;
   json["data"]["mqttport"]    = this->mqtt_port;
@@ -162,6 +137,14 @@ void BaseConfig::GetInitData(AsyncResponseStream *response) {
     json["data"]["onewire_0"]["className"] = "hide";
   #endif
 
+  #ifdef USE_WEBSERIAL
+    json["data"]["tr_serial_rx"]["className"] = "hide";
+    json["data"]["tr_serial_tx"]["className"] = "hide";
+  #else
+    json["data"]["GpioPin_serial_rx"] = this->serial_rx + 200;
+    json["data"]["GpioPin_serial_tx"] = this->serial_tx + 200;
+  #endif
+
   #ifdef USE_OLED
     json["data"]["sel_oled1"] = ((this->enable_oled)?0:1);
     json["data"]["sel_oled2"] = ((this->enable_oled)?1:0);
@@ -186,18 +169,54 @@ void BaseConfig::GetInitData(AsyncResponseStream *response) {
   json["data"]["sel_3wege_0"] = ((this->enable_3wege)?0:1);
   json["data"]["sel_3wege_1"] = ((this->enable_3wege)?1:0);
   json["data"]["ConfiguredPort_0"] = this->ventil3wege_port;
-  json["data"]["sel_update_0"] = ((this->enable_autoupdate)?1:0);
-  json["data"]["sel_update_1"] = ((this->enable_autoupdate)?0:1);
-
-  json["data"]["au_stage_prod"]["selected"] = (this->autoupdate_stage == (stage_t)PROD?"selected":"");
-  json["data"]["au_stage_pre"]["selected"] =  (this->autoupdate_stage == (stage_t)PRE?"selected":"");
-  json["data"]["au_stage_dev"]["selected"] =  (this->autoupdate_stage == (stage_t)DEV?"selected":"");
   
-  json["js"]["update_url"] = this->autoupdate_url;
-
   json["response"].to<JsonObject>();
   json["response"]["status"] = 1;
   json["response"]["text"] = "successful";
-  serializeJson(json, ret);
-  response->print(ret);
+}
+
+void BaseConfig::logN(const int loglevel, const char* format, ...) {
+  if (this->GetDebugLevel() < loglevel) return;
+  
+  va_list args;
+  va_start(args, format);
+  char buffer[256];
+  vsnprintf(buffer, sizeof(buffer), format, args);
+  #ifdef USE_WEBSERIAL
+    WebSerial.printf("[Log %d] ", loglevel);
+    //if (this->GetDebugLevel() >= 4) { WebSerial.printf("FreeHeap: %d Bytes\n ", ESP.getFreeHeap()); }
+    WebSerial.println(buffer);
+  #else
+    Serial.printf("[Log %d] ", loglevel);
+    //if (this->GetDebugLevel() >= 4) { Serial.printf("FreeHeap: %d Bytes\n ", ESP.getFreeHeap()); }
+    Serial.println(buffer);
+  #endif
+  va_end(args);
+}
+
+void BaseConfig::log(const int loglevel, const char* format, ...) {
+  if (this->GetDebugLevel() < loglevel) return;
+  
+  va_list args;
+  va_start(args, format);
+  char buffer[256];
+  vsnprintf(buffer, sizeof(buffer), format, args);
+  #ifdef USE_WEBSERIAL
+    WebSerial.print(buffer);
+  #else
+    Serial.print(buffer);
+  #endif
+  va_end(args);
+}
+
+void BaseConfig::log(const int loglevel, const JsonDocument& json) {
+  if (this->GetDebugLevel() < loglevel) return;
+  
+  #ifdef USE_WEBSERIAL
+    serializeJsonPretty(json, WebSerial);
+    WebSerial.println();
+  #else
+    serializeJsonPretty(json, Serial);
+    Serial.println();
+  #endif
 }

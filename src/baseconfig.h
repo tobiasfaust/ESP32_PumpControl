@@ -1,17 +1,27 @@
 #ifndef BASECONFIG_H
 #define BASECONFIG_H
 
-#include "CommonLibs.h"
+#include "commonlibs.h"
 #include "ArduinoJson.h"
-#include "updater.h"
+#include <StreamUtils.h>
 #include <iomanip>  // needed by setw / setfill
+#include <sstream>
+#include <_Release.h>
 
 class BaseConfig {
 
   public:
     BaseConfig();
     void      LoadJsonConfig();
-    void      loop();
+
+    /**
+    * @brief Wrapper function for logging like Serial.printf
+    * @param format the format string
+    * @param ... the arguments
+    */
+    void log(const int loglevel, const char* format, ...);
+    void logN(const int loglevel, const char* format, ...);
+    void log(const int loglevel, const JsonDocument& json);
 
     const uint8_t&  GetPinSDA()      const {return pin_sda;}
     const uint8_t&  GetPinSCL()      const {return pin_scl;}
@@ -32,11 +42,13 @@ class BaseConfig {
     const uint8_t&  GetMaxParallel() const {return max_parallel;}
     const uint16_t& GetKeepAlive()   const {return keepalive;}
     const uint8_t&  GetDebugLevel()   const {return debuglevel;}
-    String          GetReleaseName();
+    const String    GetReleaseName();
     const bool&     GetUseETH()        const { return useETH; }
-    void            GetInitData(AsyncResponseStream* response);
+    void            GetInitData(JsonDocument& json);
     const String&   GetLANBoard()      const {return LANBoard;}
-
+    const uint8_t&  GetSerialRx()     const {return serial_rx;}
+    const uint8_t&  GetSerialTx()     const {return serial_tx;}
+    
     size_t          getFragmentation();
      
   private:
@@ -59,13 +71,10 @@ class BaseConfig {
     bool      enable_3wege; // wechsel Regen- /Trinkwasser
     uint8_t   ventil3wege_port; // Portnummer des Ventils
     uint8_t   max_parallel;
-    bool      enable_autoupdate;
-    stage_t   autoupdate_stage;
-    String    autoupdate_url;
     bool      useETH;  // otherwise use WIFI
     String    LANBoard;
-    
-    updater*  ESPUpdate;
+    uint8_t   serial_rx;
+    uint8_t   serial_tx;
 };
 
 extern BaseConfig* Config;

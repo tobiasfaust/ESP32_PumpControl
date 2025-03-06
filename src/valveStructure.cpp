@@ -10,11 +10,18 @@ valveStructure::valveStructure(uint8_t sda, uint8_t scl) :
   // loading twice, 1st valve is corrupted after 1st load, has to be investigate
   // TODO
   LoadJsonConfig();
-  LoadJsonConfig();
+  //LoadJsonConfig();
 }
 
 void valveStructure::OnForTimer(String SubTopic, int duration) {
   valve* v = this->GetValveItem(SubTopic);
+  if (v && v->OnForTimer(duration)) {
+    if (mqtt) {mqtt->Publish_Int("Threads", (int)this->CountActiveThreads(), false); }
+  }
+}
+
+void valveStructure::OnForTimer(uint8_t Port, int duration) {
+  valve* v = this->GetValveItem(Port);
   if (v && v->OnForTimer(duration)) {
     if (mqtt) {mqtt->Publish_Int("Threads", (int)this->CountActiveThreads(), false); }
   }
@@ -60,8 +67,8 @@ void valveStructure::loop() {
     Valves->at(i).loop();
   }
 
-  if (Config->Enabled1Wire() && /*this->ValveHW->Get1WireActive() &&*/ Config->GetPin1Wire() != this->ValveHW->GetPin1wire()) {
-    dbg.println("Der 1Wire hat sich geändert, initiiere den 1Wire Bus neu.....");
+  if (Config->Enabled1Wire() && Config->GetPin1Wire() != this->ValveHW->GetPin1wire()) {
+    Config->logN(2, "Der 1Wire hat sich geändert, initiiere den 1Wire Bus neu.....");
     ValveHW->add1WireDevice(Config->GetPin1Wire());
   }
 }
@@ -138,12 +145,12 @@ void valveStructure::LoadJsonConfig() {
     Valves->erase(Valves->begin(), Valves->end());
   }
 
-  if (LittleFS.exists("/valveconfig.json")) {
+  if (LittleFS.exists("/config/valveconfig.json")) {
     //file exists, reading and loading
-    if (Config->GetDebugLevel() >=3) dbg.println("reading valveconfig.json file....");
-    File configFile = LittleFS.open("/valveconfig.json", "r");
+    Config->logN(3, "reading valveconfig.json file....");
+    File configFile = LittleFS.open("/config/valveconfig.json", "r");
     if (configFile) {
-      if (Config->GetDebugLevel() >=3) dbg.println("valveconfig.json is now open");
+      Config->logN(3, "valveconfig.json is now open");
 
       ReadBufferingStream stream{configFile, 64};
       stream.find("\"data\":[");
@@ -153,72 +160,57 @@ void valveStructure::LoadJsonConfig() {
 
         if (error) {
           loadDefaultConfig = true;
-          if (Config->GetDebugLevel() >=1) {
-            dbg.printf("Failed to parse valveconfig.json data: %s, load default config\n", error.c_str()); 
-          } 
+          Config->logN(1, "Failed to parse valveconfig.json data: %s, load default config", error.c_str()); 
         } else {
           // Print the result
-          if (Config->GetDebugLevel() >=4) {dbg.println("parsing JSON ok"); }
-          if (Config->GetDebugLevel() >=5) {serializeJsonPretty(elem, dbg);} 
+          Config->logN(4, "parsing JSON ok");
+          Config->log(5, elem);
 
           valve myValve;
             
-          String type = GetJsonKeyMatch(&elem, "type");
-          if (elem.containsKey("port_a") && elem["port_a"].as<int>() > 0) { myValve.AddPort1(this->ValveHW, elem["port_a"].as<int>()); }
-          if (elem.containsKey(type)) {myValve.SetValveType(elem[type].as<String>()); }
+          if (elem["port_a"] && elem["port_a"].as<int>() > 0) { myValve.AddPort1(this->ValveHW, elem["port_a"].as<int>()); }
+          if (elem["type"]) {myValve.SetValveType(elem["type"].as<String>()); }
           if (elem["active"] && elem["active"] == 1) {myValve.SetActive(true);} else {myValve.SetActive(false);}
-          if (elem.containsKey("mqtttopic")) {myValve.subtopic = elem["mqtttopic"].as<String>();}
-          if (elem.containsKey("port_b") && elem["port_b"].as<int>() > 0) { myValve.AddPort2(ValveHW, elem["port_b"].as<int>());}
-          if (elem.containsKey("imp_a")) { myValve.port1ms = _max(10, _min(elem["imp_a"].as<int>(), 999));}
-          if (elem.containsKey("imp_b")) { myValve.port2ms = _max(10, _min(elem["imp_b"].as<int>(), 999));}
+          if (elem["mqtttopic"]) {myValve.subtopic = elem["mqtttopic"].as<String>();}
+          if (elem["port_b"] && elem["port_b"].as<int>() > 0) { myValve.AddPort2(ValveHW, elem["port_b"].as<int>());}
+          if (elem["imp_a"]) { myValve.port1ms = _max(10, _min(elem["imp_a"].as<int>(), 999));}
+          if (elem["imp_b"]) { myValve.port2ms = _max(10, _min(elem["imp_b"].as<int>(), 999));}
           if (elem["reverse"] && elem["reverse"] == 1) {myValve.SetReverse(true);} else {myValve.SetReverse(false);}
-          if (elem.containsKey("autooff") && elem["autooff"].as<int>() > 0) { myValve.SetAutoOff(elem["autooff"].as<int>()); }
-            
+          if (elem["autooff"] && elem["autooff"].as<int>() > 0) { myValve.SetAutoOff(elem["autooff"].as<int>()); }
+
+          // initiiere bistabile ventile
+          if (myValve.GetValveType() == "b") {
+            myValve.OnForTimer(1);
+          }
+
           Valves->push_back(myValve);
         }
 
-      } while (stream.findUntil(",","]"));
+      } while (stream.findUntil(",","]"));    
+      configFile.close(); 
     } else {
       loadDefaultConfig = true;
-      if (Config->GetDebugLevel() >=1) {dbg.println("failed to load valveconfig.json, load default config");}
+      Config->logN(1, "failed to load valveconfig.json, load default config");
     }
   } else {
     loadDefaultConfig = true;
-    if (Config->GetDebugLevel() >=3) {dbg.println("valveconfig.json File not exists, load default config");}
+    Config->logN(3, "valveconfig.json File not exists, load default config");
   }
   
   if (loadDefaultConfig) {
-    if (Config->GetDebugLevel() >=3) { dbg.println("lade Ventile DefaultConfig"); }
+    Config->logN(3, "lade Ventile DefaultConfig");
     valve myValve;
     
-    myValve.init(this->ValveHW, 203, "Valve1");
+    myValve.init(this->ValveHW, 216, "Valve1");
     this->Valves->push_back(myValve);
     
-    myValve.init(this->ValveHW, 204, "Valve2");
+    myValve.init(this->ValveHW, 217, "Valve2");
     this->Valves->push_back(myValve);
   }
-  if (Config->GetDebugLevel() >=3) {
-    dbg.printf("%d valves are now loaded \n", Valves->size());
-  }
+  Config->logN(3, "%d valves are now loaded ", this->Valves->size());
 }
 
-/**************************************
- lookup with a pattern for a key
- returns the first matched key 
-***************************************/
-String valveStructure::GetJsonKeyMatch(JsonDocument* doc, String key) {
-  for (JsonPair kv : doc->as<JsonObject>()) {
-    if (strstr(kv.key().c_str(), key.c_str())) { 
-      return (String)kv.key().c_str();
-    }
-  }
-  return "";
-}
-
-void valveStructure::GetInitData(AsyncResponseStream* response) {
-  String ret;
-  JsonDocument json;
-  
+void valveStructure::GetInitData(JsonDocument& json) {
   json["data"].to<JsonObject>();
   JsonArray row = json["data"]["rows"].to<JsonArray>();
   
@@ -238,11 +230,9 @@ void valveStructure::GetInitData(AsyncResponseStream* response) {
     row[i]["imp_b"] = Valves->at(i).port2ms;
     row[i]["AllePorts"] = Valves->at(i).GetPort1(); 
 
-    String type_name("type_"); type_name.concat(i);
-    row[i]["SelType_n"]["checked"] = (Valves->at(i).GetValveType()=="n"?1:0);
-    row[i]["SelType_n"]["name"] = type_name; 
-    row[i]["SelType_b"]["checked"] = (Valves->at(i).GetValveType()=="b"?1:0);
-    row[i]["SelType_b"]["name"] = type_name;
+    row[i]["type_opt_n"] = (Valves->at(i).GetValveType()=="n"?1:0);
+    row[i]["type_opt_b"] = (Valves->at(i).GetValveType()=="b"?1:0);
+
     row[i]["reverse"] = (Valves->at(i).GetReverse()?1:0);
     row[i]["autooff"] = Valves->at(i).GetAutoOff();
     row[i]["action"] = (Valves->at(i).GetActive()?"Set Off":"Set On");
@@ -251,31 +241,24 @@ void valveStructure::GetInitData(AsyncResponseStream* response) {
   json["response"].to<JsonObject>();
   json["response"]["status"] = 1;
   json["response"]["text"] = "successful";
-
-  serializeJson(json, ret);
-  response->print(ret);
 }
 
-void valveStructure::GetInitData1Wire(AsyncResponseStream* response) {
-  if (Config->Enabled1Wire()) { ValveHW->GetInitData1Wire(response); }
+void valveStructure::GetInitData1Wire(JsonDocument& json) {
+  if (Config->Enabled1Wire()) { ValveHW->GetInitData1Wire(json); }
 }
 
-void valveStructure::getWebJsParameter(AsyncResponseStream *response) {
+void valveStructure::getWebJsParameter(JsonDocument& json) {
+  json["js"]["gpio_disabled"] = String("[") + String(Config->GetPinSDA() + 200) + "," + String(Config->GetPinSCL() + 200) + "," + (Config->Enabled1Wire()?String(Config->GetPin1Wire() + 200):"0") + "]";
+
+  String availablePorts("[");
   
-  // bereits belegte Ports, können nicht ausgewählt werden (zb.i2c-ports)
-  // const gpio_disabled = Array(0,4);
-  response->printf("const gpio_disabled = [%d,%d,%d];\n", Config->GetPinSDA() + 200, Config->GetPinSCL() + 200, (Config->Enabled1Wire()?Config->GetPin1Wire() + 200:0));
-
-  // anhand gefundener I2C Devices die verfügbaren Ports bereit stellen
-  //const availablePorts = [65,72];
-  response->println("const availablePorts = [");
 #ifdef USE_I2C
   uint8_t count=0;
   for (uint8_t p=1; p<=254; p++) {
     if (ValveHW->IsValidPort(p) && (I2Cdetect->i2cIsPresent(ValveHW->GetI2CAddress(p)) || ValveHW->GetI2CAddress(p) == 0x01) && (!Config->EnabledOled() || Config->GetI2cOLED()!=ValveHW->GetI2CAddress(p))) {
       // i2cDetect muss den ic2Port finden oder es ist 0x01 OneWire 
       //ohne die OLED i2c Adresse
-      response->printf("%s%d", (count>0?",":"") , p);
+      availablePorts += String((count>0?",":"")) + String(p);
       count++;
     }
   }
@@ -285,19 +268,22 @@ void valveStructure::getWebJsParameter(AsyncResponseStream *response) {
     if (ValveHW->IsValidPort(p) && ValveHW->GetI2CAddress(p) == 0x01 && (!Config->EnabledOled() || Config->GetI2cOLED()!=ValveHW->GetI2CAddress(p))) {
       // i2cDetect muss den ic2Port finden oder es ist 0x01 OneWire 
       //ohne die OLED i2c Adresse
-      response->printf("%s%d", (count>0?",":"") , p);
+      availablePorts += String((count>0?",":"")) + String(p);
       count++;
     }
   }
 #endif
 
-  response->println("];\n");
+  availablePorts.concat("]");
+  json["js"]["availablePorts"] = availablePorts;
 
   //konfigurierte Ports / Namen
-  //const configuredPorts = [ {port:65, name:"Ventil1"}, {port:67, name:"Ventil2"}]
-  response->println("const configuredPorts = [");
+  String configuredPorts("[");
   for(uint8_t i=0; i < Valves->size(); i++) {
-    response->printf("{port:%d, name:'%s'}%s", Valves->at(i).GetPort1() ,Valves->at(i).subtopic.c_str(), (i<Valves->size()-1?",":""));
+    configuredPorts += String("{\"port\":") + String(Valves->at(i).GetPort1()) + String(", \"name\":\"") + Valves->at(i).subtopic + String("\"}") + String((i<Valves->size()-1?",":""));
   }
-  response->println("];\n");
+  configuredPorts.concat("]");
+
+  json["js"]["configuredPorts"] = configuredPorts;
+
 }

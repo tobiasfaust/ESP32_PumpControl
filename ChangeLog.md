@@ -1,3 +1,14 @@
+Release 3.1.0:
+  - exchange debug variable to common log-function
+  - change backend ajax-communication to websocket
+  - add flowercare support to request moisture of Xiaomi flowercare BLE devices
+  - add functionality to switch on valves by incomimg mqtt moisture messages
+  
+Release 3.0.1:
+  - add: initialize bistable valves at start to prevent open valves
+  - add: configurable serial output pins
+  - improve wifi reconnect handling
+  
 Release 3.0.0:
   - +++++++ NO SUPPORT FOR ESP8266 anymore +++++++
   - change to Async Webserver
@@ -15,7 +26,6 @@ Release 3.0.0:
   - create new Webpage to maintain the FS-files, editing json registers on-the-fly is now possible
   - add ADS1115 moisture functionality
   - add page loader
-  - add WebSerial as replacement for classic serial console
 
 Release 2.5.3:
   - Bug: Oled Typ selectionbox in GUI will now list correct

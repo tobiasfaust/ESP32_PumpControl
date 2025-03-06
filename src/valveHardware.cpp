@@ -16,12 +16,7 @@ valveHardware::valveHardware(uint8_t sda, uint8_t scl)
   t.i2cAddress=0x00;
   this->HWDevice->push_back(t);
 
-  if (Config->GetDebugLevel() >=3)  { 
-    char buffer[100] = {0};
-    memset(buffer, 0, sizeof(buffer));
-    sprintf(buffer, "Initialisiere HardwareDevice mit GPIO auf ic2Adresse 0x%02X", t.i2cAddress);
-    dbg.println(buffer);
-  }
+  Config->logN(3, "Initialisiere HardwareDevice mit GPIO auf ic2Adresse 0x%02X", t.i2cAddress);
 }
 
 #ifdef USE_ONEWIRE
@@ -31,7 +26,7 @@ valveHardware::valveHardware(uint8_t sda, uint8_t scl)
       ow2408* MyDS2408 = static_cast<ow2408*>(t->Device);
       MyDS2408->init(pin_1wire);
       this->pin_1wire = pin_1wire;
-      if (Config->GetDebugLevel() >=3) { dbg.printf("1Wire Pin changed successfully, %d devices found\n", MyDS2408->GetCountDevices()); }
+      Config->logN(3, "1Wire Pin changed successfully, %d devices found", MyDS2408->GetCountDevices());
     } 
     else if (!this->Get1WireActive()) {    
       ow2408* MyDS2408 = new ow2408();
@@ -44,9 +39,9 @@ valveHardware::valveHardware(uint8_t sda, uint8_t scl)
       t.i2cAddress=0x01;
       this->HWDevice->push_back(t);
 
-      if (Config->GetDebugLevel() >=3)  { dbg.printf("1Wire added successfully, %d devices found\n", MyDS2408->GetCountDevices()); }
+      Config->logN(3, "1Wire added successfully, %d devices found", MyDS2408->GetCountDevices());
     } else {
-      if (Config->GetDebugLevel() >=5)  { dbg.println("1wire already present"); }
+      Config->logN(5, "1wire already present");
     }
   }
 
@@ -77,23 +72,23 @@ valveHardware::valveHardware(uint8_t sda, uint8_t scl)
     else  return 0;
   }
 
-  void valveHardware::GetInitData1Wire(AsyncResponseStream* response) {
+  void valveHardware::GetInitData1Wire(JsonDocument& json) {
   HWdev_t* t = getI2CDevice(0x01);
   ow2408* MyDS2408 = static_cast<ow2408*>(t->Device);
-  MyDS2408->GetInitData(response);
+  MyDS2408->GetInitData(json);
 }
 #else
   void valveHardware::add1WireDevice(uint8_t pin_1wire) {};
   bool valveHardware::Get1WireActive() { return false;}
   uint8_t valveHardware::Get1WireCountDevices() { return 0;}
   uint8_t valveHardware::Refresh1WireDevices() { return 0; }
-  void valveHardware::GetInitData1Wire(AsyncResponseStream* response) {};
+  void valveHardware::GetInitData1Wire(JsonDocument& json) {};
 #endif
 
 void valveHardware::addI2CDevice(uint8_t i2cAddress) {
   if (!this->I2CIsPresent(i2cAddress)) {
     if (i2cAddress == 0x01) {
-      if (Config->GetDebugLevel() >=1)  { dbg.println("cannot add 1wire simply, call 'add1WireDevice(pin)' instead"); }
+      Config->logN(1, "cannot add 1wire simply, call 'add1WireDevice(pin)' instead");
     } else {
       HWdev_t t; 
       t.i2cAddress = i2cAddress;
@@ -105,20 +100,10 @@ void valveHardware::addI2CDevice(uint8_t i2cAddress) {
 }
 
 bool valveHardware::I2CIsPresent(uint8_t i2cAddress) {
-  char buffer[100] = {0};
-  //for (const auto &element : this->HWDevice) {
   for (uint8_t i=0; i < this->HWDevice->size(); i++) {
-    if (Config->GetDebugLevel() >=5)  { 
-      memset(buffer, 0, sizeof(buffer));
-      sprintf(buffer, "Pruefe ic2Adresse 0x%02X ob HW-Element 0x%02X schon existiert", i2cAddress, this->HWDevice->at(i).i2cAddress);
-      dbg.println(buffer);
-    }    
+    Config->logN(5, "Pruefe ic2Adresse 0x%02X ob HW-Element 0x%02X schon existiert", i2cAddress, this->HWDevice->at(i).i2cAddress);    
     if (this->HWDevice->at(i).i2cAddress == i2cAddress) {
-      if (Config->GetDebugLevel() >=4) { 
-        memset(buffer, 0, sizeof(buffer));
-        sprintf(buffer, "HW-Element von i2cAdresse 0x%02X gefunden", i2cAddress);
-        dbg.println(buffer);
-      }
+      Config->logN(4, "HW-Element von i2cAdresse 0x%02X gefunden", i2cAddress);
       return true;
     }
   }
@@ -135,27 +120,22 @@ HWdev_t* valveHardware::getI2CDevice(uint8_t i2cAddress) {
 }
 
 void valveHardware::ConnectHWdevice(HWdev_t* dev) {
-#ifdef USE_PCF8574
-  if(dev->HWType == PCF) {
-    PCF8574* pcf8574 = new PCF8574(dev->i2cAddress, this->pin_sda, this->pin_scl);
-    pcf8574->begin();
-    dev->Device = pcf8574;
-  } 
-#endif
-#ifdef USE_TB6612  
-  if(dev->HWType == TB6612) {
-    tb6612* motor = new tb6612();
-    motor->init(dev->i2cAddress); 
-    dev->Device = motor;
-  }
-#endif
+  #ifdef USE_PCF8574
+    if(dev->HWType == PCF) {
+      PCF8574* pcf8574 = new PCF8574(dev->i2cAddress, this->pin_sda, this->pin_scl);
+      pcf8574->begin();
+      dev->Device = pcf8574;
+    } 
+  #endif
+  #ifdef USE_TB6612  
+    if(dev->HWType == TB6612) {
+      tb6612* motor = new tb6612();
+      motor->init(dev->i2cAddress); 
+      dev->Device = motor;
+    }
+  #endif
 
- if (Config->GetDebugLevel() >=3) { 
-    char buffer[100] = {0};
-    memset(buffer, 0, sizeof(buffer));
-    sprintf(buffer, "Hardwaredevice fuer Typ %d auf i2c-Adresse 0x%02X erfolgreich erstellt", dev->HWType, dev->i2cAddress);
-    dbg.println(buffer);
-  }
+  Config->logN(3, "Hardwaredevice fuer Typ %d auf i2c-Adresse 0x%02X erfolgreich erstellt", dev->HWType, dev->i2cAddress);
 }
 
 bool valveHardware::RegisterPort(HWdev_t*& dev, uint8_t Port) {
@@ -163,17 +143,12 @@ bool valveHardware::RegisterPort(HWdev_t*& dev, uint8_t Port) {
 }
 
 bool valveHardware::RegisterPort(HWdev_t*& dev, uint8_t Port, bool reverse) {
-  char buffer[200] = {0};
   bool success = false;
-  if (Config->GetDebugLevel() >=4) { 
-    memset(buffer, 0, sizeof(buffer));
-    sprintf(buffer, "Fordere Registrierung Port %d an", Port);
-    dbg.println(buffer);
-  }
+  Config->logN(4, "Fordere Registrierung Port %d an", Port);
     
   PortMap_t PortMap;
   PortMap.Port = Port;
-  this->PortMapping(&PortMap); // need i2cAddress and internalPort
+  this->PortMapping(PortMap); // need i2cAddress and internalPort
 
   bool state = false ^ reverse; // default: OFF
   
@@ -210,30 +185,27 @@ bool valveHardware::RegisterPort(HWdev_t*& dev, uint8_t Port, bool reverse) {
   }
   
   if (Config->GetDebugLevel() >=4) { 
-    memset(buffer, 0, sizeof(buffer));
     if (success) {
-      sprintf(buffer, "Port %d als internalPort %d fuer HardwareTyp %d auf i2c-Adresse 0x%02X erfolgreich registriert", Port, PortMap.internalPort, dev->HWType, dev->i2cAddress);
+      Config->logN(3, "Port %d als internalPort %d fuer HardwareTyp %d auf i2c-Adresse 0x%02X erfolgreich registriert", Port, PortMap.internalPort, dev->HWType, dev->i2cAddress);
     } else {
-      sprintf(buffer, "Fehler bei der Registrierung des Ports %d ", Port);
+      Config->logN(2, "Fehler bei der Registrierung des Ports %d ", Port);
     }
-    dbg.println(buffer);
   }
   
-  if (success) { return true; }
-  else { return false; }
+  return success;
 }
 
 bool valveHardware::IsValidPort(uint8_t Port) {
   PortMap_t PortMap;
   PortMap.Port = Port;
-  PortMapping(&PortMap);
+  PortMapping(PortMap);
   if(PortMap.Port == Port) {return true;} else {return false;}
 }
 
 uint8_t valveHardware::GetI2CAddress(uint8_t Port) {
   PortMap_t PortMap;
   PortMap.Port = Port;
-  PortMapping(&PortMap);
+  PortMapping(PortMap);
   return PortMap.i2cAddress;
 }
 
@@ -244,7 +216,7 @@ void valveHardware::SetPort(HWdev_t* dev, uint8_t Port, bool state, bool reverse
 void valveHardware::SetPort(HWdev_t* dev, uint8_t Port1, uint8_t Port2, bool state, bool reverse, uint16_t duration) {
   PortMap_t PortMap1, PortMap2;
   PortMap1.Port = Port1; PortMap2.Port = Port2;
-  PortMapping(&PortMap1); PortMapping(&PortMap2); // need internalPort
+  PortMapping(PortMap1); PortMapping(PortMap2); // need internalPort
 
   state = state ^ reverse;
 
@@ -293,12 +265,7 @@ void valveHardware::SetPort(HWdev_t* dev, uint8_t Port1, uint8_t Port2, bool sta
     }
   }
 
-  if (Config->GetDebugLevel() >=5)  { 
-    char buffer[100] = {0};
-    memset(buffer, 0, sizeof(buffer));
-    sprintf(buffer, "Aenderung Port %d nach Status: %s ", Port1, vState(state));
-    dbg.println(buffer);
-  }
+  Config->logN(5, "Aenderung Port %d nach Status: %s ", Port1, vState(state));
 }
 
 void valveHardware::setHWType(HWdev_t* dev) {
@@ -316,124 +283,124 @@ void valveHardware::setHWType(HWdev_t* dev) {
 }
 
 // see Definition: https://www.letscontrolit.com/wiki/index.php/PCF8574
-void valveHardware::PortMapping(PortMap_t* Map) {
-    if (Map->Port >=1 && Map->Port <=8) {
-    Map->i2cAddress=0x20;
-    Map->internalPort=Map->Port-1;
-    Map->HWType = PCF;
-  } else if (Map->Port >=9 && Map->Port <=16) {
-    Map->i2cAddress=0x21;
-    Map->internalPort=Map->Port-9;
-    Map->HWType = PCF;
-  } else if (Map->Port >=17 && Map->Port <=24) {
-    Map->i2cAddress=0x22;
-    Map->internalPort=Map->Port-17;
-    Map->HWType = PCF;
-  } else if (Map->Port >=25 && Map->Port <=32) {
-    Map->i2cAddress=0x23;
-    Map->internalPort=Map->Port-25;
-    Map->HWType = PCF;
-  } else if (Map->Port >=33 && Map->Port <=40) {
-    Map->i2cAddress=0x24;
-    Map->internalPort=Map->Port-33;
-    Map->HWType = PCF;
-  } else if (Map->Port >=41 && Map->Port <=48) {
-    Map->i2cAddress=0x25;
-    Map->internalPort=Map->Port-41;
-    Map->HWType = PCF;
-  } else if (Map->Port >=49 && Map->Port <=56) {
-    Map->i2cAddress=0x26;
-    Map->internalPort=Map->Port-49;
-    Map->HWType = PCF;
-  } else if (Map->Port >=57 && Map->Port <=64) {
-    Map->i2cAddress=0x27;
-    Map->internalPort=Map->Port-57;
-    Map->HWType = PCF;
-  } else if (Map->Port >=65 && Map->Port <=72) {
-    Map->i2cAddress=0x38;
-    Map->internalPort=Map->Port-65;
-    Map->HWType = PCF;
-  } else if (Map->Port >=73 && Map->Port <=80) {
-    Map->i2cAddress=0x39;
-    Map->internalPort=Map->Port-73;
-    Map->HWType = PCF;
-  } else if (Map->Port >=81 && Map->Port <=88) {
-    Map->i2cAddress=0x3A;
-    Map->internalPort=Map->Port-81;
-    Map->HWType = PCF;
-  } else if (Map->Port >=89 && Map->Port <=96) {
-    Map->i2cAddress=0x3B;
-    Map->internalPort=Map->Port-89;
-    Map->HWType = PCF;
-  } else if (Map->Port >=97 && Map->Port <=104) {
-    Map->i2cAddress=0x3C;
-    Map->internalPort=Map->Port-97;
-    Map->HWType = PCF;
-  } else if (Map->Port >=105 && Map->Port <=112) {
-    Map->i2cAddress=0x3D;
-    Map->internalPort=Map->Port-105;
-    Map->HWType = PCF;
-  } else if (Map->Port >=113 && Map->Port <=112) {
-    Map->i2cAddress=0x3E;
-    Map->internalPort=Map->Port-113;
-    Map->HWType = PCF;
-  } else if (Map->Port >=121 && Map->Port <=128) {
-    Map->i2cAddress=0x3F;
-    Map->internalPort=Map->Port-121;
-    Map->HWType = PCF;
-  } else if (Map->Port == 130) {
-    Map->i2cAddress=0x2D;
-    Map->internalPort=0;
-    Map->HWType = TB6612;
-  } else if (Map->Port == 131) {
-    Map->i2cAddress=0x2D;
-    Map->internalPort=1;
-    Map->HWType = TB6612;
-  } else if (Map->Port == 132) {
-    Map->i2cAddress=0x2E;
-    Map->internalPort=0;
-    Map->HWType = TB6612;
-  } else if (Map->Port == 133) {
-    Map->i2cAddress=0x2E;
-    Map->internalPort=1;
-    Map->HWType = TB6612;
-  } else if (Map->Port == 134) {
-    Map->i2cAddress=0x2F;
-    Map->internalPort=0;
-    Map->HWType = TB6612;
-  } else if (Map->Port == 135) {
-    Map->i2cAddress=0x2F;
-    Map->internalPort=1;
-    Map->HWType = TB6612;
-  } else if (Map->Port == 136) {
-    Map->i2cAddress=0x30;
-    Map->internalPort=0;
-    Map->HWType = TB6612;
-  } else if (Map->Port == 137) {
-    Map->i2cAddress=0x30;
-    Map->internalPort=1;
-    Map->HWType = TB6612;
-  } else if (Map->Port >=140 && Map->Port <=199) {
+void valveHardware::PortMapping(PortMap_t& Map) {
+    if (Map.Port >=1 && Map.Port <=8) {
+    Map.i2cAddress=0x20;
+    Map.internalPort=Map.Port-1;
+    Map.HWType = PCF;
+  } else if (Map.Port >=9 && Map.Port <=16) {
+    Map.i2cAddress=0x21;
+    Map.internalPort=Map.Port-9;
+    Map.HWType = PCF;
+  } else if (Map.Port >=17 && Map.Port <=24) {
+    Map.i2cAddress=0x22;
+    Map.internalPort=Map.Port-17;
+    Map.HWType = PCF;
+  } else if (Map.Port >=25 && Map.Port <=32) {
+    Map.i2cAddress=0x23;
+    Map.internalPort=Map.Port-25;
+    Map.HWType = PCF;
+  } else if (Map.Port >=33 && Map.Port <=40) {
+    Map.i2cAddress=0x24;
+    Map.internalPort=Map.Port-33;
+    Map.HWType = PCF;
+  } else if (Map.Port >=41 && Map.Port <=48) {
+    Map.i2cAddress=0x25;
+    Map.internalPort=Map.Port-41;
+    Map.HWType = PCF;
+  } else if (Map.Port >=49 && Map.Port <=56) {
+    Map.i2cAddress=0x26;
+    Map.internalPort=Map.Port-49;
+    Map.HWType = PCF;
+  } else if (Map.Port >=57 && Map.Port <=64) {
+    Map.i2cAddress=0x27;
+    Map.internalPort=Map.Port-57;
+    Map.HWType = PCF;
+  } else if (Map.Port >=65 && Map.Port <=72) {
+    Map.i2cAddress=0x38;
+    Map.internalPort=Map.Port-65;
+    Map.HWType = PCF;
+  } else if (Map.Port >=73 && Map.Port <=80) {
+    Map.i2cAddress=0x39;
+    Map.internalPort=Map.Port-73;
+    Map.HWType = PCF;
+  } else if (Map.Port >=81 && Map.Port <=88) {
+    Map.i2cAddress=0x3A;
+    Map.internalPort=Map.Port-81;
+    Map.HWType = PCF;
+  } else if (Map.Port >=89 && Map.Port <=96) {
+    Map.i2cAddress=0x3B;
+    Map.internalPort=Map.Port-89;
+    Map.HWType = PCF;
+  } else if (Map.Port >=97 && Map.Port <=104) {
+    Map.i2cAddress=0x3C;
+    Map.internalPort=Map.Port-97;
+    Map.HWType = PCF;
+  } else if (Map.Port >=105 && Map.Port <=112) {
+    Map.i2cAddress=0x3D;
+    Map.internalPort=Map.Port-105;
+    Map.HWType = PCF;
+  } else if (Map.Port >=113 && Map.Port <=112) {
+    Map.i2cAddress=0x3E;
+    Map.internalPort=Map.Port-113;
+    Map.HWType = PCF;
+  } else if (Map.Port >=121 && Map.Port <=128) {
+    Map.i2cAddress=0x3F;
+    Map.internalPort=Map.Port-121;
+    Map.HWType = PCF;
+  } else if (Map.Port == 130) {
+    Map.i2cAddress=0x2D;
+    Map.internalPort=0;
+    Map.HWType = TB6612;
+  } else if (Map.Port == 131) {
+    Map.i2cAddress=0x2D;
+    Map.internalPort=1;
+    Map.HWType = TB6612;
+  } else if (Map.Port == 132) {
+    Map.i2cAddress=0x2E;
+    Map.internalPort=0;
+    Map.HWType = TB6612;
+  } else if (Map.Port == 133) {
+    Map.i2cAddress=0x2E;
+    Map.internalPort=1;
+    Map.HWType = TB6612;
+  } else if (Map.Port == 134) {
+    Map.i2cAddress=0x2F;
+    Map.internalPort=0;
+    Map.HWType = TB6612;
+  } else if (Map.Port == 135) {
+    Map.i2cAddress=0x2F;
+    Map.internalPort=1;
+    Map.HWType = TB6612;
+  } else if (Map.Port == 136) {
+    Map.i2cAddress=0x30;
+    Map.internalPort=0;
+    Map.HWType = TB6612;
+  } else if (Map.Port == 137) {
+    Map.i2cAddress=0x30;
+    Map.internalPort=1;
+    Map.HWType = TB6612;
+  } else if (Map.Port >=140 && Map.Port <=199) {
     // nur die Ports anzeigen die auch wirklich vorhanden sind
   
   #ifdef USE_ONEWIRE  
     if (Config->Enabled1Wire() && this->I2CIsPresent(0x01)) {
       HWdev_t* t = this->getI2CDevice(0x01);
       ow2408* MyDS2408 = static_cast<ow2408*>(t->Device);
-      if (MyDS2408->isValidPort(Map->Port-140)) {
-        Map->i2cAddress=0x01; //Fake i2c
-        Map->internalPort=Map->Port-140;
-        Map->HWType = OW2408;
-      } else Map->Port = 0;
-    } else Map->Port = 0;
+      if (MyDS2408->isValidPort(Map.Port-140)) {
+        Map.i2cAddress=0x01; //Fake i2c
+        Map.internalPort=Map.Port-140;
+        Map.HWType = OW2408;
+      } else Map.Port = 0;
+    } else Map.Port = 0;
   #endif
 
-  } else if (Map->Port >=200 && Map->Port <=250) {
+  } else if (Map.Port >=200 && Map.Port <=250) {
     // interne GPIO
-    Map->i2cAddress=0x00;
-    Map->internalPort=Map->Port-200;
-    Map->HWType = ONBOARD;
+    Map.i2cAddress=0x00;
+    Map.internalPort=Map.Port-200;
+    Map.HWType = ONBOARD;
   } else {
-    Map->Port = 0;
+    Map.Port = 0;
   }
 }

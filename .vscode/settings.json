@@ -67,5 +67,6 @@
         "mutex": "cpp",
         "stop_token": "cpp",
         "thread": "cpp"
-    }
+    },
+    "liveServer.settings.root": "/data"
 }

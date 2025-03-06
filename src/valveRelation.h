@@ -1,10 +1,10 @@
 #ifndef VALVERELATION_H
 #define VALVERELATION_H
 
-#include "CommonLibs.h"
+#include "commonlibs.h"
 #include <vector>
 #include <ArduinoJson.h>
-#include "MyMqtt.h"
+#include "mymqtt.h"
 
 class valveRelation {
 
@@ -29,7 +29,7 @@ class valveRelation {
     void      DelSubscriber(String TriggerTopic);
     uint8_t   CountActiveSubscribers(uint8_t ActorPort);
     
-    void      GetInitData(AsyncResponseStream* response);
+    void      GetInitData(JsonDocument& json);
     void      LoadJsonConfig();
     
   private:

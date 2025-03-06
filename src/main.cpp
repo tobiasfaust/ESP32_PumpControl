@@ -1,29 +1,30 @@
 #include <vector>
-#include "CommonLibs.h"
+
+#include "commonlibs.h"
 #include "baseconfig.h"
 #include "valveStructure.h"
-#include "MyMqtt.h"
-#include "MyWebServer.h"
+#include "mymqtt.h"
+#include "mywebserver.h"
 #include "sensor.h"
 
 #ifdef USE_OLED
   #include "oled.h"
-  OLED* oled = NULL;
+  OLED* oled = nullptr;
 #endif
 
 #ifdef USE_I2C
-  i2cdetect* I2Cdetect = NULL;
+  i2cdetect* I2Cdetect = nullptr;
 #endif
 
 AsyncWebServer server(80);
 DNSServer dns;
 
-BaseConfig* Config = NULL;
-valveRelation* ValveRel = NULL;
-valveStructure* VStruct = NULL;
-MyMQTT* mqtt = NULL;
-sensor* LevelSensor = NULL;
-MyWebServer* mywebserver = NULL;
+BaseConfig* Config = nullptr;
+valveRelation* ValveRel = nullptr;
+valveStructure* VStruct = nullptr;
+MyMQTT* mqtt = nullptr;
+sensor* LevelSensor = nullptr;
+MyWebServer* mywebserver = nullptr;
 
 /* debugmodes --> in der WebUI -> Basisconfig einstellbar
     0 -> nothing
@@ -36,14 +37,13 @@ MyWebServer* mywebserver = NULL;
 
 void myMQTTCallBack(char* topic, byte* payload, unsigned int length) {
   String msg;
-  
+  String topicStr = topic;
+
   for (u_int16_t i = 0; i < length; i++) {
     msg.concat((char)payload[i]);
   }
   
-  if (Config->GetDebugLevel() >= 4) { 
-    dbg.printf("Message arrived [%s]\nMessage: %s\n", topic, msg.c_str()); 
-  }
+  Config->logN(4, "Message arrived [%s] -> Message: %s", topic, msg.c_str()); 
 
   if (LevelSensor->GetExternalSensor() && (strcmp(LevelSensor->GetExternalSensor().c_str(), topic)==0)) {
     LevelSensor->SetLvl(atoi(msg.c_str()));
@@ -51,16 +51,19 @@ void myMQTTCallBack(char* topic, byte* payload, unsigned int length) {
   else if (strstr(topic, "/raw") ||  strstr(topic, "/level") ||  strstr(topic, "/mem") ||  strstr(topic, "/rssi")) {
     /*SensorMeldungen - ignore!*/
   }
+
+  #ifdef USE_FLOWERCARE
+    else if (strstr(topic, "flowercare/")) {
+      mywebserver->flowerCareOnMqttMessage(topicStr, msg);
+    }
+  #endif  
+  
   else {
-    VStruct->ReceiveMQTT((String)topic, atoi(msg.c_str()));
+    VStruct->ReceiveMQTT(topicStr, atoi(msg.c_str()));
   }
 }
 
 void setup() {
-  Serial.begin(115200);
-  Serial.println("");
-  Serial.println("ready");
-
   #ifdef ESP8266
     LittleFS.begin();
   #elif ESP32
@@ -72,11 +75,30 @@ void setup() {
   //LittleFS.format();
 
   Config = new BaseConfig();
-  //WebSerial.onMessage([](const String& msg) { Serial.println(msg); }); // dont works, workarround by using dbg definition in platformio.ini
-  //WebSerial.begin(&server);
+
+  #ifndef USE_WEBSERIAL
+    #ifdef ESP8266
+    Serial.begin(115200, SERIAL_8N1, SERIAL_FULL, Config->GetSerialTx());
+    #else
+    Serial.begin(115200,
+                 SERIAL_8N1,
+                 Config->GetSerialRx(),
+                 Config->GetSerialTx());  // RX, TX, zb.: 33, 32
+    #endif
+    Serial.println("");
+    Serial.println("ready");
+  #endif
+
+  #ifdef USE_WEBSERIAL
+    WebSerial.onMessage([](const String& msg) { Serial.println(msg); });
+    WebSerial.begin(&server);
+    WebSerial.setBuffer(100);
+  #endif
+
+  Config->logN(1, "Start of ESP PumpControl");
 
   #ifdef USE_I2C
-    dbg.printf("Starting WIRE at (SDA, SCL)): %d, %d \n", Config->GetPinSDA(), Config->GetPinSCL());
+    Config->logN(1, "Starting WIRE at (SDA, SCL)): %d, %d ", Config->GetPinSDA(), Config->GetPinSCL());
     Wire.begin(Config->GetPinSDA(), Config->GetPinSCL());
   #endif
 
@@ -86,45 +108,40 @@ void setup() {
     oled->Enable(Config->EnabledOled());
   #endif
 
-  dbg.println("Starting Wifi and MQTT");
-  mqtt = new MyMQTT(&server, &dns, 
-                    Config->GetMqttServer().c_str(), 
-                    Config->GetMqttPort(), 
-                    Config->GetMqttBasePath().c_str(), 
-                    Config->GetMqttRoot().c_str(),
-                    (char*)"AP_PumpControl",
-                    (char*)"password"
-                  );
+  Config->logN(1, "Starting Wifi and MQTT");
+  mqtt = new MyMQTT(Config->GetMqttServer().c_str(),
+                    Config->GetMqttPort(),
+                    Config->GetMqttBasePath().c_str(),
+                    Config->GetMqttRoot().c_str());
+  mqtt->setCallback(myMQTTCallBack);
   
   #ifdef USE_OLED
     mqtt->SetOled(oled);
   #endif
 
-  mqtt->setCallback(myMQTTCallBack);
-
   #ifdef USE_I2C
-    dbg.println("Starting I2CDetect");
+    Config->logN(1, "Starting I2CDetect");
     I2Cdetect = new i2cdetect(Config->GetPinSDA(), Config->GetPinSCL());
   #endif
   
-  dbg.println("Starting Sensor");
+  Config->logN(1, "Starting Sensor");
   LevelSensor = new sensor();
   #ifdef USE_OLED
     LevelSensor->SetOled(oled);
   #endif
 
-  dbg.println("Starting Valve Relations");
+  Config->logN(1, "Starting Valve Relations");
   ValveRel = new valveRelation();
-
-  dbg.println("Starting Valve Structure");
+ 
+  Config->logN(1, "Starting Valve Structure");
   VStruct = new valveStructure(Config->GetPinSDA(), Config->GetPinSCL());
 
-  dbg.println("Starting WebServer");
+  Config->logN(1, "attempting to start WebServer");
   mywebserver = new MyWebServer(&server, &dns);
 
   //VStruct->OnForTimer("Valve1", 10); // Test
 
-  dbg.println("Setup finished");
+  Config->logN(1, "Setup finished");
 }
 
 void loop() {
@@ -132,9 +149,12 @@ void loop() {
   mqtt->loop();
   LevelSensor->loop();
   mywebserver->loop();
-  Config->loop();
-
+  
   #ifdef USE_OLED
     oled->loop();  
+  #endif
+
+  #ifdef USE_WEBSERIAL
+    WebSerial.loop();
   #endif
 }

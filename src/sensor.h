@@ -1,10 +1,10 @@
 #ifndef SENSOR_H
 #define SENSOR_H
 
-#include "CommonLibs.h"
+#include "commonlibs.h"
 #include <ArduinoJson.h>
 #include <vector>
-#include "MyMqtt.h"
+#include "mymqtt.h"
 #include "valveStructure.h"
 #include "baseconfig.h"
 
@@ -47,7 +47,7 @@ class sensor {
     void      loop();
     void      SetLvl(uint8_t lvl);
     void      LoadJsonConfig();
-    void      GetInitData(AsyncResponseStream* response);    
+    void      GetInitData(JsonDocument& json);    
     
     const uint16_t& GetRaw() const {return raw;}
     const uint8_t&  GetLvl() const {return level; }
