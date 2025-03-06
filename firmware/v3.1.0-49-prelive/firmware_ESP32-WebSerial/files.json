@@ -1,0 +1,30 @@
+{
+    "name": "ESP32_PumpControl (v3.1.0-prelive)",
+    "chipFamily": "ESP32",
+    "stage": "prelive",
+    "build": 49,
+    "variant": "webSerial",
+    "version": "v3.1.0",
+    "parts": [
+        {
+            "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.1.0-49-prelive/firmware_ESP32-WebSerial/bootloader.ESP32.v3.1.0-49.webSerial.prelive.bin",
+            "offset": 4096,
+            "filetype": "bootloader"
+        },
+        {
+            "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.1.0-49-prelive/firmware_ESP32-WebSerial/partitions.ESP32.v3.1.0-49.webSerial.prelive.bin",
+            "offset": 32768,
+            "filetype": "partitions"
+        },
+        {
+            "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.1.0-49-prelive/firmware_ESP32-WebSerial/littlefs.ESP32.v3.1.0-49.webSerial.prelive.bin",
+            "offset": 3473408,
+            "filetype": "filesystem"
+        },
+        {
+            "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.1.0-49-prelive/firmware_ESP32-WebSerial/firmware.ESP32.v3.1.0-49.webSerial.prelive.bin",
+            "offset": 65536,
+            "filetype": "firmware"
+        }
+    ]
+}
