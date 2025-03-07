@@ -25,6 +25,7 @@ MyWebServer::MyWebServer(AsyncWebServer *server, DNSServer* dns):
   ElegantOTA.begin(server);
   ElegantOTA.setGitEnv(String(GIT_OWNER), String(GIT_REPO), String(GIT_BRANCH), String(GITHUB_RUN).toInt());
   ElegantOTA.setFWVersion(String(Config->GetReleaseName() + " / Build: " + GITHUB_RUN ));
+  ElegantOTA.setFWVariant(String(GIT_VARIANT));
   ElegantOTA.setBackupRestoreFS("/config");
   ElegantOTA.setAutoReboot(true);
   ElegantOTA.onStart(std::bind(&MyWebServer::onOTAStart, this));
