@@ -71,7 +71,7 @@ export function connectWebSocket() {
   }
 
   ws = new WebSocket(location.origin.replace(/^http/, 'ws') + '/ajaxws');
-  //ws = new WebSocket('ws://10.0.2.174/ajaxws'); 
+  //ws = new WebSocket('ws://10.0.2.231/ajaxws'); 
   var wsStatus = document.getElementById('ws-status');
 
   ws.onopen = function() {
@@ -397,11 +397,18 @@ export function CreateSelectionListFromInputField(querySelector, jsonLists, blac
     _select.name = objects[j].name;
     for ( k = 0; k < jsonLists.length; k++ ) {  
       for ( i = 0; i < jsonLists[k].length; i++ ) {
+          var port, name;
+          if (typeof jsonLists[k][i] === 'object') {
+            port = jsonLists[k][i].port;
+            name = jsonLists[k][i].name;
+          } else {
+            port, name = jsonLists[k][i];
+          }
           _option = document.createElement( 'option' );
-          _option.value = jsonLists[k][i].port; 
-          _option.text  = jsonLists[k][i].name;
-          if(objects[j].value == jsonLists[k][i].port) { _option.selected = true;}
-          if(blacklist && blacklist.indexOf(jsonLists[k][i].port)>=0) {
+          _option.value = port; 
+          _option.text  = name;
+          if(objects[j].value == port) { _option.selected = true;}
+          if(blacklist && blacklist.indexOf(port)>=0) {
           	_option.disabled = true;
           }
           _select.add( _option ); 
