@@ -402,7 +402,7 @@ export function CreateSelectionListFromInputField(querySelector, jsonLists, blac
             port = jsonLists[k][i].port;
             name = jsonLists[k][i].name;
           } else {
-            port, name = jsonLists[k][i];
+            port = name = jsonLists[k][i];
           }
           _option = document.createElement( 'option' );
           _option.value = port; 
