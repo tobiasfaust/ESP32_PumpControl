@@ -102,13 +102,13 @@ export function ChangeEnabled(object) {
 the valbve type has changed
 *************************************************/
 export function ChangeValve(object) {
-  btn = document.getElementById(object.id);
+  var btn = document.getElementById(object.id);
 
   var data = {};
   data['cmd'] = {};
   data['cmd']['action'] = "SetValve";
   data['cmd']['subaction'] = object.id;
-  data['cmd']['newState'] = btn.value.replace(/^Set\ (.*)/, "$1");
+  data['cmd']['newState'] =  (btn.value.toLowerCase().includes("on") ? 1 : 0);
   data['cmd']['item'] = GetPortOfRow(object);
         
   global.requestData(data); 

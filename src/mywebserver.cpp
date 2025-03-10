@@ -279,7 +279,7 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
 
       if(action && action == "SetValve") {
         uint8_t port = item.toInt();
-        if (newState && item && port > 0 && !VStruct->GetEnabled(port)) { 
+        if (item && port > 0 && !VStruct->GetEnabled(port)) { 
           json["response"]["status"] = 0; 
           json["response"]["text"] = "Requested Port not enabled. Please enable first!";
         }
