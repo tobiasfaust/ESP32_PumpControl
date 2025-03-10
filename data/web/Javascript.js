@@ -22,6 +22,7 @@ import { functionMap as baseconfigFunctionMap } from './baseconfig.js';
 import { functionMap as sensorconfigFunctionMap } from './sensorconfig.js';
 import { functionMap as valveconfigFunctionMap } from './valveconfig.js';
 import { functionMap as relationsFunctionMap } from './relations.js';
+import { functionMap as onewireFunctionsMap } from './1wireconfig.js';
 import { functionMap as filesFunctionMap } from './handlefiles.js';
 import { functionMap as flowercareFunctionMap } from './flowercare.js';
 
@@ -31,6 +32,7 @@ const combinedFunctionMap = {
   ...sensorconfigFunctionMap,
   ...valveconfigFunctionMap,
   ...relationsFunctionMap,
+  ...onewireFunctionsMap,
   ...filesFunctionMap,
   ...flowercareFunctionMap
 };
