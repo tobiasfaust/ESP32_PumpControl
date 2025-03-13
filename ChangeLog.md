@@ -1,3 +1,6 @@
+Release 3.1.1:
+  - some fixes related to 3.1.0
+
 Release 3.1.0:
   - exchange debug variable to common log-function
   - change backend ajax-communication to websocket
