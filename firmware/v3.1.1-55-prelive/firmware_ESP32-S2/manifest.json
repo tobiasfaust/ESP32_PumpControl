@@ -1,0 +1,14 @@
+{
+    "name": "ESP32_PumpControl (v3.1.1-prelive)",
+    "chipFamily": "ESP32-S2",
+    "stage": "prelive",
+    "build": 55,
+    "variant": "standard",
+    "version": "v3.1.1",
+    "parts": [
+        {
+            "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.1.1-55-prelive/firmware_ESP32-S2/merged-firmware.ESP32-S2.v3.1.1-55.standard.prelive.bin",
+            "offset": 0
+        }
+    ]
+}
