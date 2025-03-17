@@ -1,4 +1,5 @@
 import * as global from './Javascript.js';
+import * as valveFn from './valvefunctions.js';
 
 // ************************************************
 export function init() {
@@ -34,6 +35,8 @@ function GetInitData() {
 // ************************************************
 
 function MyCallback() {
+  valveFn.validate_identifiers("maintable");
+
   document.querySelector("#loader").style.visibility = "hidden";
   document.querySelector("body").style.visibility = "visible";
 }

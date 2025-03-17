@@ -25,6 +25,7 @@ MyWebServer::MyWebServer(AsyncWebServer *server, DNSServer* dns):
   ElegantOTA.begin(server);
   ElegantOTA.setGitEnv(String(GIT_OWNER), String(GIT_REPO), String(GIT_BRANCH), String(GITHUB_RUN).toInt());
   ElegantOTA.setFWVersion(String(Config->GetReleaseName() + " / Build: " + GITHUB_RUN ));
+  ElegantOTA.setFWVariant(String(GIT_VARIANT));
   ElegantOTA.setBackupRestoreFS("/config");
   ElegantOTA.setAutoReboot(true);
   ElegantOTA.onStart(std::bind(&MyWebServer::onOTAStart, this));
@@ -278,7 +279,7 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
 
       if(action && action == "SetValve") {
         uint8_t port = item.toInt();
-        if (newState && item && port > 0 && !VStruct->GetEnabled(port)) { 
+        if (item && port > 0 && !VStruct->GetEnabled(port)) { 
           json["response"]["status"] = 0; 
           json["response"]["text"] = "Requested Port not enabled. Please enable first!";
         }
