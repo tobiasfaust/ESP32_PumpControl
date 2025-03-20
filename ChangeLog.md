@@ -1,3 +1,6 @@
+Release 3.1.2:
+  - fix using ETH01 Board (#7)
+  
 Release 3.1.1:
   - some fixes related to 3.1.0
 
