@@ -294,7 +294,7 @@ void MQTT::Publish_String(const char* subtopic, String value, bool fulltopic) {
 
 String MQTT::getTopic(String subtopic, bool fulltopic) {
   if (!fulltopic) {
-    return std::move(this->mqtt_basepath + "/" + this->mqtt_root +  "/" + subtopic);
+    return std::move((this->mqtt_basepath.length()>0?this->mqtt_basepath + "/":"") + this->mqtt_root +  "/" + subtopic);
   }
   return std::move(subtopic);
 }
