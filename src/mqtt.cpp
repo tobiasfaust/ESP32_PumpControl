@@ -402,7 +402,7 @@ void MQTT::loop() {
       char buffer[100] = {0};
       memset(buffer, 0, sizeof(buffer));
 
-      snprintf(buffer, sizeof(buffer), "%d Bytes", ESP.getFreeHeap());
+      snprintf(buffer, sizeof(buffer), "%d kb", ESP.getFreeHeap() / 1024);
       this->Publish_String("memory", buffer, false);
 
       snprintf(buffer, sizeof(buffer), "%d", WiFi.RSSI());

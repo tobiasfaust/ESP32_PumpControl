@@ -17,7 +17,9 @@ sensor::sensor() :
   
   #ifdef ESP8266
     uint8_t pinAnalogDefault = 0;
-  #elif ESP32
+  #endif
+
+  #ifdef ESP32
     uint8_t pinAnalogDefault = 36; // ADC1_CH0 (GPIO 36) 
   #endif
   

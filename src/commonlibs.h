@@ -15,7 +15,9 @@
   #include <ESP8266WiFi.h>
   #include <ESPAsyncTCP.h>
   #include <FS.h>
-#elif ESP32
+#endif 
+
+#ifdef ESP32
   #include <WiFi.h> 
   #include <AsyncTCP.h>
 #endif
@@ -35,7 +37,7 @@
 
 #ifdef ESP8266
   #define ESP_GetMaxFreeAvailableBlock() ESP.getMaxFreeBlockSize()
-#elif ESP32
+#else
   #define ESP_GetMaxFreeAvailableBlock() ESP.getMaxAllocHeap()
 #endif
 

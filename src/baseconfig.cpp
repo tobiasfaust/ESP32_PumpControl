@@ -24,7 +24,9 @@ BaseConfig::BaseConfig():
   #ifdef ESP8266
     this->pin_sda = 5;
     this->pin_scl = 4;
-  #elif ESP32
+  #endif
+  
+  #ifdef ESP32
     this->pin_sda = 21;
     this->pin_scl = 22,
   #endif
