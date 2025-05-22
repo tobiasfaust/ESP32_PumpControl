@@ -36,7 +36,7 @@ void MyMQTT::loop() {
 }
 
 void MyMQTT::reSubscribe() {
-  String topic = MQTT::getTopic("#", false);
+  String topic = MQTT::getTopic("", false);
   MQTT::Subscribe(topic);
   Config->logN(3, "MyMQTT Subscribed to myself: %s", topic.c_str());
 

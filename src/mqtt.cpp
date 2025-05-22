@@ -244,8 +244,11 @@ void MQTT::reconnect() {
 
     // ... and resubscribe if needed
     for (uint8_t i=0; i< this->subscriptions->size(); i++) {
-      PubSubClient::subscribe(this->subscriptions->at(i).c_str());
-      Config->logN(1, "MQTT resubscribed to: %s", this->subscriptions->at(i).c_str());
+      String topic = this->subscriptions->at(i);
+      if (topic.endsWith("/")) topic += "#";
+      else topic += "/#";  
+      PubSubClient::subscribe(topic.c_str());
+      Config->logN(1, "MQTT resubscribed to: %s", topic.c_str());
     }
 
   } else {
@@ -312,6 +315,8 @@ void MQTT::Publish_IP() {
 void MQTT::Subscribe(String topic) {
   this->subscriptions->push_back(topic);
   if (PubSubClient::connected()) {
+    if (topic.endsWith("/")) topic += "#";
+      else topic += "/#"; 
     PubSubClient::subscribe(topic.c_str());
     Config->logN(3, "MQTT now subscribed to: %s", topic.c_str());
   }
