@@ -10,8 +10,7 @@ MyWebServer::MyWebServer(AsyncWebServer *server, DNSServer* dns):
   fsfiles->registerLogCallback(std::bind(&BaseConfig::logN, Config, std::placeholders::_1, std::placeholders::_2));
 
   _relationen = new std::vector<FlowercareRelation_t>();
-  this->LoadFlowerCareConfig();
-
+  
   #ifdef USE_FLOWERCARE
     Config->logN(1, "Starting FlowerCare");
     flowerCare = new FlowerCare();
@@ -19,6 +18,8 @@ MyWebServer::MyWebServer(AsyncWebServer *server, DNSServer* dns):
     flowerCare->onValues(std::bind(&MyWebServer::flowerCareGetValuesCallback, this, std::placeholders::_1));
     flowerCare->onScanEnd(std::bind(&MyWebServer::flowerCareOnScanEndCallback, this));
   #endif
+  
+  this->LoadFlowerCareConfig();
 
   ws = new AsyncWebSocket("/ajaxws");
 
@@ -509,73 +510,73 @@ void MyWebServer::LoadFlowerCareConfig() {
   _relationen->clear(); // leere den Vector bevor neu befuellt wird
   mqtt->ClearSubscriptions(MyMQTT::FLOWERCARE);
  
-   bool loadDefaultConfig = false;
+  bool loadDefaultConfig = false;
  
-   if (LittleFS.exists("/config/flowercare.json")) {
-     //file exists, reading and loading
-     Config->logN(3, "reading flowercare.json file....");
-     File configFile = LittleFS.open("/config/flowercare.json", "r");
-     if (configFile) {
-       Config->logN(3, "flowercare.json is now open");
+  if (LittleFS.exists("/config/flowercare.json")) {
+    //file exists, reading and loading
+    Config->logN(3, "reading flowercare.json file....");
+    File configFile = LittleFS.open("/config/flowercare.json", "r");
+    if (configFile) {
+      Config->logN(3, "flowercare.json is now open");
  
-       ReadBufferingStream stream{configFile, 64};
-       stream.find("\"data\":[");
-       do {
-         JsonDocument elem;
-         DeserializationError error = deserializeJson(elem, stream); 
+      ReadBufferingStream stream{configFile, 64};
+      stream.find("\"data\":[");
+      do {
+        JsonDocument elem;
+        DeserializationError error = deserializeJson(elem, stream); 
  
-         if (error) {
+        if (error) {
            loadDefaultConfig = true;
            Config->logN(1, "Failed to parse flowercare.json data: %s, load default config", error.c_str()); 
-         } else {
+        } else {
            // Print the result
-           Config->logN(4, "parsing JSON ok");
-           Config->log(5, elem);
+           Config->logN(3, "parsing JSON ok");
+           Config->log(4, elem);
  
-           if (elem["mqtttopic"] && elem["port"] && elem["port"].as<int>() > 0) {
-             FlowercareRelation_t rel;
+          if (elem["mqtttopic"] && elem["port"] && elem["port"] && elem["port"].as<int>() > 0) {
+            FlowercareRelation_t rel;
  
-             rel.enabled = elem["active"].as<bool>();
-             rel.TriggerTopic = elem["mqtttopic"].as<String>();
-             rel.threshold = elem["threshold"].as<unsigned int>();
-             rel.duration = elem["duration"].as<unsigned int>();
-             rel.ActorPort = elem["port"].as<uint8_t>();
-             
-             _relationen->push_back(rel);
-             mqtt->Subscribe(rel.TriggerTopic, MyMQTT::FLOWERCARE);
-           } 
+            rel.enabled = elem["active"].as<bool>();
+            rel.TriggerTopic = elem["mqtttopic"].as<String>();
+            rel.threshold = elem["threshold"].as<unsigned int>();
+            rel.duration = elem["duration"].as<unsigned int>();
+            rel.ActorPort = elem["port"].as<uint8_t>();
+
+            _relationen->push_back(rel);
+            mqtt->Subscribe(rel.TriggerTopic, MyMQTT::FLOWERCARE);
+          } 
           
-           #ifdef USE_FLOWERCARE
-           if (elem["address"]) {
+          #ifdef USE_FLOWERCARE
+          if (elem["address"]) {
             // activation of known Flowercare devices
-             flowerCare->addDevice(NimBLEAddress(elem["address"].as<String>().c_str(), BLE_ADDR_PUBLIC));
-             flowerCare->setActive(elem["address"].as<String>(), elem["active"].as<bool>());
-           }
-           #endif
-         }
-       } while (stream.findUntil(",","]"));
-     } else {
-       loadDefaultConfig = true;
-       Config->logN(1, "failed to load flowercare.json, load default config");
-     }
-   } else {
-     loadDefaultConfig = true;
-     Config->logN(3, "flowercare.json File not exists, load default config");
-   }
+            flowerCare->addDevice(NimBLEAddress(elem["address"].as<String>().c_str(), BLE_ADDR_PUBLIC));
+            flowerCare->setActive(elem["address"].as<String>(), elem["active"].as<bool>());
+          }
+          #endif
+        }
+      } while (stream.findUntil(",","]"));
+    } else {
+      loadDefaultConfig = true;
+      Config->logN(1, "failed to load flowercare.json, load default config");
+    }
+  } else {
+    loadDefaultConfig = true;
+    Config->logN(3, "flowercare.json File not exists, load default config");
+  }
    
-   if (loadDefaultConfig) {
-     Config->logN(3, "load flowercare DefaultConfig");
-     FlowercareRelation_t rel;
-     rel.enabled = false;
-     rel.TriggerTopic = "flowercare/00:00:00:00:00:00";
-     rel.threshold = 30;
-     rel.duration = 60;
-     rel.ActorPort = 0;
-      _relationen->push_back(rel);
-   }
-   Config->logN(3, "%d flowercare relations are now loaded ", _relationen->size());
+  if (loadDefaultConfig) {
+    Config->logN(3, "load flowercare DefaultConfig");
+    FlowercareRelation_t rel;
+    rel.enabled = false;
+    rel.TriggerTopic = "flowercare/00:00:00:00:00:00";
+    rel.threshold = 30;
+    rel.duration = 60;
+    rel.ActorPort = 0;
+     _relationen->push_back(rel);
+  }
+  Config->logN(3, "%d flowercare relations are now loaded ", _relationen->size());
  
-   _relationen->shrink_to_fit();
+  _relationen->shrink_to_fit();
  }
 
 #ifdef USE_FLOWERCARE
