@@ -493,7 +493,7 @@ void MyWebServer::GetInitDataFlowerCare(JsonDocument& json) {
     JsonObject o = f.add<JsonObject>();
     o["active"]["checked"] = _relationen->at(i).enabled;
     o["mqtttopic"] = _relationen->at(i).TriggerTopic;
-    o["port"] = _relationen->at(i).ActorPort;
+    o["ConfiguredPort"] = _relationen->at(i).ActorPort;
     o["threshold"] = _relationen->at(i).threshold;
     o["duration"] = _relationen->at(i).duration;
   }
