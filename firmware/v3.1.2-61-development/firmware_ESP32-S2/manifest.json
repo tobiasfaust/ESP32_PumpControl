@@ -1,0 +1,14 @@
+{
+    "name": "ESP32_PumpControl (v3.1.2-development)",
+    "chipFamily": "ESP32-S2",
+    "stage": "development",
+    "build": 61,
+    "variant": "standard",
+    "version": "v3.1.2",
+    "parts": [
+        {
+            "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.1.2-61-development/firmware_ESP32-S2/merged-firmware.ESP32-S2.v3.1.2-61.standard.development.bin",
+            "offset": 0
+        }
+    ]
+}
