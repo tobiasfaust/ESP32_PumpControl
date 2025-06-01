@@ -1,6 +1,7 @@
 Release 3.1.2:
   - fix using ETH01 Board (#7)
   - fix broken communication for relations
+  - move userconfig to separate LittleFS partition to prevet loosing config by upgrading version via OTA
   
 Release 3.1.1:
   - some fixes related to 3.1.0

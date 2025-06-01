@@ -41,5 +41,4 @@
   #define ESP_GetMaxFreeAvailableBlock() ESP.getMaxAllocHeap()
 #endif
 
-
 #endif

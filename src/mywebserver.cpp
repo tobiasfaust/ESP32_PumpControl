@@ -1,6 +1,8 @@
 #include "mywebserver.h" 
 
-MyWebServer::MyWebServer(AsyncWebServer *server, DNSServer* dns): 
+MyWebServer::MyWebServer(fs::LittleFSFS& sysFS, fs::LittleFSFS& configFS, AsyncWebServer *server, DNSServer* dns): 
+        sysFS(sysFS),
+        configFS(configFS),
         server(server), 
         dns(dns), 
         DoReboot(false),
@@ -27,7 +29,6 @@ MyWebServer::MyWebServer(AsyncWebServer *server, DNSServer* dns):
   ElegantOTA.setGitEnv(String(GIT_OWNER), String(GIT_REPO), String(GIT_BRANCH), String(GITHUB_RUN).toInt());
   ElegantOTA.setFWVersion(String(Config->GetReleaseName() + " / Build: " + GITHUB_RUN ));
   ElegantOTA.setFWVariant(String(GIT_VARIANT));
-  ElegantOTA.setBackupRestoreFS("/config");
   ElegantOTA.setAutoReboot(true);
   ElegantOTA.onStart(std::bind(&MyWebServer::onOTAStart, this));
   ElegantOTA.onProgress(std::bind(&MyWebServer::onOTAProgress, this, std::placeholders::_1, std::placeholders::_2));
@@ -45,7 +46,8 @@ MyWebServer::MyWebServer(AsyncWebServer *server, DNSServer* dns):
 
   server->addHandler(ws);
   
-  server->serveStatic("/", LittleFS, "/", "max-age=3600").setDefaultFile("/web/index.html");
+  server->serveStatic("/web/", sysFS, "/web/", "max-age=3600").setDefaultFile("/web/index.html");
+  server->serveStatic("/config/", configFS, "/config/");
 
   // try to start the server if wifi is connected, otherwise wait for wifi connection
   if (mqtt->GetConnectStatusWifi()) {
@@ -118,15 +120,15 @@ void MyWebServer::handleNotFound(AsyncWebServerRequest *request) {
 bool MyWebServer::handleReset() {
   bool ret = true;
   Config->logN(3, "deletion of all config files was requested ....");
-  //LittleFS.format(); // Werkszustand -> nur die config dateien loeschen, die register dateien muessen erhalten bleiben
-  File root = LittleFS.open("/config/", "w");
+  //configFS.format(); // Werkszustand -> nur die config dateien loeschen, die register dateien muessen erhalten bleiben
+  File root = configFS.open("/config/", "w");
   File file = root.openNextFile();
   while(file){
     String path("/config/"); path.concat(file.name());
     if (path.indexOf(".json") == -1) {file = root.openNextFile(); continue;}
     file.close();
     
-    if (LittleFS.remove(path)) {
+    if (configFS.remove(path)) {
       Config->logN(4, "deletion of configuration file '%s' was successful", file.name());
     } else {
       Config->logN(2, "deletion of configuration file '%s' has failed", file.name());
@@ -512,10 +514,10 @@ void MyWebServer::LoadFlowerCareConfig() {
  
   bool loadDefaultConfig = false;
  
-  if (LittleFS.exists("/config/flowercare.json")) {
+  if (configFS.exists("/config/flowercare.json")) {
     //file exists, reading and loading
     Config->logN(3, "reading flowercare.json file....");
-    File configFile = LittleFS.open("/config/flowercare.json", "r");
+    File configFile = configFS.open("/config/flowercare.json", "r");
     if (configFile) {
       Config->logN(3, "flowercare.json is now open");
  
