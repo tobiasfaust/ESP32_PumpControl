@@ -154,7 +154,8 @@ bool valveHardware::RegisterPort(HWdev_t*& dev, uint8_t Port, bool reverse) {
   
   if (PortMap.Port !=0) {
     addI2CDevice(PortMap.i2cAddress);
-    dev = getI2CDevice(PortMap.i2cAddress);
+    *dev = *(getI2CDevice(PortMap.i2cAddress));
+
   #ifdef USE_PCF8574
     if(dev->HWType == PCF) {
       PCF8574* pcf8574 = static_cast<PCF8574*>(dev->Device);
