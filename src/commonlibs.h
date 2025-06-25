@@ -41,5 +41,8 @@
   #define ESP_GetMaxFreeAvailableBlock() ESP.getMaxAllocHeap()
 #endif
 
+// Initialize littlefs data partitions  
+extern fs::LittleFSFS sysFS;
+extern fs::LittleFSFS configFS;
 
 #endif

@@ -27,7 +27,6 @@ MyWebServer::MyWebServer(AsyncWebServer *server, DNSServer* dns):
   ElegantOTA.setGitEnv(String(GIT_OWNER), String(GIT_REPO), String(GIT_BRANCH), String(GITHUB_RUN).toInt());
   ElegantOTA.setFWVersion(String(Config->GetReleaseName() + " / Build: " + GITHUB_RUN ));
   ElegantOTA.setFWVariant(String(GIT_VARIANT));
-  ElegantOTA.setBackupRestoreFS("/config");
   ElegantOTA.setAutoReboot(true);
   ElegantOTA.onStart(std::bind(&MyWebServer::onOTAStart, this));
   ElegantOTA.onProgress(std::bind(&MyWebServer::onOTAProgress, this, std::placeholders::_1, std::placeholders::_2));
@@ -45,7 +44,7 @@ MyWebServer::MyWebServer(AsyncWebServer *server, DNSServer* dns):
 
   server->addHandler(ws);
   
-  server->serveStatic("/", LittleFS, "/", "max-age=3600").setDefaultFile("/web/index.html");
+  server->serveStatic("/web/", sysFS, "/", "max-age=3600").setDefaultFile("/web/index.html");
 
   // try to start the server if wifi is connected, otherwise wait for wifi connection
   if (mqtt->GetConnectStatusWifi()) {
