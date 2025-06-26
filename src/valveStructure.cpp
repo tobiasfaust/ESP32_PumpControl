@@ -145,10 +145,10 @@ void valveStructure::LoadJsonConfig() {
     Valves->erase(Valves->begin(), Valves->end());
   }
 
-  if (configFS.exists("/config/valveconfig.json")) {
+  if (configFS.exists("/valveconfig.json")) {
     //file exists, reading and loading
     Config->logN(3, "reading valveconfig.json file....");
-    File configFile = configFS.open("/config/valveconfig.json", "r");
+    File configFile = configFS.open("/valveconfig.json", "r");
     if (configFile) {
       Config->logN(3, "valveconfig.json is now open");
 

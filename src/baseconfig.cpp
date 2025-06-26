@@ -36,10 +36,10 @@ BaseConfig::BaseConfig(fs::LittleFSFS& configFS) :
 }
 
 void BaseConfig::LoadJsonConfig() {
-  if (configFS.exists("/config/baseconfig.json")) {
+  if (configFS.exists("/baseconfig.json")) {
     //file exists, reading and loading
     this->logN(3, "reading baseconfig.json file");
-    File configFile = configFS.open("/config/baseconfig.json", "r");
+    File configFile = configFS.open("/baseconfig.json", "r");
     if (configFile) {
       this->logN(3, "baseconfig.json is now open");
       ReadBufferingStream stream{configFile, 64};

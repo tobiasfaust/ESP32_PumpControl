@@ -68,7 +68,7 @@ void myMQTTCallBack(char* topic, byte* payload, unsigned int length) {
 }
 
 void setup() {
-  boolean systemPartitionMounted = sysFS.begin(true, "/webdata", 5, "webdata");
+  boolean systemPartitionMounted = sysFS.begin(true, "/web", 5, "webdata");
   boolean configPartitionMounted = configFS.begin(true, "/config", 5, "config");
   
   // Flash Write Issue

@@ -297,10 +297,10 @@ void sensor::LoadJsonConfig() {
 
   String selection = "";
 
-  if (configFS.exists("/config/sensorconfig.json")) {
+  if (configFS.exists("/sensorconfig.json")) {
     //file exists, reading and loading
     Config->logN(3, "reading sensorconfig.json file");
-    File configFile = configFS.open("/config/sensorconfig.json", "r");
+    File configFile = configFS.open("/sensorconfig.json", "r");
     if (configFile) {
       Config->logN(3, "sensorconfig.json is now open");
       ReadBufferingStream stream{configFile, 64};

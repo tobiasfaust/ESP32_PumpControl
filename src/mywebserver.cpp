@@ -10,6 +10,8 @@ MyWebServer::MyWebServer(fs::LittleFSFS& sysFS, fs::LittleFSFS& configFS, AsyncW
   
   fsfiles = new handleFiles(server);
   fsfiles->registerLogCallback(std::bind(&BaseConfig::logN, Config, std::placeholders::_1, std::placeholders::_2));
+  fsfiles->registerLittleFS(&sysFS, "/web");
+  fsfiles->registerLittleFS(&configFS, "/config");
 
   _relationen = new std::vector<FlowercareRelation_t>();
   
@@ -121,7 +123,7 @@ bool MyWebServer::handleReset() {
   bool ret = true;
   Config->logN(3, "deletion of all config files was requested ....");
   //configFS.format(); // Werkszustand -> nur die config dateien loeschen, die register dateien muessen erhalten bleiben
-  File root = configFS.open("/config/", "w");
+  File root = configFS.open("/", "w");
   File file = root.openNextFile();
   while(file){
     String path("/config/"); path.concat(file.name());
@@ -514,10 +516,10 @@ void MyWebServer::LoadFlowerCareConfig() {
  
   bool loadDefaultConfig = false;
  
-  if (configFS.exists("/config/flowercare.json")) {
+  if (configFS.exists("/flowercare.json")) {
     //file exists, reading and loading
     Config->logN(3, "reading flowercare.json file....");
-    File configFile = configFS.open("/config/flowercare.json", "r");
+    File configFile = configFS.open("/flowercare.json", "r");
     if (configFile) {
       Config->logN(3, "flowercare.json is now open");
  

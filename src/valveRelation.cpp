@@ -83,10 +83,10 @@ void valveRelation::LoadJsonConfig() {
   bool loadDefaultConfig = false;
 
 
-  if (configFS.exists("/config/relations.json")) {
+  if (configFS.exists("/relations.json")) {
     //file exists, reading and loading
     Config->logN(3, "reading relations.json file....");
-    File configFile = configFS.open("/config/relations.json", "r");
+    File configFile = configFS.open("/relations.json", "r");
     if (configFile) {
       Config->logN(3, "relations.json is now open");
 
