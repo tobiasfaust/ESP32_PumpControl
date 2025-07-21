@@ -1,0 +1,18 @@
+{
+    "name": "ESP32_PumpControl (v3.1.2-prelive)",
+    "version": "v3.1.2",
+    "stage": "prelive",
+    "build": 63,
+    "variant": "webSerial",
+    "builds": [
+        {
+            "chipFamily": "ESP32",
+            "parts": [
+                {
+                    "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.1.2-63-prelive/firmware_ESP32-WebSerial/merged-firmware.ESP32.v3.1.2-63.webSerial.prelive.bin",
+                    "offset": 0
+                }
+            ]
+        }
+    ]
+}
