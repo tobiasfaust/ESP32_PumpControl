@@ -371,14 +371,32 @@ export function setResponse(b, s) {
   } catch(e) {}
   
   try {
-    var r = document.getElementById("response");
+    var r;
+    if (document.getElementById("response")) {
+      r = document.getElementById("response");
+    } else { 
+      r = document.getElementById("footer-response"); }
+
     var t = 2000;
     if (!b) t = 5000; // show errors longer
 
     r.innerHTML = s;
     if (b) { r.className = "oktext"; } else {r.className = "errortext";}
-    timer = setTimeout(function() {document.getElementById("response").innerHTML=""}, 2000);
-  } catch(e) {}
+    timer = setTimeout(function() {document.getElementById(r.id).innerHTML=""}, t);
+  } catch(e) { console.log("no response element found");}
+
+  // add logging line to logView textarea
+  if (document.getElementById('logView')) {
+    if (b) {
+      s = `<span class="oktext">${s}</span>`;
+    } else {
+      s = `<span class="errortext">${s}</span>`;
+    }
+    const logView = document.getElementById('logView');
+    const lineCount = logView.innerHTML.split('<br>').length;
+    logView.innerHTML += lineCount + ": " + s + "<br>";
+    logView.scrollTop = logView.scrollHeight; // Auto-scroll to the bottom
+  }
 }
 
 /******************************************************************************************
@@ -632,5 +650,19 @@ export function initDataValues() {
     document.getElementById('needToSave').classList.add('hide');
   }
 }
+
+/****************************************************************************************
+ * Show or hide an object
+ * @returns {*} void
+ * ****************************************************************************************/
+export function toggleView() {
+  const logView = document.getElementById('logView');
+  if (logView.style.display === 'none') {
+    logView.style.display = 'block';
+  } else {
+    logView.style.display = 'none';
+  }
+}
+
 /****************************************************************************************
 ****************************************************************************************/

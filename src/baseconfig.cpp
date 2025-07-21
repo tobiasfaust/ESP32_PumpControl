@@ -24,7 +24,9 @@ BaseConfig::BaseConfig():
   #ifdef ESP8266
     this->pin_sda = 5;
     this->pin_scl = 4;
-  #elif ESP32
+  #endif
+  
+  #ifdef ESP32
     this->pin_sda = 21;
     this->pin_scl = 22,
   #endif
@@ -52,6 +54,8 @@ void BaseConfig::LoadJsonConfig() {
           this->logN(5, "parsing partial JSON of baseconfig.json ok"); 
           this->log(5, elem);
           
+          if (elem["SelectConnectivity"]){ this->useETH = (elem["SelectConnectivity"].as<String>()=="eth"?1:0); }
+          if (elem["SelectLAN"])        { this->LANBoard = elem["SelectLAN"].as<String>(); }  
           if (elem["mqttroot"])         { this->mqtt_root = elem["mqttroot"].as<String>();}
           if (elem["mqttserver"])       { this->mqtt_server = elem["mqttserver"].as<String>();}
           if (elem["mqttport"])         { this->mqtt_port = elem["mqttport"].as<int>();}

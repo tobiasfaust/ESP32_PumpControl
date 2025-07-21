@@ -66,7 +66,9 @@ void myMQTTCallBack(char* topic, byte* payload, unsigned int length) {
 void setup() {
   #ifdef ESP8266
     LittleFS.begin();
-  #elif ESP32
+  #endif
+
+  #ifdef ESP32
     LittleFS.begin(true); // true: format LittleFS/NVS if mount fails
   #endif
   
