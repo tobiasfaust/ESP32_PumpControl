@@ -399,9 +399,15 @@ void MQTT::loop() {
     this->ConnectStatusMqtt = false;
   }
 
-  if (Config->GetDebugLevel() >=4 && millis() - this->last_keepalive > (30 * 1000))  {
+  if (Config->GetKeepAlive() > 0 && millis() - this->last_keepalivemsg > (Config->GetKeepAlive() * 1000)) {
+    this->last_keepalivemsg = millis();
+    this->Publish_String("state", "Online", false);
+    Config->logN(4, "KeepAlive: Publish state Online");
+  }
+
+  if (Config->GetDebugLevel() >=4 && millis() - this->last_debugmsg > (30 * 1000))  {
     // send messages for debugging every 30 seconds
-    this->last_keepalive = millis();
+    this->last_debugmsg = millis();
 
     if (Config->GetDebugLevel() >=4) {
       char buffer[100] = {0};
