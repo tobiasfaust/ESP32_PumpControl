@@ -62,7 +62,7 @@ void BaseConfig::LoadJsonConfig() {
           if (elem["mqttuser"])         { this->mqtt_username = elem["mqttuser"].as<String>();}
           if (elem["mqttpass"])         { this->mqtt_password = elem["mqttpass"].as<String>();}
           if (elem["mqttbasepath"])     { this->mqtt_basepath = elem["mqttbasepath"].as<String>();}
-          if (elem["sel_UseRandomClientID"]){ if (strcmp(elem["sel_UseRandomClientID"], "none")==0) { this->mqtt_UseRandomClientID=false;} else {this->mqtt_UseRandomClientID=true;}}
+          if (elem["UseRandomClientID"]){ if (elem["UseRandomClientID"].as<String>() == "none") { this->mqtt_UseRandomClientID=false;} else {this->mqtt_UseRandomClientID=true;}}
           if (elem["keepalive"])        { if (elem["keepalive"].as<int>() == 0) { this->keepalive = 0;} else { this->keepalive = _max(elem["keepalive"].as<int>(), 10);}}
           if (elem["debuglevel"])       { this->debuglevel = _max(elem["debuglevel"].as<int>(), 0);}
           if (elem["pinsda"])           { this->pin_sda = (elem["pinsda"].as<int>()) - 200;}
