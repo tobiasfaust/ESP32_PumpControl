@@ -2,7 +2,7 @@ Release 3.1.3:
   - fix broken sensor config handling (#12)
   - fix broken keepalive message
   - fix storing config of dynamicMqttClientID (#12)
-  - fix storing mqtt basepath, emtpy basepath now allowed
+  - fix storing mqtt basepath, emtpy basepath now allowed (#12)
   
 Release 3.1.2:
   - fix using ETH01 Board (#7)
