@@ -1,0 +1,14 @@
+{
+    "name": "ESP32_PumpControl (v3.1.3-development)",
+    "chipFamily": "ESP32-C3",
+    "stage": "development",
+    "build": 69,
+    "variant": "standard",
+    "version": "v3.1.3",
+    "parts": [
+        {
+            "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.1.3-69-development/firmware_ESP32-C3/merged-firmware.ESP32-C3.v3.1.3-69.standard.development.bin",
+            "offset": 0
+        }
+    ]
+}
