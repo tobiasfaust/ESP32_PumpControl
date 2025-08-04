@@ -443,9 +443,9 @@ void sensor::GetInitData(JsonDocument& json) {
   json["data"]["measurecycle"] = this->measurecycle;
   json["data"]["measureDistMin"] = this->measureDistMin;
   json["data"]["measureDistMax"] = this->measureDistMax;
-  json["data"]["pinhcsr04trigger"] = this->pinTrigger + 200;
-  json["data"]["pinhcsr04echo"] = this->pinEcho + 200;
-  json["data"]["pinanalog"] = this->pinAnalog + 200;
+  json["data"]["GpioPin_pinhcsr04trigger"] = this->pinTrigger + 200;
+  json["data"]["GpioPin_pinhcsr04echo"] = this->pinEcho + 200;
+  json["data"]["AnalogPin_1"] = this->pinAnalog + 200;
   json["data"]["a_measureDistMin"] = this->measureDistMin;
   json["data"]["a_measureDistMax"] = this->measureDistMax;
   json["data"]["externalSensor"] = this->externalSensor;

@@ -5,7 +5,7 @@ BaseConfig::BaseConfig(fs::LittleFSFS& configFS) :
   mqtt_server ("test.mosquitto.org"),
   mqtt_port(1883),
   mqtt_root("PumpControl"),
-  mqtt_basepath("home/"),
+  mqtt_basepath(""),
   mqtt_UseRandomClientID(true),
   keepalive(0),
   debuglevel(3),
@@ -36,6 +36,9 @@ BaseConfig::BaseConfig(fs::LittleFSFS& configFS) :
 }
 
 void BaseConfig::LoadJsonConfig() {
+  // reset certain values because null values in config are allowed
+  this->mqtt_basepath = "";
+  
   if (configFS.exists("/baseconfig.json")) {
     //file exists, reading and loading
     this->logN(3, "reading baseconfig.json file");
@@ -62,8 +65,8 @@ void BaseConfig::LoadJsonConfig() {
           if (elem["mqttport"])         { this->mqtt_port = elem["mqttport"].as<int>();}
           if (elem["mqttuser"])         { this->mqtt_username = elem["mqttuser"].as<String>();}
           if (elem["mqttpass"])         { this->mqtt_password = elem["mqttpass"].as<String>();}
-          if (elem["mqttbasepath"])     { this->mqtt_basepath = elem["mqttbasepath"].as<String>();}
-          if (elem["sel_UseRandomClientID"]){ if (strcmp(elem["sel_UseRandomClientID"], "none")==0) { this->mqtt_UseRandomClientID=false;} else {this->mqtt_UseRandomClientID=true;}}
+          if (elem["mqttbasepath"])     { this->mqtt_basepath = elem["mqttbasepath"].as<String>();} 
+          if (elem["UseRandomClientID"]){ if (elem["UseRandomClientID"].as<String>() == "none") { this->mqtt_UseRandomClientID=false;} else {this->mqtt_UseRandomClientID=true;}}
           if (elem["keepalive"])        { if (elem["keepalive"].as<int>() == 0) { this->keepalive = 0;} else { this->keepalive = _max(elem["keepalive"].as<int>(), 10);}}
           if (elem["debuglevel"])       { this->debuglevel = _max(elem["debuglevel"].as<int>(), 0);}
           if (elem["pinsda"])           { this->pin_sda = (elem["pinsda"].as<int>()) - 200;}
@@ -86,7 +89,7 @@ void BaseConfig::LoadJsonConfig() {
     this->logN(1, "baseconfig.json config File not exists, load default BaseConfig");
   }
 
-  // Data Cleaning
+  // Data Cleaning, needed without trailing slash
   if(this->mqtt_basepath.endsWith("/")) {
     this->mqtt_basepath = this->mqtt_basepath.substring(0, this->mqtt_basepath.length()-1); 
   }

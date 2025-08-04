@@ -91,7 +91,8 @@ class MQTT: PubSubClient {
     String            mqtt_root = "";
     String            mqtt_basepath = "";
     uint64_t          mqttreconnect_lasttry = 0;
-    uint64_t          last_keepalive = 0;
+    uint64_t          last_debugmsg = 0;
+    uint64_t          last_keepalivemsg = 0;
     bool              ConnectStatusWifi;
     bool              ConnectStatusMqtt;
     IPAddress         ipadresse;
