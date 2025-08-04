@@ -14,7 +14,7 @@ else:
 
 if (esptype):
     data_master_dir = "esp_files";
-    data_dir = "data/web/esp";
+    data_dir = "data/esp";
 
     if (os.path.exists(data_master_dir +"/"+ esptype)):
         copytree(data_master_dir +"/"+ esptype + "/" , data_dir, dirs_exist_ok=True);

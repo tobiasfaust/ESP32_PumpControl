@@ -48,8 +48,8 @@ MyWebServer::MyWebServer(fs::LittleFSFS& sysFS, fs::LittleFSFS& configFS, AsyncW
 
   server->addHandler(ws);
   
-  server->serveStatic("/web/", sysFS, "/web/", "max-age=3600").setDefaultFile("/web/index.html");
-  server->serveStatic("/config/", configFS, "/config/");
+  server->serveStatic("/web/", sysFS, "/", "max-age=3600").setDefaultFile("/web/index.html");
+  server->serveStatic("/config/", configFS, "/");
 
   // try to start the server if wifi is connected, otherwise wait for wifi connection
   if (mqtt->GetConnectStatusWifi()) {
