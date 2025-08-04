@@ -20,7 +20,7 @@ extern valveRelation* ValveRel;
 class valveStructure {
 
   public:
-    valveStructure(fs::LittleFSFS& configFS, uint8_t sda, uint8_t scl);
+    valveStructure(uint8_t sda, uint8_t scl);
     void      loop();
     void      OnForTimer(String SubTopic, int duration);
     void      OnForTimer(uint8_t Port, int duration);
@@ -43,7 +43,6 @@ class valveStructure {
     uint8_t   Refresh1WireDevices();
     
   private:
-    fs::LittleFSFS configFS;
     valve*    GetValveItem(uint8_t Port);
     valve*    GetValveItem(String SubTopic);
     void      handleDeps(String topic, int value); //prueft die Relationen

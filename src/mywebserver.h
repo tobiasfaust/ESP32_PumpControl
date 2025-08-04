@@ -38,7 +38,7 @@ class MyWebServer {
   } FlowercareRelation_t;
 
   public:
-    MyWebServer(fs::LittleFSFS& sysFS, fs::LittleFSFS& configFS, AsyncWebServer *server, DNSServer* dns);
+    MyWebServer(AsyncWebServer *server, DNSServer* dns);
     void      loop();
 
     void  flowerCareOnMqttMessage(String& topic, String& JsonMsg);
@@ -48,8 +48,6 @@ class MyWebServer {
     AsyncWebServer* server;
     DNSServer* dns;
     AsyncWebSocket* ws;
-    fs::LittleFSFS& sysFS;
-    fs::LittleFSFS& configFS;
 
     bool      DoReboot;
     unsigned long RequestRebootTime;

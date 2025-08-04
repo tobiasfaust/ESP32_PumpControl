@@ -1,7 +1,7 @@
 #include "valveStructure.h"
 
-valveStructure::valveStructure(fs::LittleFSFS& configFS, uint8_t sda, uint8_t scl) :
-  configFS(configFS), pin_sda(sda), pin_scl(scl) {
+valveStructure::valveStructure(uint8_t sda, uint8_t scl) :
+  pin_sda(sda), pin_scl(scl) {
   this->ValveHW = new valveHardware(sda, scl);
   if (Config->Enabled1Wire()) { this->ValveHW->add1WireDevice(Config->GetPin1Wire());}
   
@@ -145,10 +145,10 @@ void valveStructure::LoadJsonConfig() {
     Valves->erase(Valves->begin(), Valves->end());
   }
 
-  if (configFS.exists("/valveconfig.json")) {
+  if (LittleFS.exists("/config/valveconfig.json")) {
     //file exists, reading and loading
     Config->logN(3, "reading valveconfig.json file....");
-    File configFile = configFS.open("/valveconfig.json", "r");
+    File configFile = LittleFS.open("/config/valveconfig.json", "r");
     if (configFile) {
       Config->logN(3, "valveconfig.json is now open");
 

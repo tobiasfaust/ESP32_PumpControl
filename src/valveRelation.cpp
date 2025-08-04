@@ -1,7 +1,6 @@
 #include "valveRelation.h"
 
-valveRelation::valveRelation(fs::LittleFSFS& configFS) :
-  configFS(configFS) {
+valveRelation::valveRelation() {
   _relationen  = new std::vector<relation_t>{};
   _subscriber  = new std::vector<subscriber_t>{};
   LoadJsonConfig();
@@ -83,10 +82,10 @@ void valveRelation::LoadJsonConfig() {
   bool loadDefaultConfig = false;
 
 
-  if (configFS.exists("/relations.json")) {
+  if (LittleFS.exists("/config/relations.json")) {
     //file exists, reading and loading
     Config->logN(3, "reading relations.json file....");
-    File configFile = configFS.open("/relations.json", "r");
+    File configFile = LittleFS.open("/config/relations.json", "r");
     if (configFile) {
       Config->logN(3, "relations.json is now open");
 
