@@ -1,4 +1,4 @@
 .pio/**
 .vscode/**
-data/web/esp
-data/web/handlefiles*
+data/esp
+data/handlefiles*
