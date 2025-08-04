@@ -11,7 +11,7 @@
 class BaseConfig {
 
   public:
-    BaseConfig();
+    BaseConfig(fs::LittleFSFS& configFS);
     void      LoadJsonConfig();
 
     /**
@@ -52,6 +52,7 @@ class BaseConfig {
     size_t          getFragmentation();
      
   private:
+    fs::LittleFSFS configFS; 
     String    mqtt_server;
     String    mqtt_username;
     String    mqtt_password;

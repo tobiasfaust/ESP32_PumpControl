@@ -1,6 +1,7 @@
 #include "baseconfig.h"
 
-BaseConfig::BaseConfig(): 
+BaseConfig::BaseConfig(fs::LittleFSFS& configFS) :
+  configFS(configFS), 
   mqtt_server ("test.mosquitto.org"),
   mqtt_port(1883),
   mqtt_root("PumpControl"),
@@ -38,10 +39,10 @@ void BaseConfig::LoadJsonConfig() {
   // reset certain values because null values in config are allowed
   this->mqtt_basepath = "";
   
-  if (LittleFS.exists("/config/baseconfig.json")) {
+  if (configFS.exists("/baseconfig.json")) {
     //file exists, reading and loading
     this->logN(3, "reading baseconfig.json file");
-    File configFile = LittleFS.open("/config/baseconfig.json", "r");
+    File configFile = configFS.open("/baseconfig.json", "r");
     if (configFile) {
       this->logN(3, "baseconfig.json is now open");
       ReadBufferingStream stream{configFile, 64};

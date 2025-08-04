@@ -26,6 +26,10 @@ MyMQTT* mqtt = nullptr;
 sensor* LevelSensor = nullptr;
 MyWebServer* mywebserver = nullptr;
 
+// Initialize littlefs data partitions  
+fs::LittleFSFS sysFS;
+fs::LittleFSFS configFS;
+
 /* debugmodes --> in der WebUI -> Basisconfig einstellbar
     0 -> nothing
     1 -> major and criticals
@@ -64,19 +68,14 @@ void myMQTTCallBack(char* topic, byte* payload, unsigned int length) {
 }
 
 void setup() {
-  #ifdef ESP8266
-    LittleFS.begin();
-  #endif
-
-  #ifdef ESP32
-    LittleFS.begin(true); // true: format LittleFS/NVS if mount fails
-  #endif
+  boolean systemPartitionMounted = sysFS.begin(true, "/web", 5, "webdata");
+  boolean configPartitionMounted = configFS.begin(true, "/config", 5, "config");
   
   // Flash Write Issue
   // https://github.com/esp8266/Arduino/issues/4061#issuecomment-428007580
   //LittleFS.format();
 
-  Config = new BaseConfig();
+  Config = new BaseConfig(configFS);
 
   #ifndef USE_WEBSERIAL
     #ifdef ESP8266
@@ -98,6 +97,20 @@ void setup() {
   #endif
 
   Config->logN(1, "Start of ESP PumpControl");
+
+  Config->logN(3, "***** File System *****");
+
+  Config->logN(3, "%s",systemPartitionMounted?"System partition is mounted":"System partition is not mounted");
+  Config->logN(3, "Size: %d byte",systemPartitionMounted?sysFS.totalBytes():0);
+  Config->logN(3, "Used: %d byte",systemPartitionMounted?sysFS.usedBytes():0);
+
+  Config->logN(3, "***** ********** *****");
+
+  Config->logN(3, "%s",configPartitionMounted?"User partition is mounted":"User partition is not mounted");
+  Config->logN(3, "Size: %d byte",configPartitionMounted?configFS.totalBytes():0);
+  Config->logN(3, "Used: %d byte",configPartitionMounted?configFS.usedBytes():0);
+
+  Config->logN(3, "***** ********** *****\n\n");
 
   #ifdef USE_I2C
     Config->logN(1, "Starting WIRE at (SDA, SCL)): %d, %d ", Config->GetPinSDA(), Config->GetPinSCL());
@@ -127,19 +140,19 @@ void setup() {
   #endif
   
   Config->logN(1, "Starting Sensor");
-  LevelSensor = new sensor();
+  LevelSensor = new sensor(configFS);
   #ifdef USE_OLED
     LevelSensor->SetOled(oled);
   #endif
 
   Config->logN(1, "Starting Valve Relations");
-  ValveRel = new valveRelation();
+  ValveRel = new valveRelation(configFS);
  
   Config->logN(1, "Starting Valve Structure");
-  VStruct = new valveStructure(Config->GetPinSDA(), Config->GetPinSCL());
+  VStruct = new valveStructure(configFS, Config->GetPinSDA(), Config->GetPinSCL());
 
   Config->logN(1, "attempting to start WebServer");
-  mywebserver = new MyWebServer(&server, &dns);
+  mywebserver = new MyWebServer(sysFS, configFS, &server, &dns);
 
   //VStruct->OnForTimer("Valve1", 10); // Test
 

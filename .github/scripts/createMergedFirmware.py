@@ -62,7 +62,7 @@ if args.BuildDir and os.path.isdir(args.BuildDir):
             {readOffsetFromPartitionCSV("partitions.csv", "app0")} {args.BuildDir}/firmware.bin'
         
         if os.path.isfile(f'{args.BuildDir}/littlefs.bin'):
-            result += f' {readOffsetFromPartitionCSV("partitions.csv", "spiffs")} {args.BuildDir}/littlefs.bin'
+            result += f' {readOffsetFromPartitionCSV("partitions.csv", "webdata")} {args.BuildDir}/littlefs.bin'
 
     elif 'ESP8266' in args.ChipFamily and os.path.isfile(f'{args.BuildDir}/littlefs.bin'):
         result = f'esptool.py --chip {args.ChipFamily} merge_bin \
@@ -71,6 +71,6 @@ if args.BuildDir and os.path.isdir(args.BuildDir):
             --flash_freq 40m \
             --flash_size 4MB \
             0x0000 {args.BuildDir}/firmware.bin \
-            {readOffsetFromPartitionCSV("partitions.csv", "spiffs")} {args.BuildDir}/littlefs.bin'
+            {readOffsetFromPartitionCSV("partitions.csv", "webdata")} {args.BuildDir}/littlefs.bin'
 
 print(f'command={result}')
