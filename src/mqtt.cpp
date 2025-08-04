@@ -220,10 +220,8 @@ void MQTT::reconnect() {
   memset(&topic[0], 0, sizeof(topic));
 
   if (Config->UseRandomMQTTClientID()) {
-    Config->logN(1, "Using random MQTT ClientID");
     snprintf (topic, sizeof(topic), "%s-%s", this->mqtt_root.c_str(), String(random(0xffff)).c_str());
   } else {
-    Config->logN(1, "Using fixed MQTT ClientID");
     snprintf (topic, sizeof(topic), "%s-%08X", this->mqtt_root.c_str(), ESP_getChipId());
   }
   snprintf(LWT, sizeof(LWT), "%s/state", this->mqtt_root.c_str());
