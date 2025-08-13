@@ -52,11 +52,11 @@ if args.BuildDir and os.path.isdir(args.BuildDir):
     if 'ESP32' in args.ChipFamily:
         bootloader_offset = bootloader_offsets[args.ChipFamily]
 
-        result = f'esptool.py --chip {args.ChipFamily} merge_bin \
+        result = f'esptool --chip {args.ChipFamily} merge-bin \
             --output {args.BuildDir}/merged-firmware.bin \
-            --flash_mode dout \
-            --flash_freq 80m \
-            --flash_size 4MB \
+            --flash-mode dout \
+            --flash-freq 80m \
+            --flash-size 4MB \
             {bootloader_offset} {args.BuildDir}/bootloader.bin \
             0x8000 {args.BuildDir}/partitions.bin \
             {readOffsetFromPartitionCSV("partitions.csv", "app0")} {args.BuildDir}/firmware.bin'
@@ -65,11 +65,11 @@ if args.BuildDir and os.path.isdir(args.BuildDir):
             result += f' {readOffsetFromPartitionCSV("partitions.csv", "webdata")} {args.BuildDir}/littlefs.bin'
 
     elif 'ESP8266' in args.ChipFamily and os.path.isfile(f'{args.BuildDir}/littlefs.bin'):
-        result = f'esptool.py --chip {args.ChipFamily} merge_bin \
+        result = f'esptool --chip {args.ChipFamily} merge-bin \
             --output {args.BuildDir}/merged-firmware.bin \
-            --flash_mode dout \
-            --flash_freq 40m \
-            --flash_size 4MB \
+            --flash-mode dout \
+            --flash-freq 40m \
+            --flash-size 4MB \
             0x0000 {args.BuildDir}/firmware.bin \
             {readOffsetFromPartitionCSV("partitions.csv", "webdata")} {args.BuildDir}/littlefs.bin'
 
