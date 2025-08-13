@@ -1,9 +1,14 @@
+Release 3.2.0:
+    +++++++ This version is not OTA compatible with older versions +++++++
+    +++++++ Please do a fresh installation by web-installer +++++++
+    
+  - move userconfig to separate LittleFS partition to prevet loosing config by upgrading version via OTA
+
 Release 3.1.3:
   - fix broken sensor config handling (#12)
   - fix broken keepalive message
   - fix storing config of dynamicMqttClientID (#12)
   - fix storing mqtt basepath, emtpy basepath now allowed (#12)
-  - move userconfig to separate LittleFS partition to prevet loosing config by upgrading version via OTA
   
 Release 3.1.2:
   - fix using ETH01 Board (#7)
