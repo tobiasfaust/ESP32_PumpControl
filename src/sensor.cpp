@@ -1,6 +1,7 @@
 #include "sensor.h"
 
-sensor::sensor() : 
+sensor::sensor(fs::LittleFSFS& configFS) :
+  configFS(configFS), 
   Type(NONE), 
   measureDistMin(0), 
   measureDistMax(0), 
@@ -296,10 +297,10 @@ void sensor::LoadJsonConfig() {
 
   String selection = "";
 
-  if (LittleFS.exists("/config/sensorconfig.json")) {
+  if (configFS.exists("/sensorconfig.json")) {
     //file exists, reading and loading
     Config->logN(3, "reading sensorconfig.json file");
-    File configFile = LittleFS.open("/config/sensorconfig.json", "r");
+    File configFile = configFS.open("/sensorconfig.json", "r");
     if (configFile) {
       Config->logN(3, "sensorconfig.json is now open");
       ReadBufferingStream stream{configFile, 64};

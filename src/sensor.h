@@ -34,7 +34,7 @@ enum sensorType_t {NONE, EXTERN, HCSR04, ONBOARD_ANALOG, ADS1115};
 class sensor {
 
   public:
-    sensor();
+    sensor(fs::LittleFSFS& configFS);
     void      init_hcsr04(uint8_t pinTrigger, uint8_t pinEcho);
     void      init_extern(String externalSensor);
     void      init_analog(uint8_t pinAnalog) ;
@@ -61,6 +61,7 @@ class sensor {
     #endif
 
   private:
+    fs::LittleFSFS& configFS;
     void      loop_analog();
     void      loop_hcsr04();
     

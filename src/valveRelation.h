@@ -21,7 +21,7 @@ class valveRelation {
   } subscriber_t;
   
   public:
-    valveRelation();
+    valveRelation(fs::LittleFSFS& configFS);
     void      AddRelation(bool enabled, String TriggerTopic, uint8_t Port, bool EnableByBypass);
     void      GetPortDependencies(std::vector<uint8_t>* Ports, String TriggerTopic);
     bool      CheckEnabledByBypass(uint8_t ActorPort, String TriggerTopic);
@@ -33,6 +33,7 @@ class valveRelation {
     void      LoadJsonConfig();
     
   private:
+    fs::LittleFSFS configFS;
     std::vector<relation_t>* _relationen  = NULL;
     std::vector<subscriber_t>* _subscriber  = NULL;
 };
