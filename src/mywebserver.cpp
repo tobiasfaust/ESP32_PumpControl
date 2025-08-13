@@ -8,6 +8,8 @@ MyWebServer::MyWebServer(AsyncWebServer *server, DNSServer* dns):
   
   fsfiles = new handleFiles(server);
   fsfiles->registerLogCallback(std::bind(&BaseConfig::logN, Config, std::placeholders::_1, std::placeholders::_2));
+  fsfiles->registerLittleFS(&sysFS, "/web");
+  fsfiles->registerLittleFS(&configFS, "/config");
 
   _relationen = new std::vector<FlowercareRelation_t>();
   
@@ -23,7 +25,7 @@ MyWebServer::MyWebServer(AsyncWebServer *server, DNSServer* dns):
 
   ws = new AsyncWebSocket("/ajaxws");
 
-  ElegantOTA.begin(server);
+  ElegantOTA.setTargetPartition("webdata");  // Set default partition for OTA updates
   ElegantOTA.setGitEnv(String(GIT_OWNER), String(GIT_REPO), String(GIT_BRANCH), String(GITHUB_RUN).toInt());
   ElegantOTA.setFWVersion(String(Config->GetReleaseName() + " / Build: " + GITHUB_RUN ));
   ElegantOTA.setFWVariant(String(GIT_VARIANT));
@@ -32,6 +34,8 @@ MyWebServer::MyWebServer(AsyncWebServer *server, DNSServer* dns):
   ElegantOTA.onStart(std::bind(&MyWebServer::onOTAStart, this));
   ElegantOTA.onProgress(std::bind(&MyWebServer::onOTAProgress, this, std::placeholders::_1, std::placeholders::_2));
   ElegantOTA.onEnd(std::bind(&MyWebServer::onOTAEnd, this, std::placeholders::_1));
+  ElegantOTA.begin(server);
+  
 
   server->on("/", HTTP_GET, std::bind(&MyWebServer::handleRoot, this, std::placeholders::_1));
   server->onNotFound(std::bind(&MyWebServer::handleNotFound, this, std::placeholders::_1));
@@ -45,7 +49,12 @@ MyWebServer::MyWebServer(AsyncWebServer *server, DNSServer* dns):
 
   server->addHandler(ws);
   
+<<<<<<< HEAD
   server->serveStatic("/", LittleFS, "/", "max-age=3600").setDefaultFile("/web/index.html");
+=======
+  server->serveStatic("/web/", sysFS, "/", "max-age=3600").setDefaultFile("/web/index.html");
+  server->serveStatic("/config/", configFS, "/");
+>>>>>>> test-multiple_littlefs
 
   // try to start the server if wifi is connected, otherwise wait for wifi connection
   if (mqtt->GetConnectStatusWifi()) {

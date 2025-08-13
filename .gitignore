@@ -1,4 +1,5 @@
-.pio/**
-.vscode/**
-data/web/esp
-data/web/handlefiles*
+.pio/
+.vscode/
+.git/
+data/esp
+data/handlefiles*

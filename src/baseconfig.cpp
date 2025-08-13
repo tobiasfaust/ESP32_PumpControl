@@ -38,7 +38,11 @@ void BaseConfig::LoadJsonConfig() {
   // reset certain values because null values in config are allowed
   this->mqtt_basepath = "";
   
+<<<<<<< HEAD
   if (LittleFS.exists("/config/baseconfig.json")) {
+=======
+  if (configFS.exists("/baseconfig.json")) {
+>>>>>>> test-multiple_littlefs
     //file exists, reading and loading
     this->logN(3, "reading baseconfig.json file");
     File configFile = LittleFS.open("/config/baseconfig.json", "r");
