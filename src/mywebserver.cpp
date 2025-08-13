@@ -49,12 +49,8 @@ MyWebServer::MyWebServer(AsyncWebServer *server, DNSServer* dns):
 
   server->addHandler(ws);
   
-<<<<<<< HEAD
-  server->serveStatic("/", LittleFS, "/", "max-age=3600").setDefaultFile("/web/index.html");
-=======
   server->serveStatic("/web/", sysFS, "/", "max-age=3600").setDefaultFile("/web/index.html");
   server->serveStatic("/config/", configFS, "/");
->>>>>>> test-multiple_littlefs
 
   // try to start the server if wifi is connected, otherwise wait for wifi connection
   if (mqtt->GetConnectStatusWifi()) {
