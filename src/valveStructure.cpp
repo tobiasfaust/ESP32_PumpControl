@@ -91,7 +91,8 @@ void valveStructure::addWaitingQueue(uint8_t Port, unsigned int duration) {
   for (size_t i = 0; i < waitingQueue->size(); ++i) {
     waitingQueue_t item = waitingQueue->at(i);
     if (item.Port == Port) {
-      // Port already in queue, do nothing
+      // Port already in queue, update only duration
+      item.duration = duration;
       return;
     }
   }
