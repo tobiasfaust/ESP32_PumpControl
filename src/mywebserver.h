@@ -39,7 +39,7 @@ class MyWebServer {
 
   public:
     MyWebServer(fs::LittleFSFS& sysFS, fs::LittleFSFS& configFS, AsyncWebServer *server, DNSServer* dns);
-    void      loop();
+    void  loop();
 
     void  flowerCareOnMqttMessage(String& topic, String& JsonMsg);
 

@@ -19,6 +19,11 @@ extern valveRelation* ValveRel;
 
 class valveStructure {
 
+  typedef struct {
+    uint8_t   Port;
+    unsigned int  duration;
+  } waitingQueue_t;
+
   public:
     valveStructure(fs::LittleFSFS& configFS, uint8_t sda, uint8_t scl);
     void      loop();
@@ -47,9 +52,11 @@ class valveStructure {
     valve*    GetValveItem(uint8_t Port);
     valve*    GetValveItem(String SubTopic);
     void      handleDeps(String topic, int value); //prueft die Relationen
+    void      addWaitingQueue(uint8_t Port, unsigned int duration);
 
     valveHardware* ValveHW = NULL;
     std::shared_ptr<std::vector<valve>> Valves;
+    std::shared_ptr<std::vector<waitingQueue_t>> waitingQueue;
 
     uint8_t pin_sda = SDA;
     uint8_t pin_scl = SCL;

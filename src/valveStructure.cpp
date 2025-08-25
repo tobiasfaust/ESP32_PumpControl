@@ -5,31 +5,29 @@ valveStructure::valveStructure(fs::LittleFSFS& configFS, uint8_t sda, uint8_t sc
   this->ValveHW = new valveHardware(sda, scl);
   if (Config->Enabled1Wire()) { this->ValveHW->add1WireDevice(Config->GetPin1Wire());}
   
-  this->Valves = std::make_shared<std::vector<valve>>(); 
-  
-  // loading twice, 1st valve is corrupted after 1st load, has to be investigate
-  // TODO
+  this->Valves = std::make_shared<std::vector<valve>>();
+  this->waitingQueue = std::make_shared<std::vector<waitingQueue_t>>(); // max 10 Eintraege in der Warteschlange
+
   LoadJsonConfig();
-  //LoadJsonConfig();
 }
 
 void valveStructure::OnForTimer(String SubTopic, int duration) {
   valve* v = this->GetValveItem(SubTopic);
-  if (v && v->OnForTimer(duration)) {
-    if (mqtt) {mqtt->Publish_Int("Threads", (int)this->CountActiveThreads(), false); }
+  if (v) {
+    this->OnForTimer(v->GetPort1(), duration);
   }
 }
 
 void valveStructure::OnForTimer(uint8_t Port, int duration) {
   valve* v = this->GetValveItem(Port);
-  if (v && v->OnForTimer(duration)) {
-    if (mqtt) {mqtt->Publish_Int("Threads", (int)this->CountActiveThreads(), false); }
+  if (Config->GetMaxThreads()==0 || (Config->GetMaxThreads() > 0 && this->CountActiveThreads() < Config->GetMaxThreads())) {
+    if (v && v->OnForTimer(duration)) {
+      if (mqtt) {mqtt->Publish_Int("Threads", (int)this->CountActiveThreads(), false); }
+    }
+  } else if (v) {
+    this->addWaitingQueue(v->GetPort1(), duration);
+    Config->logN(3, "MaxParallelThreads reached (max: %d), Port %d (duration: %d sec) has been added to queue", Config->GetMaxThreads(), v->GetPort1(), duration);
   }
-}
-
-void valveStructure::SetOff(String SubTopic) {
-  valve* v = this->GetValveItem(SubTopic);
-  if (v) { this->SetOff(GetValveItem(SubTopic)->GetPort1()); }
 }
 
 void valveStructure::SetOn(String SubTopic) {
@@ -39,12 +37,38 @@ void valveStructure::SetOn(String SubTopic) {
 
 void valveStructure::SetOn(uint8_t Port) {
   valve* v = this->GetValveItem(Port);
-  if (v && v->SetOn() && mqtt) { mqtt->Publish_Int("Threads", (int)this->CountActiveThreads(), false); }
+  if (Config->GetMaxThreads()==0 || (Config->GetMaxThreads() > 0 && this->CountActiveThreads() < Config->GetMaxThreads())) {
+    if (v && v->SetOn()) {
+      if (mqtt) { mqtt->Publish_Int("Threads", (int)this->CountActiveThreads(), false); }
+    }
+  } else if (v) { 
+    this->addWaitingQueue(v->GetPort1(), 0); 
+    Config->logN(3, "MaxParallelThreads reached (max: %d), Port %d has been added to queue", Config->GetMaxThreads(), v->GetPort1());
+  }
+}
+
+void valveStructure::SetOff(String SubTopic) {
+  valve* v = this->GetValveItem(SubTopic);
+  if (v) { this->SetOff(GetValveItem(SubTopic)->GetPort1()); }
 }
 
 void valveStructure::SetOff(uint8_t Port) {
   valve* v = this->GetValveItem(Port);
-  if (v) { v->SetOff(); }
+  if (v) { 
+    v->SetOff(); 
+    // check if there are waiting items in the queue
+    if (this->waitingQueue->size() > 0) {
+      waitingQueue_t item = this->waitingQueue->front();
+      this->waitingQueue->erase(this->waitingQueue->begin());
+      if (item.duration == 0) {
+        Config->logN(3, "processing Port %d from queue with 'SetOn'", item.Port); 
+        this->SetOn(item.Port);
+      } else {
+        Config->logN(3, "processing Port %d from queue with 'OnForTimer' and duration %d sec", item.Port, item.duration);
+        this->OnForTimer(item.Port, item.duration); 
+      }
+    }
+  }
   if (mqtt) { mqtt->Publish_Int("Threads", (int)this->CountActiveThreads(), false); }
 }
 
@@ -60,6 +84,19 @@ bool valveStructure::GetEnabled(uint8_t Port) {
 
 void valveStructure::SetEnable(uint8_t Port, bool state) {
   if (GetValveItem(Port)) { GetValveItem(Port)->SetActive(state); }
+}
+
+void valveStructure::addWaitingQueue(uint8_t Port, unsigned int duration) {
+  // Check if the port is already in the waitingQueue
+  for (size_t i = 0; i < waitingQueue->size(); ++i) {
+    waitingQueue_t item = waitingQueue->at(i);
+    if (item.Port == Port) {
+      // Port already in queue, do nothing
+      return;
+    }
+  }
+  waitingQueue_t item = { Port, duration };
+  waitingQueue->push_back(item);
 }
 
 void valveStructure::loop() {

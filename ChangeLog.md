@@ -2,7 +2,8 @@ Release 3.2.0:
     +++++++ This version is not OTA compatible with older versions +++++++
     +++++++ Please do a fresh installation by web-installer +++++++
     
-  - move userconfig to separate LittleFS partition to prevet loosing config by upgrading version via OTA
+  - feature: move userconfig to separate LittleFS partition to prevet loosing config by upgrading version via OTA
+  - feature: add maxParallelThreads functionality
 
 Release 3.1.3:
   - fix broken sensor config handling (#12)
@@ -21,12 +22,12 @@ Release 3.1.1:
 Release 3.1.0:
   - exchange debug variable to common log-function
   - change backend ajax-communication to websocket
-  - add flowercare support to request moisture of Xiaomi flowercare BLE devices
-  - add functionality to switch on valves by incomimg mqtt moisture messages
+  - feature: add flowercare support to request moisture of Xiaomi flowercare BLE devices
+  - feature: add functionality to switch on valves by incomimg mqtt moisture messages
   
 Release 3.0.1:
-  - add: initialize bistable valves at start to prevent open valves
-  - add: configurable serial output pins
+  - feature: initialize bistable valves at start to prevent open valves
+  - feature: configurable serial output pins
   - improve wifi reconnect handling
   
 Release 3.0.0:

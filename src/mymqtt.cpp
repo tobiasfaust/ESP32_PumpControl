@@ -52,10 +52,8 @@ void MyMQTT::reSubscribe() {
  * subscribe to a special topic (without /# at end)
 *******************************************************/
 void MyMQTT::Subscribe(String topic, MqttSubscriptionType_t identifier) {
-  //char buffer[100] = {0};
-  //memset(buffer, 0, sizeof(buffer));
   subscription_t sub = {};
-  //snprintf(buffer, sizeof(buffer), "%s/#", topic.c_str());
+  
   sub.subscription = topic;
   sub.identifier = identifier;
   sub.active = true;

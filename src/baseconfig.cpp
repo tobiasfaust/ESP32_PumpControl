@@ -19,7 +19,8 @@ BaseConfig::BaseConfig(fs::LittleFSFS& configFS) :
   max_parallel(0),
   useETH(0),
   serial_rx(3),
-  serial_tx(1)
+  serial_tx(1),
+  max_threads(0)
   {
   
   #ifdef ESP8266
@@ -80,6 +81,7 @@ void BaseConfig::LoadJsonConfig() {
           if (elem["ventil3wege_port"]) { this->ventil3wege_port = elem["ventil3wege_port"].as<int>();}
           if (elem["serial_rx"])        { this->serial_rx = (elem["serial_rx"].as<int>()) - 200;}
           if (elem["serial_tx"])        { this->serial_tx = (elem["serial_tx"].as<int>()) - 200;}
+          if (elem["max_threads"])      { this->max_threads = (elem["max_threads"].as<int>()); }
         }
       } while (stream.findUntil(",","]"));
     } else {
@@ -177,6 +179,7 @@ void BaseConfig::GetInitData(JsonDocument& json) {
   json["data"]["sel_3wege_0"] = ((this->enable_3wege)?0:1);
   json["data"]["sel_3wege_1"] = ((this->enable_3wege)?1:0);
   json["data"]["ConfiguredPort_0"] = this->ventil3wege_port;
+  json["data"]["max_threads"] = this->max_threads;
   
   json["response"].to<JsonObject>();
   json["response"]["status"] = 1;
@@ -210,8 +213,10 @@ void BaseConfig::log(const int loglevel, const char* format, ...) {
   char buffer[256];
   vsnprintf(buffer, sizeof(buffer), format, args);
   #ifdef USE_WEBSERIAL
+    WebSerial.printf("[Log %d] ", loglevel);  
     WebSerial.print(buffer);
   #else
+    Serial.printf("[Log %d] ", loglevel);
     Serial.print(buffer);
   #endif
   va_end(args);
@@ -221,9 +226,11 @@ void BaseConfig::log(const int loglevel, const JsonDocument& json) {
   if (this->GetDebugLevel() < loglevel) return;
   
   #ifdef USE_WEBSERIAL
+    WebSerial.printf("[Log %d] ", loglevel);  
     serializeJsonPretty(json, WebSerial);
     WebSerial.println();
   #else
+    Serial.printf("[Log %d] ", loglevel);
     serializeJsonPretty(json, Serial);
     Serial.println();
   #endif

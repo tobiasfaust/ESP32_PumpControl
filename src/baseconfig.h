@@ -48,7 +48,8 @@ class BaseConfig {
     const String&   GetLANBoard()      const {return LANBoard;}
     const uint8_t&  GetSerialRx()     const {return serial_rx;}
     const uint8_t&  GetSerialTx()     const {return serial_tx;}
-    
+    const uint8_t&  GetMaxThreads()   const {return max_threads;}
+
     size_t          getFragmentation();
      
   private:
@@ -76,6 +77,7 @@ class BaseConfig {
     String    LANBoard;
     uint8_t   serial_rx;
     uint8_t   serial_tx;
+    uint8_t   max_threads;
 };
 
 extern BaseConfig* Config;
