@@ -13,31 +13,37 @@ valveStructure::valveStructure(fs::LittleFSFS& configFS, uint8_t sda, uint8_t sc
 
 void valveStructure::OnForTimer(String SubTopic, int duration) {
   valve* v = this->GetValveItem(SubTopic);
-  if (v) {
-    this->OnForTimer(v->GetPort1(), duration);
-  }
+  if (v) { this->OnForTimer(v, duration); }
 }
 
 void valveStructure::OnForTimer(uint8_t Port, int duration) {
   valve* v = this->GetValveItem(Port);
-  if (Config->GetMaxThreads()==0 || (Config->GetMaxThreads() > 0 && this->CountActiveThreads() < Config->GetMaxThreads())) {
-    if (v && v->OnForTimer(duration)) {
+  if (v) { this->OnForTimer(v, duration); }
+}
+
+void valveStructure::OnForTimer(valve* valve, int duration) {
+  if (!valve->GetUse4ParallelThreads() || Config->GetMaxThreads() == 0 || (Config->GetMaxThreads() > 0 && this->CountActiveThreads() < Config->GetMaxThreads())) {
+    if (valve && valve->OnForTimer(duration)) {
       if (mqtt) {mqtt->Publish_Int("Threads", (int)this->CountActiveThreads(), false); }
     }
-  } else if (v) {
-    this->addWaitingQueue(v->GetPort1(), duration);
-    Config->logN(3, "MaxParallelThreads reached (max: %d), Port %d (duration: %d sec) has been added to queue", Config->GetMaxThreads(), v->GetPort1(), duration);
+  } else if (valve) {
+    this->addWaitingQueue(valve->GetPort1(), duration);
+    Config->logN(3, "MaxParallelThreads reached (max: %d), Port %d (duration: %d sec) has been added to queue", Config->GetMaxThreads(), valve->GetPort1(), duration);
   }
 }
 
 void valveStructure::SetOn(String SubTopic) {
   valve* v = this->GetValveItem(SubTopic);
-  if (v) {this->SetOn(GetValveItem(SubTopic)->GetPort1()); }
+  if (v) { this->SetOn(v); }
 }
 
 void valveStructure::SetOn(uint8_t Port) {
   valve* v = this->GetValveItem(Port);
-  if (Config->GetMaxThreads()==0 || (Config->GetMaxThreads() > 0 && this->CountActiveThreads() < Config->GetMaxThreads())) {
+  if (v) { this->SetOn(v); }
+}
+
+void valveStructure::SetOn(valve* v) {
+  if (!v->GetUse4ParallelThreads() || Config->GetMaxThreads()==0 || (Config->GetMaxThreads() > 0 && this->CountActiveThreads() < Config->GetMaxThreads())) {
     if (v && v->SetOn()) {
       if (mqtt) { mqtt->Publish_Int("Threads", (int)this->CountActiveThreads(), false); }
     }
@@ -49,24 +55,26 @@ void valveStructure::SetOn(uint8_t Port) {
 
 void valveStructure::SetOff(String SubTopic) {
   valve* v = this->GetValveItem(SubTopic);
-  if (v) { this->SetOff(GetValveItem(SubTopic)->GetPort1()); }
+  if (v) { this->SetOff(v); }
 }
 
 void valveStructure::SetOff(uint8_t Port) {
   valve* v = this->GetValveItem(Port);
-  if (v) { 
-    v->SetOff(); 
-    // check if there are waiting items in the queue
-    if (this->waitingQueue->size() > 0) {
-      waitingQueue_t item = this->waitingQueue->front();
-      this->waitingQueue->erase(this->waitingQueue->begin());
-      if (item.duration == 0) {
-        Config->logN(3, "processing Port %d from queue with 'SetOn'", item.Port); 
-        this->SetOn(item.Port);
-      } else {
-        Config->logN(3, "processing Port %d from queue with 'OnForTimer' and duration %d sec", item.Port, item.duration);
-        this->OnForTimer(item.Port, item.duration); 
-      }
+  if (v) { this->SetOff(v); }
+}
+
+void valveStructure::SetOff(valve* v) {
+  v->SetOff(); 
+  // check if there are waiting items in the queue
+  if (this->waitingQueue->size() > 0) {
+    waitingQueue_t item = this->waitingQueue->front();
+    this->waitingQueue->erase(this->waitingQueue->begin());
+    if (item.duration == 0) {
+      Config->logN(3, "processing Port %d from queue with 'SetOn'", item.Port); 
+      this->SetOn(item.Port);
+    } else {
+      Config->logN(3, "processing Port %d from queue with 'OnForTimer' and duration %d sec", item.Port, item.duration);
+      this->OnForTimer(item.Port, item.duration); 
     }
   }
   if (mqtt) { mqtt->Publish_Int("Threads", (int)this->CountActiveThreads(), false); }
@@ -162,7 +170,7 @@ valve* valveStructure::GetValveItem(String SubTopic) {
 uint8_t valveStructure::CountActiveThreads() {
   uint8_t count = 0;
   for (uint8_t i=0; i<Valves->size(); i++) {
-    if (Valves->at(i).GetActive() && (Valves->at(i).GetPort1() != Config->Get3WegePort() || !Config->Enabled3Wege() )) {count++;}
+    if (Valves->at(i).GetActive() && Valves->at(i).GetUse4ParallelThreads() && (Valves->at(i).GetPort1() != Config->Get3WegePort() || !Config->Enabled3Wege() )) {count++;}
   }
   return count;
 }
@@ -214,6 +222,7 @@ void valveStructure::LoadJsonConfig() {
           if (elem["imp_a"]) { myValve.port1ms = _max(10, _min(elem["imp_a"].as<int>(), 999));}
           if (elem["imp_b"]) { myValve.port2ms = _max(10, _min(elem["imp_b"].as<int>(), 999));}
           if (elem["reverse"] && elem["reverse"] == 1) {myValve.SetReverse(true);} else {myValve.SetReverse(false);}
+          if (elem["use4parallelthreads"] && elem["use4parallelthreads"] == 1) {myValve.SetUse4ParallelThreads(true);} else {myValve.SetUse4ParallelThreads(false);}
           if (elem["autooff"] && elem["autooff"].as<int>() > 0) { myValve.SetAutoOff(elem["autooff"].as<int>()); }
 
           // initiiere bistabile ventile
@@ -272,6 +281,7 @@ void valveStructure::GetInitData(JsonDocument& json) {
     row[i]["type_opt_b"] = (Valves->at(i).GetValveType()=="b"?1:0);
 
     row[i]["reverse"] = (Valves->at(i).GetReverse()?1:0);
+    row[i]["use4parallelthreads"] = (Valves->at(i).GetUse4ParallelThreads()?1:0);
     row[i]["autooff"] = Valves->at(i).GetAutoOff();
     row[i]["action"] = (Valves->at(i).GetActive()?"Set Off":"Set On");
   }

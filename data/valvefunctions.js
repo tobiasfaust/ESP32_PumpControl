@@ -99,7 +99,7 @@ export function ChangeEnabled(object) {
 }
 
 /************************************************
-the valbve type has changed
+set valve on or off
 *************************************************/
 export function ChangeValve(object) {
   var btn = document.getElementById(object.id);

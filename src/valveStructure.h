@@ -29,10 +29,13 @@ class valveStructure {
     void      loop();
     void      OnForTimer(String SubTopic, int duration);
     void      OnForTimer(uint8_t Port, int duration);
+    void      OnForTimer(valve* valve, int duration);
     void      SetOn(String SubTopic);
     void      SetOn(uint8_t Port);
+    void      SetOn(valve* valve);
     void      SetOff(String SubTopic);
     void      SetOff(uint8_t Port);
+    void      SetOff(valve* valve);
     bool      GetState(uint8_t Port);
     bool      GetEnabled(uint8_t Port);
     void      SetEnable(uint8_t Port, bool state);

@@ -1,6 +1,6 @@
 #include "valve.h"
 
-valve::valve() : port1ms(10), port2ms(10), enabled(true), active(false), ValveType(NONE), autooff(0), reverse(false) {
+valve::valve() : port1ms(10), port2ms(10), enabled(true), active(false), ValveType(NONE), autooff(0), reverse(false), use4parallelthreads(true) {
   this->myHWdev = new HWdev_t();
   this->myHWdev->i2cAddress = 0;
 }
@@ -48,6 +48,10 @@ void valve::SetReverse(bool value) {
 
 void valve::SetAutoOff(uint16_t value) {
   this->autooff = value;
+}
+
+void valve::SetUse4ParallelThreads(bool value) {
+  this->use4parallelthreads = value;
 }
 
 bool valve::OnForTimer(int duration) {

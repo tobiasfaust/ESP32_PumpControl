@@ -18,17 +18,19 @@ class valve {
     bool      OnForTimer(int duration);
     bool      SetOn();
     bool      SetOff();
-    int         ActiveTimeLeft(); 
+    int       ActiveTimeLeft(); 
     void      AddPort1(valveHardware* Device, uint8_t Port1);
     void      AddPort2(valveHardware* Device, uint8_t Port2);
     void      SetValveType(String type);
     void      SetActive(bool value);
     void      SetReverse(bool value);
     void      SetAutoOff(uint16_t value);
-    
+    void      SetUse4ParallelThreads(bool value);
+
     const bool& GetActive()      const {return active;}
     const bool&  GetEnabled()    const {return enabled;}
     const bool&  GetReverse()    const {return reverse;}
+    const bool&  GetUse4ParallelThreads() const {return use4parallelthreads;}
     const uint16_t& GetAutoOff()    const {return autooff;}
     const uint8_t&  GetI2cAddress()    const {return this->myHWdev->i2cAddress;}
     
@@ -45,7 +47,8 @@ class valve {
     vType_t   ValveType;
     uint16_t  autooff; // anzahl sek wenn das Ventil nach einem ON automatisch spaetestens schliessen soll -> Sicherheitsabschaltung
     bool      reverse; // Ventil schliesst auf ON, oeffnet auf OFF
-    
+    bool      use4parallelthreads; // Ventil wird zur Berechnung der Anzahl von parallelen Threads verwendet
+
     HWdev_t*  myHWdev = NULL;      //Pointer auf das Device
     valveHardware* valveHWClass = NULL; // Pointer auf die Klasse um auf die generischen Funktionen zugreifen zu können
     
