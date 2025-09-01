@@ -12,6 +12,7 @@
 #include "sensor.h"
 #include "valveStructure.h"
 #include "valveRelation.h"
+#include "flowcontrol.h"
 
 #include <ElegantOTA.h>
 
@@ -22,6 +23,7 @@
 extern sensor* LevelSensor;
 extern valveStructure* VStruct;
 extern valveRelation* ValveRel;
+extern flowControl* FlowCtrl;
 
 #ifdef USE_I2C
   extern i2cdetect* I2Cdetect;

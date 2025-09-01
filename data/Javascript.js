@@ -25,6 +25,7 @@ import { functionMap as relationsFunctionMap } from './relations.js';
 import { functionMap as onewireFunctionsMap } from './1wireconfig.js';
 import { functionMap as filesFunctionMap } from './handlefiles.js';
 import { functionMap as flowercareFunctionMap } from './flowercare.js';
+import { functionMap as flowcontrolFunctionMap } from './flowcontrol.js';
 
 const combinedFunctionMap = {
   ...statusFunctionMap,
@@ -34,7 +35,8 @@ const combinedFunctionMap = {
   ...relationsFunctionMap,
   ...onewireFunctionsMap,
   ...filesFunctionMap,
-  ...flowercareFunctionMap
+  ...flowercareFunctionMap,
+  ...flowcontrolFunctionMap
 };
 
 export let ws;    // websocket handle

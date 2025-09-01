@@ -6,6 +6,7 @@
 #include "mymqtt.h"
 #include "mywebserver.h"
 #include "sensor.h"
+#include "flowcontrol.h"
 
 #ifdef USE_OLED
   #include "oled.h"
@@ -25,6 +26,7 @@ valveStructure* VStruct = nullptr;
 MyMQTT* mqtt = nullptr;
 sensor* LevelSensor = nullptr;
 MyWebServer* mywebserver = nullptr;
+flowControl* FlowCtrl = nullptr;
 
 // Initialize littlefs data partitions  
 fs::LittleFSFS sysFS;
@@ -147,7 +149,10 @@ void setup() {
 
   Config->logN(1, "Starting Valve Relations");
   ValveRel = new valveRelation(configFS);
- 
+
+  Config->logN(1, "Starting Flow Control");
+  FlowCtrl = new flowControl(configFS);
+
   Config->logN(1, "Starting Valve Structure");
   VStruct = new valveStructure(configFS, Config->GetPinSDA(), Config->GetPinSCL());
 
@@ -164,6 +169,7 @@ void loop() {
   mqtt->loop();
   LevelSensor->loop();
   mywebserver->loop();
+  FlowCtrl->loop();
   
   #ifdef USE_OLED
     oled->loop();  

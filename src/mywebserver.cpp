@@ -198,6 +198,9 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
         } else if (subaction && subaction == "relations") {
           ValveRel->GetInitData(json);
           VStruct->getWebJsParameter(json);
+        } else if (subaction && subaction == "flowcontrol") {
+          FlowCtrl->GetInitData(json);
+          VStruct->getWebJsParameter(json);
         } else if (subaction && subaction == "flowercare") {
           this->GetInitDataFlowerCare(json);
         } else {
@@ -221,6 +224,10 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
         
         if (subaction && subaction == "relations") {
           ValveRel->LoadJsonConfig();
+        }
+
+        if (subaction && subaction == "flowcontrol") {
+          FlowCtrl->LoadJsonConfig();
         }
 
         if (subaction && subaction == "flowercare") {
