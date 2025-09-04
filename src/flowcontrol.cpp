@@ -10,13 +10,16 @@ flowControl::flowControl(fs::LittleFSFS& configFS) :
   LoadJsonConfig();
 }
 
+void flowControl::onValues(std::function<void(JsonDocument&)> callback) {
+    this->onValuesCallback = callback;
+}
+
 void flowControl::AddFlowControl(bool enabled, String name, uint8_t port, unsigned int ImpPerLitre) {
   flowcontrol_t flow;
   flow.enabled = enabled;
   flow.name = name;
   flow.port = port;
   flow.ImpPerLitre = ImpPerLitre;
-  flow.count = 0;
   flowControlItems.push_back(flow);
 
   if (enabled) {
@@ -144,6 +147,8 @@ void flowControl::GetInitData(JsonDocument& json) {
     row[i]["name"] = flowControlItems.at(i).name;
     row[i]["GpioPin"] = flowControlItems.at(i).port;
     row[i]["ImpPerLitre"] = (flowControlItems.at(i).ImpPerLitre);
+    row[i]["l/min"]["data-id"] = String(flowControlItems.at(i).name.c_str()) + "_l/min";
+    row[i]["total"]["data-id"] = String(flowControlItems.at(i).name.c_str()) + "_total";
   }
 
   json["response"].to<JsonObject>();
@@ -154,15 +159,32 @@ void flowControl::GetInitData(JsonDocument& json) {
 void flowControl::loop() {
   if (millis() - lastCalculationTime > calculationPeriod) { // alle 5 Sekunden
     lastCalculationTime = millis();
+    JsonDocument json;
+    JsonArray rows = json.to<JsonArray>();
+
     for (uint8_t i=0; i< flowControlItems.size(); i++) {
       if (flowControlItems.at(i).ImpPerLitre > 0 and flowControlItems.at(i).enabled) {
         //calculate litre per minute, based on current counts of last calculationPeriod
         float litres = (float)flowControlItems.at(i).count / (float)flowControlItems.at(i).ImpPerLitre * 60.0 / (calculationPeriod / 1000);
-        
+        // add real flow litres since last calculation to litresCounter
+        flowControlItems.at(i).litresCounter += (float)flowControlItems.at(i).count / (float)flowControlItems.at(i).ImpPerLitre;
+
         Config->logN(5, "FlowControl '%s': %u pulses/%u sec = %.3f Litres/min", flowControlItems.at(i).name.c_str(), flowControlItems.at(i).count, (calculationPeriod / 1000), litres);
-        mqtt->Publish_Float(flowControlItems.at(i).name.c_str(), litres, false);
+        
+        JsonObject obj = rows.add<JsonObject>();
+        obj["name"] = flowControlItems.at(i).name;
+        obj["l/min"] = litres;
+        obj["total"] = flowControlItems.at(i).litresCounter;
         
         flowControlItems.at(i).count = 0; // Zähler zurücksetzen
+      }
+    }
+
+    if (rows.size() > 0) {
+      Config->logN(4, "Sending FlowControl data to MQTT: %s -> %s", mqtt->getTopic("flowcontrol", false).c_str(), json.as<String>().c_str());
+      mqtt->Publish_String("flowcontrol", json.as<String>(), false);
+      if (this->onValuesCallback) {
+        this->onValuesCallback(json);
       }
     }
   }

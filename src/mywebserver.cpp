@@ -14,18 +14,18 @@ MyWebServer::MyWebServer(fs::LittleFSFS& sysFS, fs::LittleFSFS& configFS, AsyncW
   fsfiles->registerLittleFS(&configFS, "/config");
 
   _relationen = new std::vector<FlowercareRelation_t>();
+  _wsclientRequests = new std::vector<wsclient_t>();
   
   #ifdef USE_FLOWERCARE
     Config->logN(1, "Starting FlowerCare");
     flowerCare = new FlowerCare();
     flowerCare->onLog(std::bind(&BaseConfig::logN, Config, std::placeholders::_1, std::placeholders::_2));
-    flowerCare->onValues(std::bind(&MyWebServer::flowerCareGetValuesCallback, this, std::placeholders::_1));
     flowerCare->onScanEnd(std::bind(&MyWebServer::flowerCareOnScanEndCallback, this));
   #endif
   
   this->LoadFlowerCareConfig();
 
-  ws = new AsyncWebSocket("/ajaxws");
+  this->ws = new AsyncWebSocket("/ajaxws");
 
   ElegantOTA.setTargetPartition("webdata");  // Set default partition for OTA updates
   ElegantOTA.setGitEnv(String(GIT_OWNER), String(GIT_REPO), String(GIT_BRANCH), String(GITHUB_RUN).toInt());
@@ -41,7 +41,7 @@ MyWebServer::MyWebServer(fs::LittleFSFS& sysFS, fs::LittleFSFS& configFS, AsyncW
   server->on("/", HTTP_GET, std::bind(&MyWebServer::handleRoot, this, std::placeholders::_1));
   server->onNotFound(std::bind(&MyWebServer::handleNotFound, this, std::placeholders::_1));
   
-  ws->onEvent(std::bind(&MyWebServer::onWsEvent, this, std::placeholders::_1, 
+  this->ws->onEvent(std::bind(&MyWebServer::onWsEvent, this, std::placeholders::_1, 
     std::placeholders::_2, 
     std::placeholders::_3, 
     std::placeholders::_4, 
@@ -107,7 +107,7 @@ void MyWebServer::loop() {
   }
 
   ElegantOTA.loop();
-  ws->cleanupClients();
+  this->ws->cleanupClients();
 
   #ifdef USE_FLOWERCARE
     if (flowerCare) {
@@ -141,7 +141,24 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
   
   } else if (type == WS_EVT_DISCONNECT) {
     Config->logN(4, "[Client: %u] WebSocket client disconnected", client->id());
-  
+
+    // Remove client from WebSocket client requests if it exists
+    for (uint8_t i = 0; i < _wsclientRequests->size(); i++) {
+      if (_wsclientRequests->at(i).ws_id == client->id()) {
+        
+        #ifdef USE_FLOWERCARE
+        if (_wsclientRequests->at(i).requestData == wsclient_t::FLOWERCARE_DATA) { flowerCare->onValues(nullptr); }
+        #endif
+
+        if (_wsclientRequests->at(i).requestData == wsclient_t::ADS1115_DATA) { /* Handle ADS1115_DATA */ }
+        if (_wsclientRequests->at(i).requestData == wsclient_t::FLOWCONTROL_DATA) { FlowCtrl->onValues(nullptr); }
+        if (_wsclientRequests->at(i).requestData == wsclient_t::LOG_DATA) { /* Handle LOG_DATA */ }
+
+        _wsclientRequests->erase(_wsclientRequests->begin() + i);
+      }
+    }
+    _wsclientRequests->shrink_to_fit();
+
   } else if (type == WS_EVT_DATA) {
     String msg(""); msg.reserve(len + 1);
     for (size_t i = 0; i < len; i++) { msg += (char)data[i]; } msg += '\0';
@@ -159,6 +176,24 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
         if (json["cmd"]["item"])        { item      = json["cmd"]["item"].as<String>(); }
         if (json["cmd"]["item2"])       { item2     = json["cmd"]["item2"].as<String>(); }
         
+      }
+
+      if (action && action == "subscribe") {
+        if (subaction && subaction == "flowercare_data") {
+          #ifdef USE_FLOWERCARE
+            _wsclientRequests->push_back({client->id(), wsclient_t::FLOWERCARE_DATA});
+            flowerCare->onValues(std::bind(&MyWebServer::flowerCareGetValuesCallback, this, std::placeholders::_1));
+          #endif
+        } else if (subaction && subaction == "ads1115_data") {
+          _wsclientRequests->push_back({client->id(), wsclient_t::ADS1115_DATA});
+          // Handle ADS1115_DATA callback
+        } else if (subaction && subaction == "flowcontrol_data") {
+          _wsclientRequests->push_back({client->id(), wsclient_t::FLOWCONTROL_DATA});
+          FlowCtrl->onValues(std::bind(&MyWebServer::flowControlGetValuesCallback, this, std::placeholders::_1, client->id()));
+        } else if (subaction && subaction == "log_data") {
+          _wsclientRequests->push_back({client->id(), wsclient_t::LOG_DATA});
+          // Handle LOG_DATA callback
+        }
       }
 
       if (action && action == "reset") {
@@ -339,7 +374,7 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
       json["response"]["text"] = error.c_str();
     }
 
-    ws->text(client->id(), json.as<String>());
+    this->ws->text(client->id(), json.as<String>());
 
   }
 }
@@ -607,7 +642,7 @@ void MyWebServer::flowerCareGetValuesCallback(JsonDocument& json) {
   wsjson["cmd"]["callbackFn"] = "onBleUpdate_Callback";
   wsjson["cmd"]["highlight"] = "true";
 
-  ws->textAll(wsjson.as<String>());
+  this->ws->textAll(wsjson.as<String>());
 }
 
 void MyWebServer::flowerCareOnScanEndCallback() {
@@ -618,6 +653,15 @@ void MyWebServer::flowerCareOnScanEndCallback() {
   json["response"]["status"] = 1;
   json["response"]["text"] = "scan ended";
   
-  ws->textAll(json.as<String>());
+  this->ws->textAll(json.as<String>());
 }
 #endif
+
+void MyWebServer::flowControlGetValuesCallback(JsonDocument& json, uint32_t wsclient_id) {
+  // sending over WebSocket, has to reformat the json
+  JsonDocument wsjson;
+  wsjson["data-id"][String(json["name"].as<String>()) + "_l/min"] = String(json["l/min"].as<float>(), 2);
+  wsjson["data-id"][String(json["name"].as<String>()) + "_total"] = String(json["total"].as<float>(), 2);
+  wsjson["cmd"]["highlight"] = "true";
+  this->ws->text(wsclient_id, wsjson.as<String>());
+}

@@ -63,6 +63,18 @@
                 <i class="fa fa-question-circle" style="font-size: 12px; cursor: pointer; color: gold;"></i>
               </span>
             </td>
+            <td>
+              <span title="current measured flow in litres per minute">l/min
+                <i class="fa fa-question-circle" style="font-size: 12px; cursor: pointer; color: gold;"></i>
+              </span>
+            </td>
+
+            <td>
+              <span title="total measured flow in litres since last reset">Total
+                <i class="fa fa-question-circle" style="font-size: 12px; cursor: pointer; color: gold;"></i>
+              </span>
+            </td>
+
             <td style='width: 25px;'>Delete</td>
 
           </tr>
@@ -76,7 +88,8 @@
             <td><input id='name' name='name' type='text' size='30'/></td>
             <td><input id='GpioPin' name='port' type='number' min='10' max='999'/></td>
             <td><input id='ImpPerLitre' name='ImpPerLitre' type='number' min='1' max='9999'/></td>
-              
+            <td><span id='l/min' class='ajaxchange'>-</span></td>
+            <td><span id='total' class='ajaxchange'>-</span></td>
             <td><input type='button' value='&#10008;' onclick='delrow(this)'></td>
           </tr>
         </template>

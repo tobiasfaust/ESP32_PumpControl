@@ -32,6 +32,11 @@ extern flowControl* FlowCtrl;
 class MyWebServer {
 
   typedef struct {
+    uint32_t ws_id;
+    enum requestData_t {LOG_DATA, FLOWERCARE_DATA, ADS1115_DATA, FLOWCONTROL_DATA} requestData;
+  } wsclient_t;
+
+  typedef struct {
     bool enabled;
     String TriggerTopic = "";
     uint8_t ActorPort; 
@@ -57,7 +62,8 @@ class MyWebServer {
     unsigned long RequestRebootTime;
     unsigned long ota_progress_millis = 0;
     std::vector<FlowercareRelation_t>* _relationen  = NULL;
-      
+    std::vector<wsclient_t>* _wsclientRequests = NULL;
+
     handleFiles* fsfiles;
 
     #ifdef USE_FLOWERCARE
@@ -66,7 +72,8 @@ class MyWebServer {
       void      flowerCareOnScanEndCallback();
     #endif
 
-    
+    void      flowControlGetValuesCallback(JsonDocument& json, uint32_t wsclient_id);
+
     void      handleNotFound(AsyncWebServerRequest *request);
     void      handleRoot(AsyncWebServerRequest *request);
     bool      handleReset();
