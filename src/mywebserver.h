@@ -68,7 +68,7 @@ class MyWebServer {
 
     #ifdef USE_FLOWERCARE
       FlowerCare* flowerCare = nullptr;
-      void      flowerCareGetValuesCallback(JsonDocument& json);
+      void      flowerCareGetValuesCallback(JsonDocument& json, uint32_t wsclient_id);
       void      flowerCareOnScanEndCallback();
     #endif
 
