@@ -60,6 +60,13 @@ class sensor {
       void      SetOled(OLED* oled);
     #endif
 
+    // callbacks
+    /************************
+     * @brief Callback for getting the values
+     * @param function(JsonDocument&) the callback function
+     ************************/
+    void onValues(std::function<void(JsonDocument&)> callback);
+
   private:
     fs::LittleFSFS& configFS;
     void      loop_analog();
@@ -99,6 +106,8 @@ class sensor {
     #ifdef USE_OLED
       OLED*    oled;
     #endif
+
+  std::function<void(JsonDocument&)> onValuesCallback; // Callback function pointer
     
 };
 

@@ -150,7 +150,7 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
         if (_wsclientRequests->at(i).requestData == wsclient_t::FLOWERCARE_DATA) { flowerCare->onValues(nullptr); }
         #endif
 
-        if (_wsclientRequests->at(i).requestData == wsclient_t::ADS1115_DATA) { /* Handle ADS1115_DATA */ }
+        if (_wsclientRequests->at(i).requestData == wsclient_t::ADS1115_DATA) { LevelSensor->onValues(nullptr); }
         if (_wsclientRequests->at(i).requestData == wsclient_t::FLOWCONTROL_DATA) { FlowCtrl->onValues(nullptr); }
         if (_wsclientRequests->at(i).requestData == wsclient_t::LOG_DATA) { /* Handle LOG_DATA */ }
 
@@ -182,11 +182,11 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
         if (subaction && subaction == "flowercare_data") {
           #ifdef USE_FLOWERCARE
             _wsclientRequests->push_back({client->id(), wsclient_t::FLOWERCARE_DATA});
-            flowerCare->onValues(std::bind(&MyWebServer::flowerCareGetValuesCallback, this, std::placeholders::_1));
+            flowerCare->onValues(std::bind(&MyWebServer::flowerCareGetValuesCallback, this, std::placeholders::_1, client->id()));
           #endif
         } else if (subaction && subaction == "ads1115_data") {
           _wsclientRequests->push_back({client->id(), wsclient_t::ADS1115_DATA});
-          // Handle ADS1115_DATA callback
+          LevelSensor->onValues(std::bind(&MyWebServer::LevelSensorGetValuesCallback, this, std::placeholders::_1, client->id()));
         } else if (subaction && subaction == "flowcontrol_data") {
           _wsclientRequests->push_back({client->id(), wsclient_t::FLOWCONTROL_DATA});
           FlowCtrl->onValues(std::bind(&MyWebServer::flowControlGetValuesCallback, this, std::placeholders::_1, client->id()));
@@ -617,7 +617,7 @@ void MyWebServer::LoadFlowerCareConfig() {
  }
 
 #ifdef USE_FLOWERCARE
-void MyWebServer::flowerCareGetValuesCallback(JsonDocument& json) {
+void MyWebServer::flowerCareGetValuesCallback(JsonDocument& json, uint32_t wsclient_id) {
   // sending over MQTT
   json["host"] = Config->GetMqttRoot();
   String topic = "flowercare/" + json["address"].as<String>();
@@ -642,7 +642,7 @@ void MyWebServer::flowerCareGetValuesCallback(JsonDocument& json) {
   wsjson["cmd"]["callbackFn"] = "onBleUpdate_Callback";
   wsjson["cmd"]["highlight"] = "true";
 
-  this->ws->textAll(wsjson.as<String>());
+  this->ws->text(wsclient_id, wsjson.as<String>());
 }
 
 void MyWebServer::flowerCareOnScanEndCallback() {
@@ -660,8 +660,22 @@ void MyWebServer::flowerCareOnScanEndCallback() {
 void MyWebServer::flowControlGetValuesCallback(JsonDocument& json, uint32_t wsclient_id) {
   // sending over WebSocket, has to reformat the json
   JsonDocument wsjson;
-  wsjson["data-id"][String(json["name"].as<String>()) + "_l/min"] = String(json["l/min"].as<float>(), 2);
-  wsjson["data-id"][String(json["name"].as<String>()) + "_total"] = String(json["total"].as<float>(), 2);
+  JsonArray rows = json.as<JsonArray>();
+  for (JsonObject elem : rows) {
+    wsjson["data-id"][String(elem["name"].as<String>()) + "_l/min"] = String(elem["l/min"].as<float>(), 2);
+    wsjson["data-id"][String(elem["name"].as<String>()) + "_total"] = String(elem["total"].as<float>(), 2);
+  }
+  wsjson["cmd"]["highlight"] = "true";
+  this->ws->text(wsclient_id, wsjson.as<String>());
+}
+
+void MyWebServer::LevelSensorGetValuesCallback(JsonDocument& json, uint32_t wsclient_id) {
+  // sending over WebSocket, has to reformat the json
+  JsonDocument wsjson;
+  JsonArray rows = json.as<JsonArray>();
+  for (JsonObject elem : rows) {
+    wsjson["data-id"][String(elem["name"].as<String>()) + "_val"] = elem["moisture"];
+  }
   wsjson["cmd"]["highlight"] = "true";
   this->ws->text(wsclient_id, wsjson.as<String>());
 }

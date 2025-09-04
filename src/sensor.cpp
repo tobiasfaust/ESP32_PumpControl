@@ -33,6 +33,10 @@ sensor::sensor(fs::LittleFSFS& configFS) :
   LoadJsonConfig(); 
 }
 
+void sensor::onValues(std::function<void(JsonDocument&)> callback) {
+    this->onValuesCallback = callback;
+}
+
 void sensor::init_analog(uint8_t pinAnalog) {
   setSensorType(ONBOARD_ANALOG);
   this->pinAnalog = pinAnalog;
@@ -178,13 +182,17 @@ void sensor::loop_hcsr04() {
   void sensor::loop_ads1115_moisture() {
     uint16_t raw = 0;
     uint8_t  level = 0;
+    JsonDocument json;
+    JsonArray rows = json.to<JsonArray>();
     
     for (uint8_t i=0; i<this->ads1115_devices->size(); i++) {
       for (uint8_t chan=0; chan<4; chan++) {
         if (this->ads1115_devices->at(i).i2cAddress == this->ads1115_i2c && chan == this->ads1115_port) {
           // exclude sensor channel from measurement the moisture
           continue;
-        }  
+        }
+
+        // do nothing if no topic is set for this channel
         if (chan == 0 && this->ads1115_devices->at(i).topic_chan1.length()==0) continue;  
         if (chan == 1 && this->ads1115_devices->at(i).topic_chan2.length()==0) continue;
         if (chan == 2 && this->ads1115_devices->at(i).topic_chan3.length()==0) continue;
@@ -214,7 +222,19 @@ void sensor::loop_hcsr04() {
             break;
         } 
 
-        if (raw > 0 ) { mqtt->Publish_Int(topic.c_str(), (int)level, false); }
+        if (raw > 0 ) { 
+          JsonObject obj = rows.add<JsonObject>();
+          obj["name"] = topic;
+          obj["moisture"] = level;
+        }
+      }
+    }
+
+    if (rows.size() > 0) {
+      Config->logN(4, "Sending Moisture data to MQTT: %s -> %s", mqtt->getTopic("moisture", false).c_str(), json.as<String>().c_str());
+      mqtt->Publish_String("moisture", json.as<String>(), false);
+      if (this->onValuesCallback) {
+        this->onValuesCallback(json);
       }
     }
   }
@@ -224,7 +244,7 @@ void sensor::loop_hcsr04() {
     this->level = 0;
 
     if (!this->getAdsDevice(this->ads1115_i2c)) {
-      Config->logN(3, "Measure of analog Sensor ADS1115 port %d requested, but not ADS1115 found. Stop measure! ", this->ads1115_port);
+      Config->logN(2, "Measure of analog Sensor ADS1115 port %d requested, but not ADS1115 found. Stop measure! ", this->ads1115_port);
     } else {
 
       Config->logN(4, "start measure, use analog Sensor ADS1115 port: %d ", this->ads1115_port);
@@ -365,11 +385,13 @@ void sensor::GetInitData(JsonDocument& json) {
   json["data"]["sel2"] = ((this->Type==ONBOARD_ANALOG)?1:0);
 
 #ifdef USE_ADS1115
-  std::ostringstream ads1115_i2c_hex;
-  ads1115_i2c_hex << std::hex << std::uppercase << std::setw(2) << std::setfill('0') << (int)this->ads1115_i2c;
-  
+  //std::ostringstream ads1115_i2c_hex;
+  //ads1115_i2c_hex << std::hex << std::uppercase << std::setw(2) << std::setfill('0') << (int)this->ads1115_i2c;
+  char ads1115_i2c_hex[3];
+  snprintf(ads1115_i2c_hex, sizeof(ads1115_i2c_hex), "%02X", this->ads1115_i2c);
+
+  json["data"]["ads1115_i2c"] = String(ads1115_i2c_hex);
   json["data"]["sel3"] = ((this->Type==ADS1115)?1:0);
-  json["data"]["ads1115_i2c"] = ads1115_i2c_hex.str(); 
   json["data"]["ads1115_port"] = this->ads1115_port;
   json["data"]["sel_moisture1"] = ((this->moistureEnabled)?0:1);
   json["data"]["sel_moisture2"] = ((this->moistureEnabled)?1:0);
@@ -378,50 +400,40 @@ void sensor::GetInitData(JsonDocument& json) {
   
   uint8_t counter = 0;
   for (uint8_t i=0;i<this->ads1115_devices->size(); i++) {
-    std::ostringstream moisture_i2c_hex;
-    moisture_i2c_hex << std::hex << std::uppercase << std::setw(2) << std::setfill('0') << (int)this->ads1115_devices->at(i).i2cAddress;
-    if (this->ads1115_devices->at(i).topic_chan1.length() > 0 &&
-        !(this->GetType() == ADS1115  &&
-         this->ads1115_i2c == this->ads1115_devices->at(i).i2cAddress &&
-         this->ads1115_port == 0
-        )) {
-      json["data"]["rows"][counter]["mqtttopic"] = this->ads1115_devices->at(i).topic_chan1.c_str();
-      json["data"]["rows"][counter]["ads_port"] = 0;
-      json["data"]["rows"][counter]["ads_addr"] = moisture_i2c_hex.str(); 
-      counter++;
-    }
+    //std::ostringstream moisture_i2c_hex;
+    //moisture_i2c_hex << std::hex << std::uppercase << std::setw(2) << std::setfill('0') << (int)this->ads1115_devices->at(i).i2cAddress;
+    
+    char i2caddrhex[3];
+    snprintf(i2caddrhex, sizeof(i2caddrhex), "%02X", this->ads1115_devices->at(i).i2cAddress);
 
-    if (this->ads1115_devices->at(i).topic_chan2.length() > 0 &&
-        !(this->GetType() == ADS1115  &&
+    for (uint8_t chan=0; chan<4; chan++) {
+      String* topic = nullptr;
+      switch (chan) {
+      case 0:
+        topic = &this->ads1115_devices->at(i).topic_chan1;
+        break;
+      case 1:
+        topic = &this->ads1115_devices->at(i).topic_chan2;
+        break;
+      case 2:
+        topic = &this->ads1115_devices->at(i).topic_chan3;
+        break;
+      case 3:
+        topic = &this->ads1115_devices->at(i).topic_chan4;
+        break;
+      }
+    
+      if (topic->length() > 0 &&
+        !(this->GetType() == sensorType_t::ADS1115  &&
          this->ads1115_i2c == this->ads1115_devices->at(i).i2cAddress &&
-         this->ads1115_port == 0
+         this->ads1115_port == chan
         )) {
-      json["data"]["rows"][counter]["mqtttopic"] = this->ads1115_devices->at(i).topic_chan2.c_str();
-      json["data"]["rows"][counter]["ads_port"] = 1;
-      json["data"]["rows"][counter]["ads_addr"] = moisture_i2c_hex.str(); 
+      json["data"]["rows"][counter]["mqtttopic"] = topic->c_str();
+      json["data"]["rows"][counter]["ads_port"] = chan;
+      json["data"]["rows"][counter]["ads_addr"] = String(i2caddrhex);
+      json["data"]["rows"][counter]["ads_value"]["data-id"] = String(topic->c_str()) + "_val";
       counter++;
-    }
-
-    if (this->ads1115_devices->at(i).topic_chan3.length() > 0 &&
-        !(this->GetType() == ADS1115  &&
-         this->ads1115_i2c == this->ads1115_devices->at(i).i2cAddress &&
-         this->ads1115_port == 0
-        )) {
-      json["data"]["rows"][counter]["mqtttopic"] = this->ads1115_devices->at(i).topic_chan3.c_str();
-      json["data"]["rows"][counter]["ads_port"] = 2;
-      json["data"]["rows"][counter]["ads_addr"] = moisture_i2c_hex.str(); 
-      counter++;
-    }
-
-    if (this->ads1115_devices->at(i).topic_chan4.length() > 0 &&
-        !(this->GetType() == ADS1115  &&
-         this->ads1115_i2c == this->ads1115_devices->at(i).i2cAddress &&
-         this->ads1115_port == 0
-        )) {
-      json["data"]["rows"][counter]["mqtttopic"] = this->ads1115_devices->at(i).topic_chan4.c_str();
-      json["data"]["rows"][counter]["ads_port"] = 3;
-      json["data"]["rows"][counter]["ads_addr"] = moisture_i2c_hex.str(); 
-      counter++;
+      }
     }
   }
 

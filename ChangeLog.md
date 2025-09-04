@@ -5,6 +5,7 @@ Release 3.2.0:
   - feature: move userconfig to separate LittleFS partition to prevet loosing config by upgrading version via OTA
   - feature: add maxParallelThreads functionality
   - feature: add FlowControl support (#15)
+  - feature: add FlowControl and ADS1115 SoilMoisture values for constant updates in the web UI 
 
 Release 3.1.3:
   - fix broken sensor config handling (#12)

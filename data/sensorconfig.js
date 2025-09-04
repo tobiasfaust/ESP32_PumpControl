@@ -50,6 +50,14 @@ function MyCallback() {
 
   document.querySelector("#loader").style.visibility = "hidden";
   document.querySelector("body").style.visibility = "visible";
+
+    var data = {};
+    data['cmd'] = {};
+    data['cmd']['action'] = "subscribe";
+    data['cmd']['subaction'] = "ads1115_data";
+    data["cmd"]["highlight"] = "true";
+  
+    global.requestData(data);
   
 }
 
