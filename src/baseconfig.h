@@ -23,6 +23,13 @@ class BaseConfig {
     void logN(const int loglevel, const char* format, ...);
     void log(const int loglevel, const JsonDocument& json);
 
+    // callbacks
+    /************************
+     * @brief Callback for getting the values
+     * @param function(const char&) the callback function
+     ************************/
+    void onLogValues(std::function<void(const char*)> callback);
+
     const uint8_t&  GetPinSDA()      const {return pin_sda;}
     const uint8_t&  GetPinSCL()      const {return pin_scl;}
     const uint8_t&  GetPin1Wire()      const {return pin_1wire;}
@@ -78,6 +85,8 @@ class BaseConfig {
     uint8_t   serial_rx;
     uint8_t   serial_tx;
     uint8_t   max_threads;
+
+    std::function<void(const char*)> onLogValuesCallback; // Callback function pointer
 };
 
 extern BaseConfig* Config;

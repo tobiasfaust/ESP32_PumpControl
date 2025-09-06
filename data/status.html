@@ -3,10 +3,10 @@
   <head>
     <meta name='viewport' content='width=device-width, initial-scale=1.0'/>
     <meta charset='utf-8'/>
-    <link rel='stylesheet' type='text/css' href='/web/Style.css'/>
+    <link rel='stylesheet' type='text/css' href='./Style.css'/>
     <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css' >
-    <script language='javascript' type='module' src='/web/Javascript.js'></script>
-    <script language='javascript' type='module' src='/web/status.js'></script>
+    <script language='javascript' type='module' src='./Javascript.js'></script>
+    <script language='javascript' type='module' src='./status.js'></script>
 
     <script type='module'>
       import { init, DoReboot, DoReset, RefreshI2C, Refresh1Wire } from './status.js';
@@ -107,10 +107,10 @@
           <td><span id='fragmentation'></span>%</td>
         </tr>
 
-        <tr id="tr_webserial">
-          <td>show logs via webserial</td>
+        <tr>
+          <td>show current serial logs via web</td>
           <td>
-            <button class='button' onclick='window.location.href="/webserial"'>WebSerial</button>
+            <button class='button' onclick='window.open("./webserial_frame.html", "_blank")'>WebSerial</button>
           </td>
         </tr>
 

@@ -121,7 +121,9 @@ void BaseConfig::GetInitData(JsonDocument& json) {
   json["data"]["sel_URCID1"]  = ((this->mqtt_UseRandomClientID)?0:1);
   json["data"]["sel_URCID2"]  = ((this->mqtt_UseRandomClientID)?1:0);
   json["data"]["keepalive"] = this->keepalive;
-  
+  json["data"]["GpioPin_serial_rx"] = this->serial_rx + 200;
+  json["data"]["GpioPin_serial_tx"] = this->serial_tx + 200;
+
   #ifdef ESP32
     json["data"]["sel_wifi"] = ((this->useETH)?0:1);
     json["data"]["sel_eth"]  = ((this->useETH)?1:0);
@@ -145,14 +147,6 @@ void BaseConfig::GetInitData(JsonDocument& json) {
   #else
     json["data"]["tr_owSelect"]["className"] = "hide";
     json["data"]["onewire_0"]["className"] = "hide";
-  #endif
-
-  #ifdef USE_WEBSERIAL
-    json["data"]["tr_serial_rx"]["className"] = "hide";
-    json["data"]["tr_serial_tx"]["className"] = "hide";
-  #else
-    json["data"]["GpioPin_serial_rx"] = this->serial_rx + 200;
-    json["data"]["GpioPin_serial_tx"] = this->serial_tx + 200;
   #endif
 
   #ifdef USE_OLED
@@ -193,15 +187,13 @@ void BaseConfig::logN(const int loglevel, const char* format, ...) {
   va_start(args, format);
   char buffer[256];
   vsnprintf(buffer, sizeof(buffer), format, args);
-  #ifdef USE_WEBSERIAL
-    WebSerial.printf("[Log %d] ", loglevel);
-    //if (this->GetDebugLevel() >= 4) { WebSerial.printf("FreeHeap: %d Bytes\n ", ESP.getFreeHeap()); }
-    WebSerial.println(buffer);
-  #else
-    Serial.printf("[Log %d] ", loglevel);
-    //if (this->GetDebugLevel() >= 4) { Serial.printf("FreeHeap: %d Bytes\n ", ESP.getFreeHeap()); }
-    Serial.println(buffer);
-  #endif
+  Serial.printf("[Log %d] ", loglevel);
+  Serial.println(buffer);
+  
+  if (this->onLogValuesCallback) {
+      this->onLogValuesCallback(buffer);
+  }
+
   va_end(args);
 }
 
@@ -212,26 +204,29 @@ void BaseConfig::log(const int loglevel, const char* format, ...) {
   va_start(args, format);
   char buffer[256];
   vsnprintf(buffer, sizeof(buffer), format, args);
-  #ifdef USE_WEBSERIAL
-    WebSerial.printf("[Log %d] ", loglevel);  
-    WebSerial.print(buffer);
-  #else
-    Serial.printf("[Log %d] ", loglevel);
-    Serial.print(buffer);
-  #endif
+  
+  Serial.printf("[Log %d] ", loglevel);
+  Serial.print(buffer);
+
+  if (this->onLogValuesCallback) {
+      this->onLogValuesCallback(buffer);
+  }
+
   va_end(args);
 }
 
 void BaseConfig::log(const int loglevel, const JsonDocument& json) {
   if (this->GetDebugLevel() < loglevel) return;
   
-  #ifdef USE_WEBSERIAL
-    WebSerial.printf("[Log %d] ", loglevel);  
-    serializeJsonPretty(json, WebSerial);
-    WebSerial.println();
-  #else
-    Serial.printf("[Log %d] ", loglevel);
-    serializeJsonPretty(json, Serial);
-    Serial.println();
-  #endif
+  Serial.printf("[Log %d] ", loglevel);
+  serializeJsonPretty(json, Serial);
+  Serial.println();
+
+  if (this->onLogValuesCallback) {
+      this->onLogValuesCallback(json.as<String>().c_str());
+  }
+}
+
+void BaseConfig::onLogValues(std::function<void(const char*)> callback) {
+    this->onLogValuesCallback = callback;
 }

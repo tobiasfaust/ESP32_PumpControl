@@ -152,7 +152,7 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
 
         if (_wsclientRequests->at(i).requestData == wsclient_t::ADS1115_DATA) { LevelSensor->onValues(nullptr); }
         if (_wsclientRequests->at(i).requestData == wsclient_t::FLOWCONTROL_DATA) { FlowCtrl->onValues(nullptr); }
-        if (_wsclientRequests->at(i).requestData == wsclient_t::LOG_DATA) { /* Handle LOG_DATA */ }
+        if (_wsclientRequests->at(i).requestData == wsclient_t::LOG_DATA) { Config->onLogValues(nullptr); }
 
         _wsclientRequests->erase(_wsclientRequests->begin() + i);
       }
@@ -192,7 +192,7 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
           FlowCtrl->onValues(std::bind(&MyWebServer::flowControlGetValuesCallback, this, std::placeholders::_1, client->id()));
         } else if (subaction && subaction == "log_data") {
           _wsclientRequests->push_back({client->id(), wsclient_t::LOG_DATA});
-          // Handle LOG_DATA callback
+          Config->onLogValues(std::bind(&MyWebServer::logGetValuesCallback, this, std::placeholders::_1, json, client->id()));
         }
       }
 
@@ -449,10 +449,6 @@ void MyWebServer::GetInitDataStatus(JsonDocument& json) {
     json["data"]["rssi"] = WiFi.RSSI();
   #endif
 
-  #ifndef USE_WEBSERIAL
-    json["data"]["tr_webserial"]["className"] = "hide";
-  #endif
-
   json["response"].to<JsonObject>();
   json["response"]["status"] = 1;
   json["response"]["text"] = "successful";
@@ -678,4 +674,9 @@ void MyWebServer::LevelSensorGetValuesCallback(JsonDocument& json, uint32_t wscl
   }
   wsjson["cmd"]["highlight"] = "true";
   this->ws->text(wsclient_id, wsjson.as<String>());
+}
+
+void MyWebServer::logGetValuesCallback(const char* logline, JsonDocument& json, uint32_t wsclient_id) {
+  json["logline"] = logline;
+  this->ws->text(wsclient_id, json.as<String>());
 }

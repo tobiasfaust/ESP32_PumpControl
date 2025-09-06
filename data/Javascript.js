@@ -16,7 +16,6 @@
 /*****************************************************************************************
  * Definition of constants
  *****************************************************************************************/
-
 import { functionMap as statusFunctionMap } from './status.js';
 import { functionMap as baseconfigFunctionMap } from './baseconfig.js';
 import { functionMap as sensorconfigFunctionMap } from './sensorconfig.js';
@@ -26,18 +25,7 @@ import { functionMap as onewireFunctionsMap } from './1wireconfig.js';
 import { functionMap as filesFunctionMap } from './handlefiles.js';
 import { functionMap as flowercareFunctionMap } from './flowercare.js';
 import { functionMap as flowcontrolFunctionMap } from './flowcontrol.js';
-
-const combinedFunctionMap = {
-  ...statusFunctionMap,
-  ...baseconfigFunctionMap,
-  ...sensorconfigFunctionMap,
-  ...valveconfigFunctionMap,
-  ...relationsFunctionMap,
-  ...onewireFunctionsMap,
-  ...filesFunctionMap,
-  ...flowercareFunctionMap,
-  ...flowcontrolFunctionMap
-};
+//! dont forget to extend combindedFunctionMap in handleJsonItems function when adding new functionMaps
 
 export let ws;    // websocket handle
 var datavalues;   // form data values as string to check, if "needToSave" Dialog should be shown
@@ -74,8 +62,9 @@ export function connectWebSocket() {
     return;
   }
 
-  ws = new WebSocket(location.origin.replace(/^http/, 'ws') + '/ajaxws');
+  //ws = new WebSocket(location.origin.replace(/^http/, 'ws') + '/ajaxws');
   //ws = new WebSocket('ws://10.0.2.231/ajaxws'); 
+  ws = new WebSocket('/ajaxws');
   var wsStatus = document.getElementById('ws-status');
 
   ws.onopen = function() {
@@ -138,8 +127,6 @@ export function handleRadioSelections() {
 /*****************************************************************************************
  * central function to send data to server
  * @param {*} json -> json object to send
- * @param {*} highlight -> highlight on/off
- * @param {*} callbackFn -> callback function to call after data is fetched
  * @returns {*} void
 ******************************************************************************************/
 export function requestData(json) {
@@ -354,8 +341,20 @@ export function handleJsonItems(json) {
   if ("data-id" in json) {
     updateDataID(json, highlight);
   }
+  
+  const combinedFunctionMap = {
+    ...statusFunctionMap,
+    ...baseconfigFunctionMap,
+    ...sensorconfigFunctionMap,
+    ...valveconfigFunctionMap,
+    ...relationsFunctionMap,
+    ...onewireFunctionsMap,
+    ...filesFunctionMap,
+    ...flowercareFunctionMap,
+    ...flowcontrolFunctionMap
+  };
 
-	// DOM objects now ready
+  // DOM objects now ready
   if (callbackFn && typeof combinedFunctionMap[callbackFn] === 'function') {
     combinedFunctionMap[callbackFn](json);
   }

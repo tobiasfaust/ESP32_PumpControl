@@ -79,24 +79,13 @@ void setup() {
 
   Config = new BaseConfig(configFS);
 
-  #ifndef USE_WEBSERIAL
-    #ifdef ESP8266
-    Serial.begin(115200, SERIAL_8N1, SERIAL_FULL, Config->GetSerialTx());
-    #else
-    Serial.begin(115200,
+  Serial.begin(115200,
                  SERIAL_8N1,
                  Config->GetSerialRx(),
                  Config->GetSerialTx());  // RX, TX, zb.: 33, 32
-    #endif
-    Serial.println("");
-    Serial.println("ready");
-  #endif
 
-  #ifdef USE_WEBSERIAL
-    WebSerial.onMessage([](const String& msg) { Serial.println(msg); });
-    WebSerial.begin(&server);
-    WebSerial.setBuffer(100);
-  #endif
+  Serial.println("");
+  Serial.println("ready");
 
   Config->logN(1, "Start of ESP PumpControl");
 
@@ -173,9 +162,5 @@ void loop() {
   
   #ifdef USE_OLED
     oled->loop();  
-  #endif
-
-  #ifdef USE_WEBSERIAL
-    WebSerial.loop();
   #endif
 }

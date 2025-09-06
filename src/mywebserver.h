@@ -74,6 +74,7 @@ class MyWebServer {
 
     void      flowControlGetValuesCallback(JsonDocument& json, uint32_t wsclient_id);
     void      LevelSensorGetValuesCallback(JsonDocument& json, uint32_t wsclient_id);
+    void      logGetValuesCallback(const char* logline, JsonDocument& json, uint32_t wsclient_id);
 
     void      handleNotFound(AsyncWebServerRequest *request);
     void      handleRoot(AsyncWebServerRequest *request);

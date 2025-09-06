@@ -3,11 +3,11 @@
   <head>
     <meta name='viewport' content='width=device-width, initial-scale=1.0'/>
     <meta charset='utf-8'/>
-    <link rel='stylesheet' type='text/css' href='/web/Style.css'/>
+    <link rel='stylesheet' type='text/css' href='./Style.css'/>
     <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css' >
-    <script language='javascript' type='module' src='Javascript.js'></script>
-    <script language='javascript' type='module' src='navi.js'></script>
-    
+    <script language='javascript' type='module' src='./Javascript.js'></script>
+    <script language='javascript' type='module' src='./navi.js'></script>
+
     <script type='module'>
       import { init, highlightNavi, showUpdateInfoInMainFrame } from './navi.js';
       window.highlightNavi = highlightNavi;
@@ -40,30 +40,30 @@
       </tr>
       <tr>
         <td class='navi' style='width: 50px'></td>
-        <td class='navi navi_active' name='navi' id='status' onclick='highlightNavi(this)' style='width: 100px'><a href='/web/status.html' target="frame_main">Status</a></td>
+        <td class='navi navi_active' name='navi' id='status' onclick='highlightNavi(this)' style='width: 100px'><a href='./status.html' target="frame_main">Status</a></td>
         <td class='navi' style='width: 50px'></td>
-        <td class='navi' name='navi' id='baseconfig' onclick='highlightNavi(this)' style='width: 100px'><a href='/web/baseconfig.html' target="frame_main">Basis Config</a></td>
+        <td class='navi' name='navi' id='baseconfig' onclick='highlightNavi(this)' style='width: 100px'><a href='./baseconfig.html' target="frame_main">Basis Config</a></td>
         <td class='navi' style='width: 50px'></td>
-        <td class='navi' name='navi' id='sensorconfig' onclick='highlightNavi(this)' style='width: 100px'><a href='/web/sensorconfig.html' target="frame_main">Sensor Config</a></td>
+        <td class='navi' name='navi' id='sensorconfig' onclick='highlightNavi(this)' style='width: 100px'><a href='./sensorconfig.html' target="frame_main">Sensor Config</a></td>
         <td class='navi' style='width: 50px'></td>
-        <td class='navi' name='navi' id='ventilconfig' onclick='highlightNavi(this)' style='width: 100px'><a href='/web/valveconfig.html' target="frame_main">Ventil Config</a></td>
+        <td class='navi' name='navi' id='ventilconfig' onclick='highlightNavi(this)' style='width: 100px'><a href='./valveconfig.html' target="frame_main">Ventil Config</a></td>
         <td class='navi' style='width: 50px'></td>
-        <td class='navi' name='navi' id='1wireconfig' onclick='highlightNavi(this)' style='width: 100px'><a href='/web/1wireconfig.html' target="frame_main">1wire Config</a></td>
+        <td class='navi' name='navi' id='1wireconfig' onclick='highlightNavi(this)' style='width: 100px'><a href='./1wireconfig.html' target="frame_main">1wire Config</a></td>
         <td class='navi' id="td_1wire_0" style='width: 50px'></td>
-        <td class='navi' name='navi' id='relations' onclick='highlightNavi(this)' style='width: 100px'><a href='/web/relations.html' target="frame_main">Relationen</a></td>
+        <td class='navi' name='navi' id='relations' onclick='highlightNavi(this)' style='width: 100px'><a href='./relations.html' target="frame_main">Relationen</a></td>
         <td class='navi' style='width: 50px'></td>
-        <td class="navi" name='navi' id='flowercare' onclick='highlightNavi(this)' style='width: 100px'><a href='/web/flowercare.html' target="frame_main">FlowerCare</a></td>
+        <td class="navi" name='navi' id='flowercare' onclick='highlightNavi(this)' style='width: 100px'><a href='./flowercare.html' target="frame_main">FlowerCare</a></td>
         <td class='navi' style='width: 50px'></td>
-        <td class="navi" name='navi' id='flowcontrol' onclick='highlightNavi(this)' style='width: 100px'><a href='/web/flowcontrol.html' target="frame_main">FlowControl</a></td>
+        <td class="navi" name='navi' id='flowcontrol' onclick='highlightNavi(this)' style='width: 100px'><a href='./flowcontrol.html' target="frame_main">FlowControl</a></td>
         <td class='navi' style='width: 50px'></td>
-        <td class='navi' name='navi' id='handleFiles' onclick='highlightNavi(this)' style='width: 100px'><a href='/web/handlefiles.html' target="frame_main">Files</a></td>
+        <td class='navi' name='navi' id='handleFiles' onclick='highlightNavi(this)' style='width: 100px'><a href='./handlefiles.html' target="frame_main">Files</a></td>
         <td class='navi' style='width: 50px'></td>
         <td class='navi' name='navi' id='wiki' style='width: 100px'><a href='https://github.com/tobiasfaust/ESP32_PumpControl/wiki' target='_blank'>Wiki</a></td>
         <td class='navi' style='width: 50px'></td>
         <td class='navi'>
           <form style='margin: -5px' action="https://www.paypal.com/donate" method="post" target="_blank">
             <input type="hidden" name="hosted_button_id" value="RYUQVSNNTP3N6" />
-            <input type="image" style='margin: -5px; padding: 0px; border: 0px;' src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" name="submit" title="If you think the project is great, I would be happy about a donation to be able to integrate paid extensions. I want to integrate the professional WebSerial and professional ElegantOTA Edition but each of them costs 250€." alt="please by me a coffee" />
+            <input type="image" style='margin: -5px; padding: 0px; border: 0px;' src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" name="submit" title="If you think the project is great, I would be happy about a donation to be able to integrate paid extensions. I want to integrate the professional ElegantOTA Edition but it costs 300€." alt="please by me a coffee" />
             </form>
         </td>
         <td class='navi' style='width: 50px'></td>
