@@ -34,14 +34,13 @@
   <body>
     <div id="loader"></div>    
     <button onclick="onSubmit('DataForm', 'active.*');initDataValues();" style="position: fixed; top: 0; left: 0;">Save</button>
+    <button onclick="addrow('maintable')" style="position: fixed; top: 30px; left: 0;">&#10010; add new FlowSensor</button>
     
     <div id="needToSave" class="hide needToSave">
       <i class="fa fa-exclamation-triangle" style="color: gold; font-size: 20px;"></i>
       <span style="font-size: 70%;">Änderungen nicht gespeichert</span>
     </div>
 
-    <button onclick="addrow('maintable')" style="position: fixed; top: 0; left: 75px;">&#10010; add new FlowSensor</button>
-    
     <form id='DataForm'>
       <table id='maintable' class='editorDemoTable'>
         <thead>

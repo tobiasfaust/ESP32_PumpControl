@@ -25,6 +25,7 @@ import { functionMap as onewireFunctionsMap } from './1wireconfig.js';
 import { functionMap as filesFunctionMap } from './handlefiles.js';
 import { functionMap as flowercareFunctionMap } from './flowercare.js';
 import { functionMap as flowcontrolFunctionMap } from './flowcontrol.js';
+import { functionMap as doifFunctionsMap } from './doif.js';  
 //! dont forget to extend combindedFunctionMap in handleJsonItems function when adding new functionMaps
 
 export let ws;    // websocket handle
@@ -351,7 +352,8 @@ export function handleJsonItems(json) {
     ...onewireFunctionsMap,
     ...filesFunctionMap,
     ...flowercareFunctionMap,
-    ...flowcontrolFunctionMap
+    ...flowcontrolFunctionMap,
+    ...doifFunctionsMap
   };
 
   // DOM objects now ready

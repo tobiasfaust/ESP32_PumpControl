@@ -126,7 +126,7 @@
           <tr id='ads1115_0'>
             <td>i2c address of ADS1115</td>
               <td>
-                <input id="ads1115_i2c" maxlength='2' name='ads1115_i2c' type='text'/>
+                <input id="ads1115_i2c" maxlength='2' name='ads1115_i2c' type='text' spellcheck='false'/>
               </td>
             </tr>
 
@@ -154,7 +154,7 @@
           <tr id='extern_1'>
             <td>MQTT-topic of external sensor (level in %)</td>
             <td>
-              <input id="externalSensor" size='30' name='externalSensor' type='text'/>
+              <input id="externalSensor" size='30' name='externalSensor' type='text' spellcheck='false'/>
             </td>
           </tr>
 
@@ -225,8 +225,8 @@
                   <template id="rows">
                     <tr>
                       <td></td>
-                      <td><input id='mqtttopic' name='mqtttopic' type='text' size='30' placeholder='topic'/></td>
-                      <td><input id="ads_addr" maxlength='2' name='ads_addr' type='text'/></td>
+                      <td><input id='mqtttopic' name='mqtttopic' type='text' size='30' placeholder='topic' spellcheck='false'/></td>
+                      <td><input id="ads_addr" maxlength='2' name='ads_addr' type='text' spellcheck='false'/></td>
                       <td><input id='ads_port' name='ads_port' type='number' min='0' max='4'/></td>
                       <td><span id='ads_value' class='ajaxchange'>-</span></td>
                       <td><input type='button' value='&#10008;' onclick='delrow(this)'/></td>

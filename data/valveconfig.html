@@ -38,14 +38,13 @@
   <body>
     <div id="loader"></div>
     <button onclick="onSubmit('DataForm', 'active.*');initDataValues();" style="position: fixed; top: 0; left: 0;">Save</button>
-    
+    <button onclick="addrow('maintable')" style="position: fixed; top: 30px; left: 0;">&#10010; add new Port</button>
+
     <div id="needToSave" class="hide needToSave">
       <i class="fa fa-exclamation-triangle" style="color: gold; font-size: 20px;"></i>
       <span style="font-size: 70%;">Änderungen nicht gespeichert</span>
     </div>
 
-    <button onclick="addrow('maintable')" style="position: fixed; top: 0; left: 75px;">&#10010; add new Port</button>
-    
     <form id='DataForm'>
     <table id='maintable' class='editorDemoTable'>
     <thead>
@@ -69,8 +68,8 @@
         <td>
           <input type='checkbox' name='active' onclick='ChangeEnabled(this)' id='active'/>
         </td>
-        <td><input id="mqtttopic" size='30' name='mqtttopic' type='text'/></td>
-  
+        <td><input id="mqtttopic" size='30' name='mqtttopic' type='text' spellcheck='false'/></td>
+
         <td id='tdport'>
           <div id="typ_b">
             <div id='PortA'>

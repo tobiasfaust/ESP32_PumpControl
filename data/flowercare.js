@@ -47,10 +47,10 @@ export function scanBLE() {
 // ************************************************
 function MyCallback(json) {
   //global.CreateSelectionListFromInputField('input[type=number][id^=GpioPin]', [gpio]);
-  global.CreateSelectionListFromInputField('input[type=number][id*=ConfiguredPort]', [JSON.parse(configuredPorts)]);
+  //global.CreateSelectionListFromInputField('input[type=number][id*=ConfiguredPort]', [JSON.parse(configuredPorts)]);
   //global.handleRadioSelections();
   global.transformCheckboxes();
-  valveFn.validate_identifiers("fc_relations_table");
+  //valveFn.validate_identifiers("fc_relations_table");
 
   // anpassen der Update werte auf ein lesbares Format
   formatAllDates();  
@@ -95,29 +95,6 @@ export function ActivateDevice(id) {
   data['cmd']["item"] = obj.getAttribute('data-mac');
   
   global.requestData(data);
-}
-
-// ************************************************
-export function ActivateRelation(id) {
-  var obj = document.getElementById(id);
-  
-  // id = fc_relations_0.active
-  var objMqttTopic = document.getElementById(id.replace("active", "mqtttopic"));
-  var objPort = document.getElementById(id.replace("active", "ConfiguredPort"));
-
-  if (objMqttTopic.value != "" && objPort.value != "") {
-    var data = {};
-    data['cmd'] = {};
-    data['cmd']['action'] = "flowercare";
-    data['cmd']['subaction'] = "activateRelation";
-    data['cmd']['newState'] = (obj.checked?1:0);
-    data['cmd']["item"] = objMqttTopic.value;
-    data['cmd']["item2"] = objPort.value;
-    
-    global.requestData(data);
-  } else {
-    global.setResponse(false, "Please define a valid MQTT-Topic");
-  }
 }
 
 // ************************************************

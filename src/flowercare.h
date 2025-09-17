@@ -1,6 +1,8 @@
 #ifndef FLOWERCARE_H
 #define FLOWERCARE_H
 
+#include "commonlibs.h"
+#include "mymqtt.h"
 #include <vector>
 #include <Arduino.h>
 #include <ArduinoJson.h>
@@ -156,6 +158,28 @@ class FlowerCare {
     void log(int loglevel, const char* format, ...);
     std::function<void(int, const char*)> onlogCallback; // Callback function pointer
     std::function<void(JsonDocument&)> onValuesCallback; // Callback function pointer
+};
+
+class flowercareWeb : public FlowerCare {
+  public:
+    /************************
+     * @brief Constructor
+     ************************/
+    flowercareWeb(fs::LittleFSFS& configFS);
+
+    /************************
+     * @brief get initial data for web interface
+     * @param JsonDocument& the json document to fill
+     ************************/
+    void GetInitData(JsonDocument& json);
+
+    /************************
+     * @brief load the configuration from filesystem
+     ************************/
+    void LoadJsonConfig();
+
+  private:
+    fs::LittleFSFS& configFS;
 };
 
 #endif // FLOWERCARE_H
