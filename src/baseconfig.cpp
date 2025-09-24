@@ -29,8 +29,8 @@ BaseConfig::BaseConfig(fs::LittleFSFS& configFS) :
   #endif
   
   #ifdef ESP32
-    this->pin_sda = 21;
-    this->pin_scl = 22,
+    this->pin_sda = 32;
+    this->pin_scl = 33;
   #endif
   
   LoadJsonConfig();

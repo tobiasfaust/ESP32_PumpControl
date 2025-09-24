@@ -246,13 +246,13 @@ void valveStructure::LoadJsonConfig() {
   
   if (loadDefaultConfig) {
     Config->logN(3, "lade Ventile DefaultConfig");
-    valve myValve;
+    valve v;
     
-    myValve.init(this->ValveHW, 216, "Valve1");
-    this->Valves->push_back(myValve);
+    v.init(this->ValveHW, 213, "Valve1");
+    this->Valves->push_back(v);
     
-    myValve.init(this->ValveHW, 217, "Valve2");
-    this->Valves->push_back(myValve);
+    v.init(this->ValveHW, 217, "Valve2");
+    this->Valves->push_back(v);
   }
   Config->logN(3, "%d valves are now loaded ", this->Valves->size());
 }

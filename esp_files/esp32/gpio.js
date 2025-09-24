@@ -1,6 +1,7 @@
 gpio =         [  {port: 201, name:'D1/TX0'},
                   {port: 203, name:'D3/RX0'},
-                  {port: 204, name:'D24'},
+                  {port: 204, name:'D4'},
+                  {port: 205, name:'D5'},
                   {port: 213, name:'D13'},
                   {port: 216, name:'D16/RX2'},
                   {port: 217, name:'D17/TX2'},
@@ -35,5 +36,3 @@ gpioanalog =   [  {port: 236, name:'ADC1_CH0 - GPIO36'},
                   {port: 225, name:'ADC2_CH8 - GPIO25'},
                   {port: 226, name:'ADC2_CH9 - GPIO26'}
                ];
-
-update_url = "";

@@ -14,4 +14,3 @@ gpio = [  {port: 216, name:'D0'},
 gpioanalog = [  {port: 200, name:'A0'}
         ];
 
-update_url = "";
