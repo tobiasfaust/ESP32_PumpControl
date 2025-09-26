@@ -186,6 +186,7 @@ uint8_t valveStructure::Refresh1WireDevices() {
 /* load json config from littlefs */
 void valveStructure::LoadJsonConfig() {
   bool loadDefaultConfig = false;
+  Config->disabledGPIO.deleteAll(BaseConfig::GpioIdentifier::VALVES);
 
   if (!Valves->empty()) { 
     Valves->erase(Valves->begin(), Valves->end());
@@ -231,6 +232,11 @@ void valveStructure::LoadJsonConfig() {
           }
 
           Valves->push_back(myValve);
+          
+          if (myValve.GetPort1() >=200) {
+            // gpio used - mark this gpio as disabled for other purposes
+            Config->disabledGPIO.addValue(myValve.GetPort1() - 200, BaseConfig::GpioIdentifier::VALVES);
+          }
         }
 
       } while (stream.findUntil(",","]"));    
@@ -296,8 +302,6 @@ void valveStructure::GetInitData1Wire(JsonDocument& json) {
 }
 
 void valveStructure::getWebJsParameter(JsonDocument& json) {
-  json["js"]["gpio_disabled"] = String("[") + String(Config->GetPinSDA() + 200) + "," + String(Config->GetPinSCL() + 200) + "," + (Config->Enabled1Wire()?String(Config->GetPin1Wire() + 200):"0") + "]";
-
   String availablePorts("[");
   
 #ifdef USE_I2C

@@ -32,7 +32,7 @@ function GetInitData() {
 
 // ************************************************
 function MyCallback() {
-  global.CreateSelectionListFromInputField('input[type=number][id^=GpioPin]', [gpio]);
+  global.CreateSelectionListFromInputField('input[type=number][id^=GpioPin]', [gpio], JSON.parse(gpio_disabled));
   global.CreateSelectionListFromInputField('input[type=number][id*=ConfiguredPort]', [JSON.parse(configuredPorts)]);
   global.handleRadioSelections();
 

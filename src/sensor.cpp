@@ -38,12 +38,16 @@ void sensor::onValues(std::function<void(JsonDocument&)> callback) {
 }
 
 void sensor::init_analog(uint8_t pinAnalog) {
+  Config->disabledGPIO.addValue(pinAnalog, BaseConfig::GpioIdentifier::SENSOR);
   setSensorType(ONBOARD_ANALOG);
   this->pinAnalog = pinAnalog;
   this->MAX_DIST=500; // is maximum by default
 }
 
 void sensor::init_hcsr04(uint8_t pinTrigger, uint8_t pinEcho) {
+  Config->disabledGPIO.addValue(pinTrigger, BaseConfig::GpioIdentifier::SENSOR);
+  Config->disabledGPIO.addValue(pinEcho, BaseConfig::GpioIdentifier::SENSOR);
+
   setSensorType(HCSR04);
   this->MAX_DIST = 23200; // Anything over 400 cm (400*58 = 23200 us pulse) is "out of range"
   this->pinTrigger = pinTrigger;
@@ -310,7 +314,8 @@ void sensor::loop() {
 
 void sensor::LoadJsonConfig() {
   mqtt->ClearSubscriptions(MyMQTT::SENSOR);
-  
+  Config->disabledGPIO.deleteAll(BaseConfig::GpioIdentifier::SENSOR);
+
   #ifdef USE_ADS1115
     this->ads1115_devices->clear();
   #endif

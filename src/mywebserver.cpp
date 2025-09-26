@@ -222,21 +222,25 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
         } else if (subaction && subaction == "baseconfig") {
           Config->GetInitData(json);
           VStruct->getWebJsParameter(json);
+          json["js"]["gpio_disabled"] = Config->disabledGPIO.getArrayExcludeIdentifier(BaseConfig::GpioIdentifier::BASECONFIG);
         } else if (subaction && subaction == "valveconfig") {
           VStruct->GetInitData(json);
           VStruct->getWebJsParameter(json);
+          json["js"]["gpio_disabled"] = Config->disabledGPIO.getArrayExcludeIdentifier(BaseConfig::GpioIdentifier::VALVES);
         } else if (subaction && subaction == "1wireconfig") {
           VStruct->GetInitData1Wire(json);
-          VStruct->getWebJsParameter(json);
+          //VStruct->getWebJsParameter(json);
         } else if (subaction && subaction == "sensorconfig") {
           LevelSensor->GetInitData(json);
-          VStruct->getWebJsParameter(json);
+          //VStruct->getWebJsParameter(json);
+          json["js"]["gpio_disabled"] = Config->disabledGPIO.getArrayExcludeIdentifier(BaseConfig::GpioIdentifier::SENSOR);
         } else if (subaction && subaction == "relations") {
           ValveRel->GetInitData(json);
-          VStruct->getWebJsParameter(json);
+          //VStruct->getWebJsParameter(json);
         } else if (subaction && subaction == "flowcontrol") {
           FlowCtrl->GetInitData(json);
           VStruct->getWebJsParameter(json);
+          json["js"]["gpio_disabled"] = Config->disabledGPIO.getArrayExcludeIdentifier(BaseConfig::GpioIdentifier::FLOWCONTROL);
         } else if (subaction && subaction == "flowercare") {
           #ifdef USE_FLOWERCARE
             flowerCare->GetInitData(json);

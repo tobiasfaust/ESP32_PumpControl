@@ -33,10 +33,14 @@ BaseConfig::BaseConfig(fs::LittleFSFS& configFS) :
     this->pin_scl = 33;
   #endif
   
+  this->disabledGPIO.setOffset(200); // offset for GPIO numbers
   LoadJsonConfig();
 }
 
 void BaseConfig::LoadJsonConfig() {
+  // Clear any existing disabled GPIOs completely
+  this->disabledGPIO.deleteAll(GpioIdentifier::BASECONFIG);
+
   // reset certain values because null values in config are allowed
   this->mqtt_basepath = "";
   
@@ -95,6 +99,15 @@ void BaseConfig::LoadJsonConfig() {
   if(this->mqtt_basepath.endsWith("/")) {
     this->mqtt_basepath = this->mqtt_basepath.substring(0, this->mqtt_basepath.length()-1); 
   }
+
+  // add disabled GPIOs with speaking identifiers
+  this->disabledGPIO.addValue(this->pin_sda, GpioIdentifier::BASECONFIG);
+  this->disabledGPIO.addValue(this->pin_scl, GpioIdentifier::BASECONFIG);
+  if (this->pin_1wire>0 && this->enable_1wire) { this->disabledGPIO.addValue(this->pin_1wire, GpioIdentifier::BASECONFIG); }
+  this->disabledGPIO.addValue(this->serial_rx, GpioIdentifier::BASECONFIG);
+  this->disabledGPIO.addValue(this->serial_tx, GpioIdentifier::BASECONFIG);
+  if (this->enable_3wege && this->ventil3wege_port>0) { this->disabledGPIO.addValue(this->ventil3wege_port, GpioIdentifier::BASECONFIG); }
+    
 }
 
 const String BaseConfig::GetReleaseName() {

@@ -1,5 +1,6 @@
 #include "flowcontrol.h"
 #include <map>
+#include <cstdint> // for uintptr_t safe cast between integer and pointer
 
 std::vector<flowControl::flowcontrol_t> flowControl::flowControlItems;
 
@@ -24,17 +25,27 @@ void flowControl::AddFlowControl(bool enabled, String name, uint8_t port, unsign
 
   if (enabled) {
     //register port as INPUT_PULLUP
-    pinMode(flow.port - 200, INPUT_PULLUP);
-    attachInterruptArg(digitalPinToInterrupt(flow.port - 200), isrHandler, (void*)(flow.port - 200), FALLING);
+    pinMode(flow.port, INPUT_PULLUP);
+    // Pass GPIO number through ISR argument using a uintptr_t round-trip to avoid int->pointer size warnings
+    attachInterruptArg(
+      digitalPinToInterrupt(flow.port),
+      isrHandler,
+      reinterpret_cast<void*>(static_cast<uintptr_t>(flow.port)),
+      FALLING
+    );
+    // register disabled gpio
+    Config->disabledGPIO.addValue(flow.port, BaseConfig::GpioIdentifier::FLOWCONTROL);
 
     Config->logN(4, "FlowControl '%s' (Port: %d) added", flow.name.c_str(), flow.port);
   }
 }
 
 void flowControl::DelFlowControl() {
+  Config->disabledGPIO.deleteAll(BaseConfig::GpioIdentifier::FLOWCONTROL); // Clear any existing FlowControl disabled GPIOs
+
   for (uint8_t i=0; i< flowControlItems.size(); i++) {
-    pinMode(flowControlItems.at(i).port - 200, INPUT);
-    detachInterrupt(digitalPinToInterrupt(flowControlItems.at(i).port - 200));
+    pinMode(flowControlItems.at(i).port, INPUT);
+    detachInterrupt(digitalPinToInterrupt(flowControlItems.at(i).port));
   }
   Config->logN(4, "All FlowControl items removed");
   flowControlItems.clear();
@@ -44,6 +55,8 @@ void flowControl::DelFlowControl() {
 void flowControl::DelFlowControl(uint8_t port) {
   for (uint8_t i=0; i< flowControlItems.size(); i++) {
     if (flowControlItems.at(i).port == port) {
+      // remove registration
+      Config->disabledGPIO.deleteValue(port, BaseConfig::GpioIdentifier::FLOWCONTROL);
       flowControlItems.erase(flowControlItems.begin() + i);
       Config->logN(4, "FlowControl '%s' (Port: %d) removed", flowControlItems.at(i).name.c_str(), port);
       break;
@@ -51,15 +64,15 @@ void flowControl::DelFlowControl(uint8_t port) {
   }
 
   // unregister port, set to output mode
-  pinMode(port - 200, OUTPUT);
-  detachInterrupt(digitalPinToInterrupt(port - 200));
+  pinMode(port, OUTPUT);
+  detachInterrupt(digitalPinToInterrupt(port));
 
   flowControlItems.shrink_to_fit();
 }
 
 int flowControl::findIndexByGpio(gpio_num_t gpio) {
     for (size_t i = 0; i < flowControlItems.size(); i++) {
-        if (flowControlItems.at(i).port == gpio + 200) return i;
+        if (flowControlItems.at(i).port == gpio) return i;
     }
     return -1;
 }
@@ -72,8 +85,9 @@ int flowControl::findIndexByName(const String& name) {
 }
 
 void IRAM_ATTR flowControl::isrHandler(void* arg) {
-    int gpio = (int)arg;
-    int idx = findIndexByGpio((gpio_num_t)gpio);
+    // Recover GPIO number from ISR argument
+    uint32_t gpio = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(arg));
+    int idx = findIndexByGpio(static_cast<gpio_num_t>(gpio));
     if (idx >= 0 && flowControlItems.at(idx).enabled) {
       flowControlItems.at(idx).count++;
     }
@@ -112,7 +126,7 @@ void flowControl::LoadJsonConfig() {
 
           if (elem["active"] && elem["active"].as<bool>()) {enabled = elem["active"].as<bool>();} else {enabled = false;}
           if (elem["name"]) {name = elem["name"].as<String>();}
-          if (elem["port"] && elem["port"].as<int>() > 0) { port = elem["port"].as<int>();}
+          if (elem["port"] && elem["port"].as<int>() > 0) { port = (elem["port"].as<int>()) - 200;}
           if (elem["ImpPerLitre"] && elem["ImpPerLitre"].as<int>() > 0) { ImpPerLitre = elem["ImpPerLitre"].as<int>();}
 
           this->AddFlowControl(enabled, name, port, ImpPerLitre);
@@ -145,7 +159,7 @@ void flowControl::GetInitData(JsonDocument& json) {
   for (uint8_t i=0; i< flowControlItems.size(); i++) {
     row[i]["active"] = (flowControlItems.at(i).enabled?1:0);
     row[i]["name"] = flowControlItems.at(i).name;
-    row[i]["GpioPin"] = flowControlItems.at(i).port;
+    row[i]["GpioPin"] = flowControlItems.at(i).port + 200;
     row[i]["ImpPerLitre"] = (flowControlItems.at(i).ImpPerLitre);
     row[i]["l/min"]["data-id"] = String(flowControlItems.at(i).name.c_str()) + "_l/min";
     row[i]["total"]["data-id"] = String(flowControlItems.at(i).name.c_str()) + "_total";
