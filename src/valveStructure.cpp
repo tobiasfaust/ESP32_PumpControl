@@ -6,28 +6,28 @@ valveStructure::valveStructure(fs::LittleFSFS& configFS, uint8_t sda, uint8_t sc
   if (Config->Enabled1Wire()) { this->ValveHW->add1WireDevice(Config->GetPin1Wire());}
   
   this->Valves = std::make_shared<std::vector<valve>>();
-  this->waitingQueue = std::make_shared<std::vector<waitingQueue_t>>(); // max 10 Eintraege in der Warteschlange
+  this->waitingQueue = new std::vector<waitingQueue_t>();
 
   LoadJsonConfig();
 }
 
-void valveStructure::OnForTimer(String SubTopic, int duration) {
+void valveStructure::OnForTimer(String SubTopic, unsigned int duration) {
   valve* v = this->GetValveItem(SubTopic);
   if (v) { this->OnForTimer(v, duration); }
 }
 
-void valveStructure::OnForTimer(uint8_t Port, int duration) {
+void valveStructure::OnForTimer(uint8_t Port, unsigned int duration) {
   valve* v = this->GetValveItem(Port);
   if (v) { this->OnForTimer(v, duration); }
 }
 
-void valveStructure::OnForTimer(valve* valve, int duration) {
+void valveStructure::OnForTimer(valve* valve, unsigned int duration) {
   if (!valve->GetUse4ParallelThreads() || Config->GetMaxThreads() == 0 || (Config->GetMaxThreads() > 0 && this->CountActiveThreads() < Config->GetMaxThreads())) {
     if (valve && valve->OnForTimer(duration)) {
       if (mqtt) {mqtt->Publish_Int("Threads", (int)this->CountActiveThreads(), false); }
     }
   } else if (valve) {
-    this->addWaitingQueue(valve->GetPort1(), duration);
+    push_back_unique(this->waitingQueue, { valve->GetPort1(), duration }, true);
     Config->logN(3, "MaxParallelThreads reached (max: %d), Port %d (duration: %d sec) has been added to queue", Config->GetMaxThreads(), valve->GetPort1(), duration);
   }
 }
@@ -47,8 +47,8 @@ void valveStructure::SetOn(valve* v) {
     if (v && v->SetOn()) {
       if (mqtt) { mqtt->Publish_Int("Threads", (int)this->CountActiveThreads(), false); }
     }
-  } else if (v) { 
-    this->addWaitingQueue(v->GetPort1(), 0); 
+  } else if (v) {
+    push_back_unique(this->waitingQueue, { v->GetPort1(), 0 }, true);
     Config->logN(3, "MaxParallelThreads reached (max: %d), Port %d has been added to queue", Config->GetMaxThreads(), v->GetPort1());
   }
 }
@@ -94,20 +94,6 @@ void valveStructure::SetEnable(uint8_t Port, bool state) {
   if (GetValveItem(Port)) { GetValveItem(Port)->SetActive(state); }
 }
 
-void valveStructure::addWaitingQueue(uint8_t Port, unsigned int duration) {
-  // Check if the port is already in the waitingQueue
-  for (size_t i = 0; i < waitingQueue->size(); ++i) {
-    waitingQueue_t item = waitingQueue->at(i);
-    if (item.Port == Port) {
-      // Port already in queue, update only duration
-      item.duration = duration;
-      return;
-    }
-  }
-  waitingQueue_t item = { Port, duration };
-  waitingQueue->push_back(item);
-}
-
 void valveStructure::loop() {
   for (uint8_t i=0; i<Valves->size(); i++) {
     Valves->at(i).loop();
@@ -119,7 +105,7 @@ void valveStructure::loop() {
   }
 }
 
-void valveStructure::ReceiveMQTT(String topic, int value) {
+void valveStructure::ReceiveMQTT(String topic, unsigned int value) {
   String SubTopic(topic); // nur das konfigurierte Subtopic, zb. "valve1"
   SubTopic = SubTopic.substring(SubTopic.lastIndexOf("/", SubTopic.lastIndexOf("/")-1)+1, SubTopic.lastIndexOf("/"));
   if (topic == "/test/on-for-timer") { Valves->at(0).OnForTimer(value); }
@@ -131,7 +117,7 @@ void valveStructure::ReceiveMQTT(String topic, int value) {
   if (topic.endsWith("state")) { this->handleDeps(topic, value); } 
 }
 
-void valveStructure::handleDeps(String topic, int value) {
+void valveStructure::handleDeps(String topic, unsigned int value) {
   // topic: PumpControlDev/Valve1/state
   // Check auf Ventile, die auf Relationen ansprechen sollen
   String BaseTopic(topic); // das komplette topic ohne Kommando, zb. "PumpControlDev/Valve1"

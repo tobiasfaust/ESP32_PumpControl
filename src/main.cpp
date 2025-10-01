@@ -61,7 +61,7 @@ void myMQTTCallBack(char* topic, byte* payload, unsigned int length) {
     /*SensorMeldungen - ignore!*/
   } 
   else {
-    VStruct->ReceiveMQTT(topicStr, atoi(msg.c_str()));
+    VStruct->ReceiveMQTT(topicStr, static_cast<unsigned int>(atoi(msg.c_str())));
   }
 }
 

@@ -24,6 +24,7 @@
 
 #include <string.h>
 #include <LittleFS.h>
+#include <helper.h>
 #include <ESPAsyncWebServer.h>
 #include <DNSServer.h>
 
