@@ -117,9 +117,14 @@ export function handleRadioSelections() {
   for (var i = 0; i < checkboxes.length; i++) {
     if (checkboxes[i].onclick) {
       var onclickStr = checkboxes[i].getAttribute('onclick');
-      var match = onclickStr.match(/onCheckboxSelection\((.*)\)/);
+     var match = onclickStr.match(/onCheckboxSelection\((.*)\)/);
       if (match) {
-        eval("onCheckboxSelection(" + match[1] + ")");
+        // Entferne den ersten Parameter (->this) aus match[1]
+        // Beispiel: "this, ['EnableRelays_1','EnableRelays_2'],[]"
+        // Ergebnis: "['EnableRelays_1','EnableRelays_2'],[]"
+        let params = match[1].replace(/^\s*[^,]+,\s*/, '');
+        // eval mit dem aktuellen Checkbox-Element als ersten Parameter
+        eval("onCheckboxSelection(checkboxes[i], " + params + ")");
       }
     }
   }
@@ -128,6 +133,8 @@ export function handleRadioSelections() {
 /*****************************************************************************************
  * central function to send data to server
  * @param {*} json -> json object to send
+ * @param {*} highlight -> highlight on/off
+ * @param {*} callbackFn -> callback function to call after data is fetched
  * @returns {*} void
 ******************************************************************************************/
 export function requestData(json) {
