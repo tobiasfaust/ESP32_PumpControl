@@ -15,6 +15,7 @@ class flowControl {
     unsigned int ImpPerLitre = 0;   // Impulse per Litre
     float litresCounter = 0.0;      // Litres counter
     volatile uint32_t count = 0;    // Impulse counter
+    volatile unsigned long lastImpulseTime = 0; // Timestamp of the last impulse received
   } flowcontrol_t;
   
   public:

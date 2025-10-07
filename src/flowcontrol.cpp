@@ -71,26 +71,28 @@ void flowControl::DelFlowControl(uint8_t port) {
 }
 
 int flowControl::findIndexByGpio(gpio_num_t gpio) {
-    for (size_t i = 0; i < flowControlItems.size(); i++) {
-        if (flowControlItems.at(i).port == gpio) return i;
-    }
-    return -1;
+  for (size_t i = 0; i < flowControlItems.size(); i++) {
+    if (flowControlItems.at(i).port == gpio) return i;
+  }
+  return -1;
 }
 
 int flowControl::findIndexByName(const String& name) {
-    for (size_t i = 0; i < flowControlItems.size(); i++) {
-        if (flowControlItems.at(i).name == name) return i;
-    }
-    return -1;
+  for (size_t i = 0; i < flowControlItems.size(); i++) {
+    if (flowControlItems.at(i).name == name) return i;
+  }
+  return -1;
 }
 
 void IRAM_ATTR flowControl::isrHandler(void* arg) {
-    // Recover GPIO number from ISR argument
-    uint32_t gpio = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(arg));
-    int idx = findIndexByGpio(static_cast<gpio_num_t>(gpio));
-    if (idx >= 0 && flowControlItems.at(idx).enabled) {
-      flowControlItems.at(idx).count++;
-    }
+  // Recover GPIO number from ISR argument
+  uint32_t gpio = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(arg));
+  int idx = findIndexByGpio(static_cast<gpio_num_t>(gpio));
+  if (idx >= 0 && flowControlItems.at(idx).enabled && (millis() - flowControlItems.at(idx).lastImpulseTime > 10)) { // Entprellung 10ms
+    // Increment the pulse count for the corresponding flow control item
+    flowControlItems.at(idx).count++;
+    flowControlItems.at(idx).lastImpulseTime = millis();
+  }
 }
 
 void flowControl::LoadJsonConfig() {
