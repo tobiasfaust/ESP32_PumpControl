@@ -3,24 +3,16 @@ import * as valveFn from './valvefunctions.js';
 
 // ************************************************
 export function init() {
-  // Initiale Verbindung aufbauen
-    global.connectWebSocket();
-  
-    // Warte bis die WebSocket-Verbindung aufgebaut ist
-    let checkWebSocketInterval = setInterval(() => {
-      if (global.ws && global.ws.readyState === WebSocket.OPEN) {
-        clearInterval(checkWebSocketInterval);
-        GetInitData();
-      }
-    }, 100);
-
+  global.connectWebSocket();
+  let checkWebSocketInterval = setInterval(() => {
+    if (global.ws && global.ws.readyState === WebSocket.OPEN) {
+      clearInterval(checkWebSocketInterval);
+      GetInitData();
+    }
+  }, 100);
 }
 
-// ************************************************
-export const functionMap = {
-  flowercare_Callback: MyCallback,
-  onBleUpdate_Callback: onBleUpdate_cb
-};
+// functionMap entfernt -> Registrierung am Ende
 
 // ************************************************
 function GetInitData() {
@@ -108,3 +100,12 @@ function formatDate(obj) {
     obj.innerText = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   }
 }
+
+// ************************************************
+// Registrierung der Callback-Funktionen
+// Dieses Modul nutzt das Inversion-of-Control Callback-Registry aus Javascript.js
+// Es werden folgende Callbacks aktiv beim Laden des Moduls registriert.
+try {
+  global.registerCallback('flowercare_Callback', MyCallback);
+  global.registerCallback('onBleUpdate_Callback', onBleUpdate_cb);
+} catch(e) { console.error('Callback Registrierung fehlgeschlagen (flowercare):', e); }

@@ -3,22 +3,16 @@ import * as valveFn from './valvefunctions.js';
 
 // ************************************************
 export function init() {
-  // Initiale Verbindung aufbauen
-    global.connectWebSocket();
-  
-    // Warte bis die WebSocket-Verbindung aufgebaut ist
-    let checkWebSocketInterval = setInterval(() => {
-      if (global.ws && global.ws.readyState === WebSocket.OPEN) {
-        clearInterval(checkWebSocketInterval);
-        GetInitData();
-      }
-    }, 100);
+  global.connectWebSocket();
+  let checkWebSocketInterval = setInterval(() => {
+    if (global.ws && global.ws.readyState === WebSocket.OPEN) {
+      clearInterval(checkWebSocketInterval);
+      GetInitData();
+    }
+  }, 100);
 }
 
-// ************************************************
-export const functionMap = {
-  relations_Callback: MyCallback
-};
+// functionMap entfernt -> Registrierung am Ende
 
 // ************************************************
 function GetInitData() {
@@ -50,5 +44,13 @@ function MyCallback() {
   document.querySelector("#loader").style.visibility = "hidden";
   document.querySelector("body").style.visibility = "visible";
 }
+
+// ************************************************
+// Registrierung der Callback-Funktionen
+// Dieses Modul nutzt das Inversion-of-Control Callback-Registry aus Javascript.js
+// Es werden folgende Callbacks aktiv beim Laden des Moduls registriert.
+try {
+  global.registerCallback('relations_Callback', MyCallback);
+} catch(e) { console.error('Callback Registrierung fehlgeschlagen (relations):', e); }
 
 // ************************************************

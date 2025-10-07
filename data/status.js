@@ -1,5 +1,16 @@
 import * as global from './Javascript.js';
 
+export function init1() {
+  var data = {};
+  data['cmd'] = {};
+  data['cmd']['action'] = "GetInitData";
+  data['cmd']['subaction'] = "status";
+  data['cmd']['callbackFn'] = "status_Callback";
+  data['data'] = {'wifiname': 'test'};
+
+  global.handleJsonItems(data);
+
+}
 // ************************************************
 export function init() {
   // Initiale Verbindung aufbauen
@@ -13,12 +24,6 @@ export function init() {
     }
   }, 100);
 }
-
-// ************************************************
-export const functionMap = {
-  status_Callback: MyCallback,
-  status_CallRebootPage: CallRebootPage
-};
 
 // ************************************************
 function GetInitData() {
@@ -77,4 +82,13 @@ export function CallRebootPage(json) {
   window.location.href = "reboot.html";
 }
 
-// 
+// ************************************************
+// Registrierung der Callback-Funktionen
+// Dieses Modul nutzt das Inversion-of-Control Callback-Registry aus Javascript.js
+// Es werden folgende Callbacks aktiv beim Laden des Moduls registriert.
+try {
+  global.registerCallback('status_Callback', MyCallback);
+  global.registerCallback('status_CallRebootPage', CallRebootPage);
+} catch (e) {
+  console.error('Fehler bei der Callback-Registrierung in status.js:', e);
+}

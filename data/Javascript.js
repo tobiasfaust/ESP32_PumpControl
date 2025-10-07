@@ -16,23 +16,61 @@
 /*****************************************************************************************
  * Definition of constants
  *****************************************************************************************/
-import { functionMap as statusFunctionMap } from './status.js';
-import { functionMap as baseconfigFunctionMap } from './baseconfig.js';
-import { functionMap as sensorconfigFunctionMap } from './sensorconfig.js';
-import { functionMap as valveconfigFunctionMap } from './valveconfig.js';
-import { functionMap as relationsFunctionMap } from './relations.js';
-import { functionMap as onewireFunctionsMap } from './1wireconfig.js';
-import { functionMap as filesFunctionMap } from './handlefiles.js';
-import { functionMap as flowercareFunctionMap } from './flowercare.js';
-import { functionMap as flowcontrolFunctionMap } from './flowcontrol.js';
-import { functionMap as doifFunctionsMap } from './doif.js';  
-//! dont forget to extend combindedFunctionMap in handleJsonItems function when adding new functionMaps
+// Hinweis: Die bisherigen functionMap-Imports wurden entfernt und
+// durch ein Inversion-of-Control Registry ersetzt. Einzelne Module (z.B. status.js)
+// registrieren ihre Callback-Funktionen jetzt aktiv über registerCallback().
+// Dadurch entfällt die Notwendigkeit, alle functionMaps hier zentral zu importieren
+// und zusammenzuführen.
 
 export let ws;    // websocket handle
 var datavalues;   // form data values as string to check, if "needToSave" Dialog should be shown
 
 var timer; // ID of setTimout Timer -> setResponse
 let reconnectInterval = 5000; // 5 seconds interval to reconnect websocket connection
+
+
+/*****************************************************************************************
+ * zentrale Callback Registry (Inversion of Control)
+ * Module (z.B. status.js) registrieren ihre Funktionen aktiv.
+ * Beispiel in status.js:
+ *   import { registerCallback } from './Javascript.js';
+ *   registerCallback('status_Callback', status_Callback);
+ *****************************************************************************************/
+const _callbackRegistry = {}; // { name: function }
+
+/**
+ * Registriert eine Callback-Funktion unter einem eindeutigen Namen.
+ * @param {string} name - Bezeichner, der auch in json.cmd.callbackFn auftaucht
+ * @param {Function} fn - Auszuführende Funktion (Signatur: fn(json))
+ */
+export function registerCallback(name, fn) {
+  if (typeof name !== 'string' || name.length === 0) {
+    throw new Error('registerCallback: name muss ein nicht-leerer String sein');
+  }
+  if (typeof fn !== 'function') {
+    throw new Error('registerCallback: fn muss eine Funktion sein');
+  }
+  _callbackRegistry[name] = fn;
+  if (console && console.debug) console.debug('Callback registriert:', name);
+}
+
+/**
+ * Liefert eine registrierte Callback-Funktion oder undefined.
+ * @param {string} name
+ * @returns {Function|undefined}
+ */
+export function getRegisteredCallback(name) {
+  return _callbackRegistry[name];
+}
+
+/**
+ * Optional: Entfernt eine registrierte Callback-Funktion.
+ * @param {string} name
+ */
+export function unregisterCallback(name) {
+  delete _callbackRegistry[name];
+}
+
 
 /******************************************************************************************
  * Connect to WebSocket server
@@ -350,22 +388,20 @@ export function handleJsonItems(json) {
     updateDataID(json, highlight);
   }
   
-  const combinedFunctionMap = {
-    ...statusFunctionMap,
-    ...baseconfigFunctionMap,
-    ...sensorconfigFunctionMap,
-    ...valveconfigFunctionMap,
-    ...relationsFunctionMap,
-    ...onewireFunctionsMap,
-    ...filesFunctionMap,
-    ...flowercareFunctionMap,
-    ...flowcontrolFunctionMap,
-    ...doifFunctionsMap
-  };
-
-  // DOM objects now ready
-  if (callbackFn && typeof combinedFunctionMap[callbackFn] === 'function') {
-    combinedFunctionMap[callbackFn](json);
+  // DOM objects now ready -> Inversion of Control Aufruf
+  // Statt combinedFunctionMap wird jetzt ein zentrales Callback-Registry genutzt.
+  if (callbackFn) {
+    const fn = getRegisteredCallback(callbackFn);
+    if (typeof fn === 'function') {
+      try {
+        fn(json);
+      } catch (e) {
+        console.error('Fehler beim Ausführen des Callbacks', callbackFn, e);
+        setResponse(false, 'Callback Fehler: ' + callbackFn);
+      }
+    } else {
+      console.warn(`Callback '${callbackFn}' nicht registriert.`);
+    }
   }
 }
 

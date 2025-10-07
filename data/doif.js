@@ -3,22 +3,16 @@ import * as valveFn from './valvefunctions.js';
 
 // ************************************************
 export function init() {
-  // Initiale Verbindung aufbauen
-    global.connectWebSocket();
-  
-    // Warte bis die WebSocket-Verbindung aufgebaut ist
-    let checkWebSocketInterval = setInterval(() => {
-      if (global.ws && global.ws.readyState === WebSocket.OPEN) {
-        clearInterval(checkWebSocketInterval);
-        GetInitData();
-      }
-    }, 100);
+  global.connectWebSocket();
+  let checkWebSocketInterval = setInterval(() => {
+    if (global.ws && global.ws.readyState === WebSocket.OPEN) {
+      clearInterval(checkWebSocketInterval);
+      GetInitData();
+    }
+  }, 100);
 }
 
-// ************************************************
-export const functionMap = {
-  doif_Callback: MyCallback
-};
+// functionMap entfernt -> Registrierung am Ende
 
 // ************************************************
 function GetInitData() {
@@ -87,3 +81,10 @@ export function checkRegExp(obj) {
     obj.focus();
   }
 }
+
+/*************************************************
+ * Registrierung der Callback-Funktion
+ *************************************************/
+try {
+  global.registerCallback('doif_Callback', MyCallback);
+} catch(e) { console.error('Callback Registrierung fehlgeschlagen (doif):', e); }
