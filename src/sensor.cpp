@@ -357,9 +357,9 @@ void sensor::LoadJsonConfig() {
 
         #ifdef USE_ADS1115
           if (elem["mqtttopic"] && 
-              elem["ads_addr"] &&
-              elem["ads_port"]) {
-                this->init_ads1115(strtoul(elem["ads_addr"].as<String>().c_str(), NULL, 16), elem["ads_port"].as<int>(), elem["mqtttopic"].as<String>());
+              elem["ads_addr"]) {
+                uint8_t port = (elem["ads_port"])? elem["ads_port"].as<int>() : 0;
+                this->init_ads1115(strtoul(elem["ads_addr"].as<String>().c_str(), NULL, 16), port, elem["mqtttopic"].as<String>());
               }
         #endif
         
