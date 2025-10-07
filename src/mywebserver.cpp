@@ -236,7 +236,7 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
           json["js"]["gpio_disabled"] = Config->disabledGPIO.getArrayExcludeIdentifier(BaseConfig::GpioIdentifier::SENSOR);
         } else if (subaction && subaction == "relations") {
           ValveRel->GetInitData(json);
-          //VStruct->getWebJsParameter(json);
+          VStruct->getWebJsParameter(json);
         } else if (subaction && subaction == "flowcontrol") {
           FlowCtrl->GetInitData(json);
           VStruct->getWebJsParameter(json);
