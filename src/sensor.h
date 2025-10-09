@@ -12,12 +12,18 @@
   #include <ADS1115_WE.h> 
 
   typedef struct {
+    String topic;
+    uint16_t cal_min = 0;
+    uint16_t cal_max = 3300;
+  } adsport_t;
+
+  typedef struct {
     ADS1115_WE device;
     uint8_t i2cAddress;
-    String topic_chan1;
-    String topic_chan2;
-    String topic_chan3;
-    String topic_chan4;
+    adsport_t port1 = {};
+    adsport_t port2 = {};
+    adsport_t port3 = {};
+    adsport_t port4 = {};
   } adsdev_t;
 
 #endif
@@ -40,7 +46,7 @@ class sensor {
     void      init_analog(uint8_t pinAnalog) ;
     
     #ifdef USE_ADS1115
-      void      init_ads1115(uint8_t i2c, uint8_t port, String topic="");
+      void      init_ads1115(uint8_t i2c, uint8_t port, String topic, uint16_t cal_min, uint16_t cal_max);
     #endif
 
     void      setSensorType(sensorType_t t);
