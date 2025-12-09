@@ -54,18 +54,14 @@ void myMQTTCallBack(char* topic, byte* payload, unsigned int length) {
   if (LevelSensor->GetExternalSensor() && (strcmp(LevelSensor->GetExternalSensor().c_str(), topic)==0)) {
     LevelSensor->SetLvl(atoi(msg.c_str()));
   }
+  else if (strstr(topic, "flowercare/") || strstr(topic, "moisture")) {
+    mywebserver->DoIfOnMqttMessage(topicStr, msg);
+  } 
   else if (strstr(topic, "/raw") ||  strstr(topic, "/level") ||  strstr(topic, "/mem") ||  strstr(topic, "/rssi")) {
     /*SensorMeldungen - ignore!*/
-  }
-
-  #ifdef USE_FLOWERCARE
-    else if (strstr(topic, "flowercare/")) {
-      mywebserver->flowerCareOnMqttMessage(topicStr, msg);
-    }
-  #endif  
-  
+  } 
   else {
-    VStruct->ReceiveMQTT(topicStr, atoi(msg.c_str()));
+    VStruct->ReceiveMQTT(topicStr, static_cast<unsigned int>(atoi(msg.c_str())));
   }
 }
 

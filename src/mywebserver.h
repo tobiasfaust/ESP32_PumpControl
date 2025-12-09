@@ -13,6 +13,7 @@
 #include "valveStructure.h"
 #include "valveRelation.h"
 #include "flowcontrol.h"
+#include "doif.h"
 
 #include <ElegantOTA.h>
 
@@ -36,19 +37,11 @@ class MyWebServer {
     enum requestData_t {LOG_DATA, FLOWERCARE_DATA, ADS1115_DATA, FLOWCONTROL_DATA} requestData;
   } wsclient_t;
 
-  typedef struct {
-    bool enabled;
-    String TriggerTopic = "";
-    uint8_t ActorPort; 
-    unsigned int threshold;
-    unsigned int duration;
-  } FlowercareRelation_t;
-
   public:
     MyWebServer(fs::LittleFSFS& sysFS, fs::LittleFSFS& configFS, AsyncWebServer *server, DNSServer* dns);
     void  loop();
 
-    void  flowerCareOnMqttMessage(String& topic, String& JsonMsg);
+    void  DoIfOnMqttMessage(String& topic, String& msg);
 
   private:
 
@@ -61,13 +54,13 @@ class MyWebServer {
     bool      DoReboot;
     unsigned long RequestRebootTime;
     unsigned long ota_progress_millis = 0;
-    std::vector<FlowercareRelation_t>* _relationen  = NULL;
     std::vector<wsclient_t>* _wsclientRequests = NULL;
 
     handleFiles* fsfiles;
+    doIf* doif;
 
     #ifdef USE_FLOWERCARE
-      FlowerCare* flowerCare = nullptr;
+      flowercareWeb* flowerCare = nullptr;
       void      flowerCareGetValuesCallback(JsonDocument& json, uint32_t wsclient_id);
       void      flowerCareOnScanEndCallback();
     #endif
@@ -89,8 +82,6 @@ class MyWebServer {
     void      onImprovWiFiConnectedCb(const char *ssid, const char *password);
     void      onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len);
 
-    void      GetInitDataFlowerCare(JsonDocument& json);
-    void      LoadFlowerCareConfig();      
 };
 
 #endif

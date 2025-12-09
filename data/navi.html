@@ -26,7 +26,7 @@
           <i><span style='color:#CCCCCC;' id='hostname'></span></i>
         </td>
   
-        <td colspan='10'>
+        <td colspan='14'>
           <span id="updateInfoItem" class="hide" onclick="showUpdateInfoInMainFrame()">
             <i class="pulse fa fa-info-circle" style="color: green; font-size: 20px;"></i>
           </span>
@@ -41,24 +41,37 @@
       <tr>
         <td class='navi' style='width: 50px'></td>
         <td class='navi navi_active' name='navi' id='status' onclick='highlightNavi(this)' style='width: 100px'><a href='./status.html' target="frame_main">Status</a></td>
+        
         <td class='navi' style='width: 50px'></td>
         <td class='navi' name='navi' id='baseconfig' onclick='highlightNavi(this)' style='width: 100px'><a href='./baseconfig.html' target="frame_main">Basis Config</a></td>
+        
         <td class='navi' style='width: 50px'></td>
         <td class='navi' name='navi' id='sensorconfig' onclick='highlightNavi(this)' style='width: 100px'><a href='./sensorconfig.html' target="frame_main">Sensor Config</a></td>
+        
         <td class='navi' style='width: 50px'></td>
         <td class='navi' name='navi' id='ventilconfig' onclick='highlightNavi(this)' style='width: 100px'><a href='./valveconfig.html' target="frame_main">Ventil Config</a></td>
-        <td class='navi' style='width: 50px'></td>
-        <td class='navi' name='navi' id='1wireconfig' onclick='highlightNavi(this)' style='width: 100px'><a href='./1wireconfig.html' target="frame_main">1wire Config</a></td>
+        
         <td class='navi' id="td_1wire_0" style='width: 50px'></td>
-        <td class='navi' name='navi' id='relations' onclick='highlightNavi(this)' style='width: 100px'><a href='./relations.html' target="frame_main">Relationen</a></td>
+        <td class='navi' name='navi' id='1wireconfig' onclick='highlightNavi(this)' style='width: 100px'><a href='./1wireconfig.html' target="frame_main">1wire Config</a></td>
+        
         <td class='navi' style='width: 50px'></td>
+        <td class='navi' name='navi' id='relations' onclick='highlightNavi(this)' style='width: 100px'><a href='./relations.html' target="frame_main">Relationen</a></td>
+        
+        <td class='navi' id="td_flowercare" style='width: 50px'></td>
         <td class="navi" name='navi' id='flowercare' onclick='highlightNavi(this)' style='width: 100px'><a href='./flowercare.html' target="frame_main">FlowerCare</a></td>
+        
         <td class='navi' style='width: 50px'></td>
         <td class="navi" name='navi' id='flowcontrol' onclick='highlightNavi(this)' style='width: 100px'><a href='./flowcontrol.html' target="frame_main">FlowControl</a></td>
+        
+        <td class='navi' style='width: 50px'></td>
+        <td class="navi" name='navi' id='doif' onclick='highlightNavi(this)' style='width: 100px'><a href='./doif.html' target="frame_main">DoIF</a></td>
+
         <td class='navi' style='width: 50px'></td>
         <td class='navi' name='navi' id='handleFiles' onclick='highlightNavi(this)' style='width: 100px'><a href='./handlefiles.html' target="frame_main">Files</a></td>
+        
         <td class='navi' style='width: 50px'></td>
         <td class='navi' name='navi' id='wiki' style='width: 100px'><a href='https://github.com/tobiasfaust/ESP32_PumpControl/wiki' target='_blank'>Wiki</a></td>
+        
         <td class='navi' style='width: 50px'></td>
         <td class='navi'>
           <form style='margin: -5px' action="https://www.paypal.com/donate" method="post" target="_blank">
@@ -66,6 +79,7 @@
             <input type="image" style='margin: -5px; padding: 0px; border: 0px;' src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" name="submit" title="If you think the project is great, I would be happy about a donation to be able to integrate paid extensions. I want to integrate the professional ElegantOTA Edition but it costs 300€." alt="please by me a coffee" />
             </form>
         </td>
+
         <td class='navi' style='width: 50px'></td>
       </tr>
     </table>

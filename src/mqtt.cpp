@@ -51,6 +51,9 @@ MQTT::MQTT(const char* MqttServer, uint16_t MqttPort, String MqttBasepath, Strin
   if (Config->GetUseETH()) {
     #ifdef ESP32
       eth_shield_t* shield = this->GetEthShield(Config->GetLANBoard());
+     
+      // reserve all ETH pins
+      Config->disabledGPIO.addValues(shield->blockedGpio, BaseConfig::GpioIdentifier::ETH);
 
       // ETH.begin(1, 16, 23, 18, ETH_PHY_LAN8720, ETH_CLOCK_GPIO0_IN);
       ETH.begin(shield->PHY_ADDR,
@@ -65,6 +68,7 @@ MQTT::MQTT(const char* MqttServer, uint16_t MqttPort, String MqttBasepath, Strin
 
   } else {
     // use Wifi
+    Config->disabledGPIO.deleteAll(BaseConfig::GpioIdentifier::ETH); // free all ETH pins
     improvSerial.ConnectToWifi();
   }
 

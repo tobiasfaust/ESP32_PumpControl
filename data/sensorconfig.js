@@ -3,22 +3,16 @@ import * as valveFn from './valvefunctions.js';
 
 // ************************************************
 export function init() {
-  // Initiale Verbindung aufbauen
-    global.connectWebSocket();
-  
-    // Warte bis die WebSocket-Verbindung aufgebaut ist
-    let checkWebSocketInterval = setInterval(() => {
-      if (global.ws && global.ws.readyState === WebSocket.OPEN) {
-        clearInterval(checkWebSocketInterval);
-        GetInitData();
-      }
-    }, 100);
+  global.connectWebSocket();
+  let checkWebSocketInterval = setInterval(() => {
+    if (global.ws && global.ws.readyState === WebSocket.OPEN) {
+      clearInterval(checkWebSocketInterval);
+      GetInitData();
+    }
+  }, 100);
 }
 
-// ************************************************
-export const functionMap = {
-  sensorconfig_Callback: MyCallback
-};
+// functionMap entfernt -> Registrierung am Ende
 
 // ************************************************
 function GetInitData() {
@@ -33,8 +27,8 @@ function GetInitData() {
 
 // ************************************************
 function MyCallback() {
-  global.CreateSelectionListFromInputField('input[type=number][id^=GpioPin]', [gpio]);
-  global.CreateSelectionListFromInputField('input[type=number][id^=AnalogPin]', [gpioanalog]);
+  global.CreateSelectionListFromInputField('input[type=number][id^=GpioPin]', [gpio], JSON.parse(gpio_disabled));
+  global.CreateSelectionListFromInputField('input[type=number][id^=AnalogPin]', [gpioanalog], JSON.parse(gpio_disabled));
   global.handleRadioSelections();
   valveFn.validate_identifiers("moistureRows");
 
@@ -60,5 +54,13 @@ function MyCallback() {
     global.requestData(data);
   
 }
+
+// ************************************************
+// Registrierung der Callback-Funktionen
+// Dieses Modul nutzt das Inversion-of-Control Callback-Registry aus Javascript.js
+// Es werden folgende Callbacks aktiv beim Laden des Moduls registriert.
+try {
+  global.registerCallback('sensorconfig_Callback', MyCallback);
+} catch(e) { console.error('Callback Registrierung fehlgeschlagen (sensorconfig):', e); }
 
 // ************************************************

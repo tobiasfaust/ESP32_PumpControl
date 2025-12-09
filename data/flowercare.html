@@ -10,13 +10,12 @@
     
     <script type='module'>
       import { delrow, addrow } from './valvefunctions.js';
-      import { init, scanBLE, ActivateDevice, ActivateRelation } from './flowercare.js';
+      import { init, scanBLE, ActivateDevice } from './flowercare.js';
       import { onSubmit, initDataValues } from './Javascript.js';
       window.onSubmit = onSubmit;
       window.initDataValues = initDataValues;
       window.scanBLE = scanBLE;
       window.ActivateDevice = ActivateDevice;
-      window.ActivateRelation = ActivateRelation;
       window.addrow = addrow;
       window.deleteRow = delrow;
 
@@ -32,7 +31,7 @@
   <body>
     <div id="loader"></div>
     <button onclick="onSubmit('DataForm', 'active.*');initDataValues();" style="position: fixed; top: 0; left: 0;">Save</button>
-    <button onclick="scanBLE()" id="btn_scan" class="hide" style="position: fixed; top: 0; left: 100px;">Scan for BLE Devices</button>
+    <button onclick="scanBLE()" id="btn_scan" class="hide" style="position: fixed; top: 30px; left: 0;">Scan for BLE Devices</button>
 
     <div id="needToSave" class="hide needToSave">
       <i class="fa fa-exclamation-triangle" style="color: gold; font-size: 20px;"></i>
@@ -86,54 +85,6 @@
           </template>
         </tbody>
       </table>
-            
-      <button type="button" onclick="addrow('fc_relations_table')" style="position: relative; top: 30px; left: 0;">add Row</button>
-      <table id="fc_relations_table" class="editorDemoTable">
-        <thead>
-          <tr>
-            <td style='width: 25px;'>Nr</td>
-            <td style='width: 50px;'>Aktiv</td>
-            <td style='width: 300px;'>
-                <span title="MQTT-Topic of a flowercare device to be reacted upon">MQTT-Topic
-                <i class="fa fa-question-circle" style="font-size: 12px; cursor: pointer; color: gold;"></i>
-                </span>
-            </td>
-            <td style='width: 100px;'>
-                <span title="Valve to be activated when the soil moisture threshold received in the MQTT topic is below the set value">Port
-                <i class="fa fa-question-circle" style="font-size: 12px; cursor: pointer; color: gold;"></i>
-                </span>
-            </td>
-            <td style='width: 100px;'>
-              <span title="turn valve on if moinsture is lower than this threshold">threshold
-                <i class="fa fa-question-circle" style="font-size: 12px; cursor: pointer; color: gold;"></i>
-              </span>
-            </td>
-            <td style='width: 100px;'>
-              <span title="turn valve on for x seconds">duration
-                <i class="fa fa-question-circle" style="font-size: 12px; cursor: pointer; color: gold;"></i>
-              </span>
-            </td>
-            <td style='width: 50px;'>delete</td>
-          </tr>
-        </thead>
-
-        <tbody>
-          <template id='fc_relations'>
-            <tr>
-              <td></td>
-              <td><input type='checkbox' onclick='ActivateRelation(this.id)' id='active' name='active'></td>
-              <td><input type='text' name='mqtttopic' id='mqtttopic' style='width: 300px;'></td>
-              <td><input id='ConfiguredPort' name='port' type='number' min='10' max='999'/></td>
-              <td><input type='number' id='threshold' name="threshold" style='width: 50px;'></td>
-              <td><input type='number' id='duration' name="duration" style='width: 50px;'></td>
-              <td><button type="button"  onclick='deleteRow(this)'>
-                <i class='fa fa-trash'></i>
-              </button></td>
-            </tr>
-          </template>
-        </tbody>
-      </table>
-    </form>
     
     <br>
     <div id="footer"></div>

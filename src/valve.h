@@ -41,6 +41,13 @@ class valve {
     uint16_t  port2ms; // millisekunden bei Type "b" für Port2: 10-999
     String    subtopic; //ohne on-for-timer
 
+    bool operator==(const valve& other) const {
+      return port1 == other.port1;
+    }
+    bool operator!=(const valve& other) const {
+      return !(*this == other);
+    }
+
   private:
     bool      enabled;  //grundsätzlich aktiviert in WebUI
     bool      active;  // Ventil ist gerade aktiv/geöffnet

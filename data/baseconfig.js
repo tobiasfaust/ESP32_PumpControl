@@ -2,22 +2,16 @@ import * as global from './Javascript.js';
 
 // ************************************************
 export function init() {
-  // Initiale Verbindung aufbauen
-    global.connectWebSocket();
-  
-    // Warte bis die WebSocket-Verbindung aufgebaut ist
-    let checkWebSocketInterval = setInterval(() => {
-      if (global.ws && global.ws.readyState === WebSocket.OPEN) {
-        clearInterval(checkWebSocketInterval);
-        GetInitData();
-      }
-    }, 100);
+  global.connectWebSocket();
+  let checkWebSocketInterval = setInterval(() => {
+    if (global.ws && global.ws.readyState === WebSocket.OPEN) {
+      clearInterval(checkWebSocketInterval);
+      GetInitData();
+    }
+  }, 100);
 }
 
-// ************************************************
-export const functionMap = {
-  basisconfig_Callback: MyCallback
-};
+// Hinweis: functionMap entfernt, stattdessen Registrierung via registerCallback am Ende
 
 // ************************************************
 function GetInitData() {
@@ -32,7 +26,7 @@ function GetInitData() {
 
 // ************************************************
 function MyCallback() {
-  global.CreateSelectionListFromInputField('input[type=number][id^=GpioPin]', [gpio]);
+  global.CreateSelectionListFromInputField('input[type=number][id^=GpioPin]', [gpio], JSON.parse(gpio_disabled));
   global.CreateSelectionListFromInputField('input[type=number][id*=ConfiguredPort]', [JSON.parse(configuredPorts)]);
   global.handleRadioSelections();
 
@@ -49,3 +43,11 @@ function MyCallback() {
   document.querySelector("#loader").style.visibility = "hidden";
   document.querySelector("body").style.visibility = "visible";
 }
+
+// ************************************************
+// Registrierung der Callback-Funktionen
+// Dieses Modul nutzt das Inversion-of-Control Callback-Registry aus Javascript.js
+// Es werden folgende Callbacks aktiv beim Laden des Moduls registriert.
+try {
+  global.registerCallback('basisconfig_Callback', MyCallback);
+} catch(e) { console.error('Callback Registrierung fehlgeschlagen (baseconfig):', e); }

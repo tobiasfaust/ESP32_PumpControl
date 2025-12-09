@@ -204,3 +204,88 @@ void FlowerCare::loop() {
         }
     }
 }
+
+//#########################################################################################
+flowercareWeb::flowercareWeb(fs::LittleFSFS& configFS) : FlowerCare(), configFS(configFS) {
+    this->LoadJsonConfig();
+}
+
+void flowercareWeb::GetInitData(JsonDocument& json) {
+  const std::vector<FlowerCareDevice>* devices = FlowerCare::getDevices();
+  if (devices->size() > 0) {
+    JsonArray f = json["data"]["flowercare"].to<JsonArray>();
+    for (auto& device : *devices) {
+      JsonObject o = f.add<JsonObject>();
+      o["address"] = device.address.toString();
+      o["mqtttopic"] = String("flowercare/") + String(device.address.toString().c_str());
+      o["battery"]["innerHTML"] = device.battery;
+      o["battery"]["data-id"] = String(device.address.toString().c_str()) + "_bat";
+      o["firmwareVersion"]["innerHTML"] = device.firmwareVersion;
+      o["firmwareVersion"]["data-id"] = String(device.address.toString().c_str()) + "_fw";
+      o["temperature"]["innerHTML"] = device.temperature;
+      o["temperature"]["data-id"] = String(device.address.toString().c_str()) + "_temp";
+      o["moisture"]["innerHTML"] = device.moisture;
+      o["moisture"]["data-id"] = String(device.address.toString().c_str()) + "_moist";
+      o["brightness"]["innerHTML"] = device.brightness;
+      o["brightness"]["data-id"] = String(device.address.toString().c_str()) + "_bright";
+      o["fertility"]["innerHTML"] = device.fertility;
+      o["fertility"]["data-id"] = String(device.address.toString().c_str()) + "_fert";
+      o["lastLiveDataUpdate"]["innerHTML"] = device.lastLiveDataUpdate;
+      o["lastLiveDataUpdate"]["data-id"] = String(device.address.toString().c_str()) + "_liveupd";
+      o["lastBatteryUpdate"]["innerHTML"] = device.lastBatteryUpdate;
+      o["lastBatteryUpdate"]["data-id"] = String(device.address.toString().c_str()) + "_batupd";
+      o["failedReads"] = device.failedReads;
+      o["active"]["checked"] = device.active;
+      o["active"]["data-mac"] = device.address.toString();
+    }
+  }
+
+  json["data"]["fc_devices_table"]["className"] = "editorDemoTable"; // remove class "hide"
+  json["data"]["btn_scan"]["className"] = ""; //remove class "hide"
+
+  json["js"]["esp_uptime"] = millis();
+
+  json["response"].to<JsonObject>();
+  json["response"]["status"] = 1;
+  json["response"]["text"] = "successful";
+}
+
+void flowercareWeb::LoadJsonConfig() {
+  mqtt->ClearSubscriptions(MyMQTT::DOIF);
+ 
+  if (configFS.exists("/flowercare.json")) {
+    //file exists, reading and loading
+    Config->logN(3, "reading flowercare.json file....");
+    File configFile = configFS.open("/flowercare.json", "r");
+    if (configFile) {
+      Config->logN(3, "flowercare.json is now open");
+ 
+      ReadBufferingStream stream{configFile, 64};
+      stream.find("\"data\":[");
+      do {
+        JsonDocument elem;
+        DeserializationError error = deserializeJson(elem, stream); 
+ 
+        if (error) {
+           Config->logN(1, "Failed to parse flowercare.json data: %s", error.c_str()); 
+        } else {
+           // Print the result
+           Config->logN(3, "parsing JSON ok");
+           Config->log(4, elem);
+ 
+          #ifdef USE_FLOWERCARE
+          if (elem["address"]) {
+            // activation of known Flowercare devices
+            FlowerCare::addDevice(NimBLEAddress(elem["address"].as<String>().c_str(), BLE_ADDR_PUBLIC));
+            FlowerCare::setActive(elem["address"].as<String>(), elem["active"].as<bool>());
+          }
+          #endif
+        }
+      } while (stream.findUntil(",","]"));
+    } else {
+      Config->logN(1, "failed to load flowercare.json");
+    }
+  } else {
+    Config->logN(3, "flowercare.json File not exists");
+  }
+}

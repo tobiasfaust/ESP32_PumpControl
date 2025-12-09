@@ -7,6 +7,9 @@ Release 3.2.0:
   - feature: add FlowControl support (#15)
   - feature: add FlowControl and ADS1115 SoilMoisture values for constant updates in the web UI 
   - feature: add new webserial log monitor page for all variants
+  - feature: add DoIF for flowercare and other moisture sensors
+  - fix broken ethernet connection handling by adding global gpio handling (#7)
+  - feature: add sensor calibration options for ADS1115 moisture sensors
 
 Release 3.1.3:
   - fix broken sensor config handling (#12)

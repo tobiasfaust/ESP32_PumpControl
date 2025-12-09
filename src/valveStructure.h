@@ -19,17 +19,21 @@ extern valveRelation* ValveRel;
 
 class valveStructure {
 
-  typedef struct {
-    uint8_t   Port;
+  struct waitingQueue_t {
+    uint8_t       Port;
     unsigned int  duration;
-  } waitingQueue_t;
+    // Equality operator needed for push_back_unique / std::find
+    bool operator==(const waitingQueue_t& other) const {
+      return Port == other.Port;
+    }
+  };
 
   public:
     valveStructure(fs::LittleFSFS& configFS, uint8_t sda, uint8_t scl);
     void      loop();
-    void      OnForTimer(String SubTopic, int duration);
-    void      OnForTimer(uint8_t Port, int duration);
-    void      OnForTimer(valve* valve, int duration);
+    void      OnForTimer(String SubTopic, unsigned int duration);
+    void      OnForTimer(uint8_t Port, unsigned int duration);
+    void      OnForTimer(valve* valve, unsigned int duration);
     void      SetOn(String SubTopic);
     void      SetOn(uint8_t Port);
     void      SetOn(valve* valve);
@@ -46,7 +50,7 @@ class valveStructure {
 
     void      LoadJsonConfig();
     void      getWebJsParameter(JsonDocument& json);
-    void      ReceiveMQTT(String topic, int value);
+    void      ReceiveMQTT(String topic, unsigned int value);
     uint8_t   Get1WireCountDevices();
     uint8_t   Refresh1WireDevices();
     
@@ -54,12 +58,11 @@ class valveStructure {
     fs::LittleFSFS configFS;
     valve*    GetValveItem(uint8_t Port);
     valve*    GetValveItem(String SubTopic);
-    void      handleDeps(String topic, int value); //prueft die Relationen
-    void      addWaitingQueue(uint8_t Port, unsigned int duration);
+    void      handleDeps(String topic, unsigned int value); //prueft die Relationen
 
     valveHardware* ValveHW = NULL;
     std::shared_ptr<std::vector<valve>> Valves;
-    std::shared_ptr<std::vector<waitingQueue_t>> waitingQueue;
+    std::vector<waitingQueue_t>* waitingQueue = nullptr;
 
     uint8_t pin_sda = SDA;
     uint8_t pin_scl = SCL;

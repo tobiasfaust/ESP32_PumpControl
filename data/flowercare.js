@@ -3,24 +3,16 @@ import * as valveFn from './valvefunctions.js';
 
 // ************************************************
 export function init() {
-  // Initiale Verbindung aufbauen
-    global.connectWebSocket();
-  
-    // Warte bis die WebSocket-Verbindung aufgebaut ist
-    let checkWebSocketInterval = setInterval(() => {
-      if (global.ws && global.ws.readyState === WebSocket.OPEN) {
-        clearInterval(checkWebSocketInterval);
-        GetInitData();
-      }
-    }, 100);
-
+  global.connectWebSocket();
+  let checkWebSocketInterval = setInterval(() => {
+    if (global.ws && global.ws.readyState === WebSocket.OPEN) {
+      clearInterval(checkWebSocketInterval);
+      GetInitData();
+    }
+  }, 100);
 }
 
-// ************************************************
-export const functionMap = {
-  flowercare_Callback: MyCallback,
-  onBleUpdate_Callback: onBleUpdate_cb
-};
+// functionMap entfernt -> Registrierung am Ende
 
 // ************************************************
 function GetInitData() {
@@ -46,11 +38,11 @@ export function scanBLE() {
 
 // ************************************************
 function MyCallback(json) {
-  //global.CreateSelectionListFromInputField('input[type=number][id^=GpioPin]', [gpio]);
-  global.CreateSelectionListFromInputField('input[type=number][id*=ConfiguredPort]', [JSON.parse(configuredPorts)]);
+  //global.CreateSelectionListFromInputField('input[type=number][id^=GpioPin]', [gpio], JSON.parse(gpio_disabled));
+  //global.CreateSelectionListFromInputField('input[type=number][id*=ConfiguredPort]', [JSON.parse(configuredPorts)]);
   //global.handleRadioSelections();
   global.transformCheckboxes();
-  valveFn.validate_identifiers("fc_relations_table");
+  //valveFn.validate_identifiers("fc_relations_table");
 
   // anpassen der Update werte auf ein lesbares Format
   formatAllDates();  
@@ -98,29 +90,6 @@ export function ActivateDevice(id) {
 }
 
 // ************************************************
-export function ActivateRelation(id) {
-  var obj = document.getElementById(id);
-  
-  // id = fc_relations_0.active
-  var objMqttTopic = document.getElementById(id.replace("active", "mqtttopic"));
-  var objPort = document.getElementById(id.replace("active", "ConfiguredPort"));
-
-  if (objMqttTopic.value != "" && objPort.value != "") {
-    var data = {};
-    data['cmd'] = {};
-    data['cmd']['action'] = "flowercare";
-    data['cmd']['subaction'] = "activateRelation";
-    data['cmd']['newState'] = (obj.checked?1:0);
-    data['cmd']["item"] = objMqttTopic.value;
-    data['cmd']["item2"] = objPort.value;
-    
-    global.requestData(data);
-  } else {
-    global.setResponse(false, "Please define a valid MQTT-Topic");
-  }
-}
-
-// ************************************************
 function formatDate(obj) {
   const intValue = parseInt(obj.innerText, 10);
   if (intValue > 0) {
@@ -131,3 +100,12 @@ function formatDate(obj) {
     obj.innerText = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   }
 }
+
+// ************************************************
+// Registrierung der Callback-Funktionen
+// Dieses Modul nutzt das Inversion-of-Control Callback-Registry aus Javascript.js
+// Es werden folgende Callbacks aktiv beim Laden des Moduls registriert.
+try {
+  global.registerCallback('flowercare_Callback', MyCallback);
+  global.registerCallback('onBleUpdate_Callback', onBleUpdate_cb);
+} catch(e) { console.error('Callback Registrierung fehlgeschlagen (flowercare):', e); }

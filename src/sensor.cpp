@@ -38,12 +38,16 @@ void sensor::onValues(std::function<void(JsonDocument&)> callback) {
 }
 
 void sensor::init_analog(uint8_t pinAnalog) {
+  Config->disabledGPIO.addValue(pinAnalog, BaseConfig::GpioIdentifier::SENSOR);
   setSensorType(ONBOARD_ANALOG);
   this->pinAnalog = pinAnalog;
   this->MAX_DIST=500; // is maximum by default
 }
 
 void sensor::init_hcsr04(uint8_t pinTrigger, uint8_t pinEcho) {
+  Config->disabledGPIO.addValue(pinTrigger, BaseConfig::GpioIdentifier::SENSOR);
+  Config->disabledGPIO.addValue(pinEcho, BaseConfig::GpioIdentifier::SENSOR);
+
   setSensorType(HCSR04);
   this->MAX_DIST = 23200; // Anything over 400 cm (400*58 = 23200 us pulse) is "out of range"
   this->pinTrigger = pinTrigger;
@@ -116,7 +120,8 @@ void sensor::loop_hcsr04() {
 }
 
 #ifdef USE_ADS1115
-  void sensor::init_ads1115(uint8_t i2c, uint8_t port, String topic) {  
+  void sensor::init_ads1115(uint8_t i2c, uint8_t port, String topic, uint16_t cal_min, uint16_t cal_max) {  
+    // check, if device already exists
     adsdev_t* device = this->getAdsDevice(i2c);
     
     if (device == nullptr) { 
@@ -128,21 +133,30 @@ void sensor::loop_hcsr04() {
       if(!ads.device.init()) {
         Config->logN(1, "Could not connect to ADS1115 at i2cAddress 0x%02x, ignore it!", i2c );
       } else {
-        Config->logN(3, "Initialize ADS1115 at i2cAddress 0x%02x with channel %d", i2c, port);
+        Config->logN(3, "Initialize ADS1115 at i2cAddress 0x%02x", i2c);
         ads.device.setVoltageRange_mV(ADS1115_RANGE_4096);
+        ads.device.setConvRate(ADS1115_128_SPS);
         ads.i2cAddress = i2c;
-        if (port == 0) {ads.topic_chan1 = topic;}
-        if (port == 1) {ads.topic_chan2 = topic;}
-        if (port == 2) {ads.topic_chan3 = topic;}
-        if (port == 3) {ads.topic_chan4 = topic;}
+
         this->ads1115_devices->push_back(ads);
+        device = &this->ads1115_devices->back();
       }
-    } else {
-      Config->logN(3, "Add Channel %d to ADS1115 at i2cAddress 0x%02x with topic '%s' ", port, i2c, topic.c_str());
-      if (port == 0) {device->topic_chan1 = topic;}
-      if (port == 1) {device->topic_chan2 = topic;}
-      if (port == 2) {device->topic_chan3 = topic;}
-      if (port == 3) {device->topic_chan4 = topic;}
+    }
+
+    if (device != nullptr) {
+      adsport_t* portptr = nullptr;
+      if (port == 0) {portptr = &device->port1;}
+      if (port == 1) {portptr = &device->port2;}
+      if (port == 2) {portptr = &device->port3;}
+      if (port == 3) {portptr = &device->port4;}
+
+      if (portptr) {
+        portptr->topic = topic;
+        portptr->cal_min = cal_min;
+        portptr->cal_max = cal_max;
+      }
+      
+      Config->logN(3, "Channel %d to ADS1115 at i2cAddress 0x%02x added with topic '%s' ", port, i2c, topic.c_str());
     }
   }
 
@@ -192,39 +206,35 @@ void sensor::loop_hcsr04() {
           continue;
         }
 
-        // do nothing if no topic is set for this channel
-        if (chan == 0 && this->ads1115_devices->at(i).topic_chan1.length()==0) continue;  
-        if (chan == 1 && this->ads1115_devices->at(i).topic_chan2.length()==0) continue;
-        if (chan == 2 && this->ads1115_devices->at(i).topic_chan3.length()==0) continue;
-        if (chan == 3 && this->ads1115_devices->at(i).topic_chan4.length()==0) continue;
-
+        adsport_t* portptr = nullptr;
+        switch (chan) {
+          case 0:
+            portptr = &this->ads1115_devices->at(i).port1;
+            break;
+          case 1:
+            portptr = &this->ads1115_devices->at(i).port2;
+            break;
+          case 2:
+            portptr = &this->ads1115_devices->at(i).port3;
+            break;
+          case 3:
+            portptr = &this->ads1115_devices->at(i).port4;
+            break;
+        } 
+        if (portptr == nullptr) continue;  // should not happen
+        if (portptr->topic.length() == 0) continue; // no topic defined, ignore it
+        
         raw = readADS1115Channel(&this->ads1115_devices->at(i), this->getAdsChannel(chan));
         /* map voltage to a moisture-level
         *  0-3.3V -> 0-100%
         *  moisture sensor gets 100% = dry, but we want a moisture: 100% = wet  
         */
-        level = 100 - map(raw, 0, 3300, 0, 100); // 0-3.3V -> 0-100%
+        level = 100 - map(raw, portptr->cal_min, portptr->cal_max, 0, 100); // 0-3.3V -> 0-100%
         Config->logN(4, "read moisture of ADS1115 (0x%02x) channel %d: raw: %d, calculated level: %d", this->ads1115_devices->at(i).i2cAddress, chan, raw, level);
-
-        String topic = "";
-        switch (chan) {
-          case 0:
-            topic = this->ads1115_devices->at(i).topic_chan1;
-            break;
-          case 1:
-            topic = this->ads1115_devices->at(i).topic_chan2;
-            break;
-          case 2:
-            topic = this->ads1115_devices->at(i).topic_chan3;
-            break;
-          case 3:
-            topic = this->ads1115_devices->at(i).topic_chan4;
-            break;
-        } 
 
         if (raw > 0 ) { 
           JsonObject obj = rows.add<JsonObject>();
-          obj["name"] = topic;
+          obj["name"] = portptr->topic.c_str();
           obj["moisture"] = level;
         }
       }
@@ -261,13 +271,14 @@ void sensor::loop_hcsr04() {
     device->device.setCompareChannels(channel);
     device->device.startSingleMeasurement();
     while(device->device.isBusy()){}
-    raw = device->device.getResultWithRange(-4096,4096, 3300); 
+    //raw = device->device.getResultWithRange(-4096,4096, 3300); 
+    raw = device->device.getResult_mV(); // get raw value in mV
     return (uint16_t) abs(raw);
   }
 #endif
 
 void sensor::loop() {
-  /*start measuring soil moisture, every 60sec */
+  /*start measuring soil moisture, every 5sec */
 #ifdef USE_ADS1115
   if (millis() - this->previousMillis_moisture > 5*1000) {
     this->previousMillis_moisture = millis();
@@ -310,7 +321,8 @@ void sensor::loop() {
 
 void sensor::LoadJsonConfig() {
   mqtt->ClearSubscriptions(MyMQTT::SENSOR);
-  
+  Config->disabledGPIO.deleteAll(BaseConfig::GpioIdentifier::SENSOR);
+
   #ifdef USE_ADS1115
     this->ads1115_devices->clear();
   #endif
@@ -352,9 +364,11 @@ void sensor::LoadJsonConfig() {
 
         #ifdef USE_ADS1115
           if (elem["mqtttopic"] && 
-              elem["ads_addr"] &&
-              elem["ads_port"]) {
-                this->init_ads1115(strtoul(elem["ads_addr"].as<String>().c_str(), NULL, 16), elem["ads_port"].as<int>(), elem["mqtttopic"].as<String>());
+              elem["ads_addr"]) {
+                uint8_t port = (elem["ads_port"])? elem["ads_port"].as<int>() : 0;
+                uint16_t cal_min = (elem["ads_min"])? elem["ads_min"].as<int>() : 0;
+                uint16_t cal_max = (elem["ads_max"])? elem["ads_max"].as<int>() : 0;
+                this->init_ads1115(strtoul(elem["ads_addr"].as<String>().c_str(), NULL, 16), port, elem["mqtttopic"].as<String>(), cal_min, cal_max);
               }
         #endif
         
@@ -365,9 +379,9 @@ void sensor::LoadJsonConfig() {
       else if (selection == "hcsr04")   { this->init_hcsr04(this->pinTrigger, this->pinEcho); }
       else if (selection == "extern")   { this->init_extern(this->externalSensor); }
       else if (selection == "none")     { this->setSensorType(NONE); Config->logN(3, "No LevelSensor requested"); }
-            
-      #ifdef USE_ADS1115  
-        else if(selection == "ads1115") { this->setSensorType(ADS1115); this->init_ads1115(this->ads1115_i2c, this->ads1115_port); }
+
+      #ifdef USE_ADS1115
+        else if(selection == "ads1115") { this->setSensorType(ADS1115); this->init_ads1115(this->ads1115_i2c, this->ads1115_port, "", this->measureDistMin, this->measureDistMax); }
       #endif
 
     } else {
@@ -407,41 +421,45 @@ void sensor::GetInitData(JsonDocument& json) {
     snprintf(i2caddrhex, sizeof(i2caddrhex), "%02X", this->ads1115_devices->at(i).i2cAddress);
 
     for (uint8_t chan=0; chan<4; chan++) {
-      String* topic = nullptr;
+      adsport_t* portptr = nullptr;
       switch (chan) {
       case 0:
-        topic = &this->ads1115_devices->at(i).topic_chan1;
+        portptr = &this->ads1115_devices->at(i).port1;
         break;
       case 1:
-        topic = &this->ads1115_devices->at(i).topic_chan2;
+        portptr = &this->ads1115_devices->at(i).port2;
         break;
       case 2:
-        topic = &this->ads1115_devices->at(i).topic_chan3;
+        portptr = &this->ads1115_devices->at(i).port3;
         break;
       case 3:
-        topic = &this->ads1115_devices->at(i).topic_chan4;
+        portptr = &this->ads1115_devices->at(i).port4;
         break;
       }
     
-      if (topic->length() > 0 &&
+      if (portptr->topic.length() > 0 &&
         !(this->GetType() == sensorType_t::ADS1115  &&
          this->ads1115_i2c == this->ads1115_devices->at(i).i2cAddress &&
          this->ads1115_port == chan
         )) {
-      json["data"]["rows"][counter]["mqtttopic"] = topic->c_str();
+      json["data"]["rows"][counter]["mqtttopic"] = portptr->topic.c_str();
       json["data"]["rows"][counter]["ads_port"] = chan;
       json["data"]["rows"][counter]["ads_addr"] = String(i2caddrhex);
-      json["data"]["rows"][counter]["ads_value"]["data-id"] = String(topic->c_str()) + "_val";
+      json["data"]["rows"][counter]["ads_min"] = portptr->cal_min;
+      json["data"]["rows"][counter]["ads_max"] = portptr->cal_max;
+      json["data"]["rows"][counter]["ads_value"]["data-id"] = String(portptr->topic.c_str()) + "_val";
       counter++;
       }
     }
   }
 
-  // print template as first row
+  // no ADS1115 port defined, print template as first row
   if (counter == 0) {
     json["data"]["rows"][0]["mqtttopic"] = "moisture_1";
     json["data"]["rows"][0]["ads_port"] = 0;
     json["data"]["rows"][0]["ads_addr"] = "48";
+    json["data"]["rows"][0]["ads_min"] = 0;
+    json["data"]["rows"][0]["ads_max"] = 3300;
   }
 
 #else 
