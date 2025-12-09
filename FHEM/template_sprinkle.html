@@ -1,0 +1,159 @@
+<ftui-row>
+  <ftui-column width="30%" align-items="top">
+    <!-- last times-->
+    <ftui-label 
+      size="20px"
+      padding="0em 1em"
+      text-align="left"
+      style="background-color: #fff9c4; border-radius: 8px;">
+      {{name}}
+    </ftui-label>
+    <ftui-row>on/off:
+      <ftui-label [text]="{{last_onoff}}"></ftui-label>
+    </ftui-row>
+    <ftui-row>sensor:
+      <ftui-label [text]="{{last_sensor}}"></ftui-label>
+    </ftui-row>
+  </ftui-column>
+  <ftui-column width="12%" align-items="top" >
+    <!-- activation button-->
+    <ftui-label size="20px">status</ftui-label>
+    <ftui-row align-items="center">
+      <ftui-button states="off,on"
+        [value]="{{pcdev}}:VentilStatus | map('0:off,1:on')"
+        @click="sendFhem(`set {{pcdev}} on-for-timer ${this.value == 'on' ? 'off' : document.getElementById('{{name}}_duration').value}`);"
+        shape="round"
+        size="normal"
+        class="sprinkle"
+        [color]="{{pcdev}}:VentilStatus | map('0:dark,1:orange')"
+      ><ftui-icon 
+        path="../images/openautomation"  
+        name="sani_sprinkling" 
+        size="large"
+      ></ftui-icon>
+      </ftui-button>
+    </ftui-row>
+  </ftui-column>
+  <ftui-column width="12%" align-items="top">
+    <!-- aktuelle Feuchte-->
+    <ftui-label size="20px">moisture</ftui-label>
+    <ftui-row align-items="center">
+      <ftui-label size="30px" color="orange" [text]="{{moisture_ist}}"></ftui-label> / 
+      <ftui-label size="12px" color="orange" [text]="{{moisture_soll}}"></ftui-label>
+    </ftui-row>
+  </ftui-column>
+  <ftui-column width="12%" align-items="top">
+    <!-- Nährstoffgehalt-->
+    <ftui-label size="20px">fertility</ftui-label>
+    <ftui-row align-items="center">
+      <ftui-label size="30px" color="orange" [text]="{{fertility}}"></ftui-label>
+    </ftui-row>
+  </ftui-column>
+  <ftui-column width="10%" align-items="top">
+    <!-- set automatik-->
+    <ftui-label size="20px">auto</ftui-label>
+    <ftui-row align-items="center">
+      <ftui-switch 
+        [value]="{{auto_dev}}:mode" 
+        (value)="map('disabled:disable,enabled:enable') | {{auto_dev}}"
+        states="disabled,enabled"
+      ></ftui-switch>
+  </ftui-column>
+  <ftui-row width="14%">
+    <!-- batteriestatus -->
+    <ftui-icon 
+      path="../images/openautomation"  
+      [name]="{{battery_state}} | step('0:measure_battery_0,15:measure_battery_25,25:measure_battery_50,50:measure_battery_75,75:measure_battery_100')"
+      [color]="{{battery_state}} | step('0:red,25:orange,50:green')"
+      size="large">
+     </ftui-icon>
+     <!-- online/offline PumpControlDevice -->
+      <ftui-icon 
+        path="../images/openautomation"  
+        name="it_network" 
+        [color]="{{pcdev_onlinestate}} | map('off:red,on:green')"
+        size="normal">
+      </ftui-icon>
+      <!-- online/offline SoilMoisture Sensor -->
+      <ftui-icon 
+        path="./" 
+        name="soil_moisture" 
+        [color]="{{moisture_onlinestate}} | map('off:red,on:green')"
+        size="large">
+      </ftui-icon>
+  </ftui-row>
+  <ftui-column width="10%">
+    <!-- settings via popup-->
+     <ftui-icon 
+       name="edit_settings" 
+       path="../images/openautomation"
+       @click="{{auto_dev}}_edit.open()"
+       size="large" 
+       ></ftui-icon>
+  </ftui-column>
+</ftui-row>
+
+<ftui-popup id="{{auto_dev}}_edit" shape="round" mode="fade" timeout="0" height="400px" width="600px"
+  style="position: fixed; inset: 0; width: 100%; height: 100%; z-index: 5000; overflow: auto;">
+  <ftui-popup-header>edit settings {{name}}</ftui-popup-header>
+    
+    <ftui-row>
+      <ftui-column>
+        <ftui-label size="14px">Bew&auml;ssern um (0=Off)</ftui-label>
+        <ftui-timeset [(value)]="{{auto_dev}}:1-time"
+                    color="yellow"
+                    class="size-2">Uhr</ftui-timeset>
+      </ftui-column>
+      <ftui-column>
+        <ftui-label size="14px">oder Zeitraum bis (0=Off)</ftui-label>
+        <ftui-timeset [(value)]="{{auto_dev}}:2-time"
+                    color="yellow"
+                    class="size-2">Uhr</ftui-timeset>
+      </ftui-column>
+    </ftui-row>
+    <ftui-row padding="0em 2em">
+      <ftui-label text-align="left" width="350px" size="14px">Sollfeuchte</ftui-label>
+      <ftui-slider [(value)]="{{auto_dev}}:2-treshold-moisture" min="0" max="100"
+                   tick="25"
+                   tooltips="always"
+                   wide-tick="50"
+                   has-ruler
+                   has-wide-ticks>
+      </ftui-slider>
+    </ftui-row>
+
+    <ftui-row align-items="center" padding="0em 2em" >
+      <ftui-label text-align="left" width="350px" size="14px">bei erwartetem Niederschlag<br>weniger als (in mm)</ftui-label>
+      <ftui-slider [(value)]="{{auto_dev}}:2-treshold-rain" min="0" max="10" step="0.1"
+                   tick="2"
+                   tooltips="always"
+                   wide-tick="5"
+                   has-ruler
+                   has-wide-ticks>
+      </ftui-slider>
+    </ftui-row>
+
+    <ftui-row align-items="center" padding="0em 2em">
+      <ftui-label text-align="left" width="350px" size="14px">Mindestfeuchte</ftui-label>
+      <ftui-slider [(value)]="{{auto_dev}}:1-treshold-moisture" min="0" max="100"
+                   tick="25"
+                   tooltips="always"
+                   wide-tick="50"
+                   has-ruler
+                   has-wide-ticks>
+      </ftui-slider>
+    </ftui-row>
+
+    <ftui-row align-items="center" padding="0em 2em">
+      <ftui-label text-align="left" width="350px" size="14px">Bew&auml;sserungsdauer in sek</ftui-label>
+      <ftui-slider 
+          id="{{name}}_duration"
+          [(value)]="{{auto_dev}}:0-duration" min="0" max="3600" step="60"
+          tooltips="always"
+          tick="300"
+          wide-tick="900"
+          has-ruler
+          has-wide-ticks>
+      </ftui-slider>
+    </ftui-row>
+</ftui-popup>
