@@ -39,7 +39,7 @@ MyWebServer::MyWebServer(fs::LittleFSFS& sysFS, fs::LittleFSFS& configFS, AsyncW
   ElegantOTA.begin(server);
   
 
-  server->on("/", HTTP_GET, std::bind(&MyWebServer::handleRoot, this, std::placeholders::_1));
+  server->on("/", HTTP_GET, std::bind(&MyWebServer::handleRoot, this, std::placeholders::_1), nullptr, nullptr);
   server->onNotFound(std::bind(&MyWebServer::handleNotFound, this, std::placeholders::_1));
   
   this->ws->onEvent(std::bind(&MyWebServer::onWsEvent, this, std::placeholders::_1, 
@@ -144,18 +144,18 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
     Config->logN(4, "[Client: %u] WebSocket client disconnected", client->id());
 
     // Remove client from WebSocket client requests if it exists
-    for (uint8_t i = 0; i < _wsclientRequests->size(); i++) {
-      if (_wsclientRequests->at(i).ws_id == client->id()) {
+    for (uint8_t i = 0; i < this->_wsclientRequests->size(); i++) {
+      if (this->_wsclientRequests->at(i).ws_id == client->id()) {
         
         #ifdef USE_FLOWERCARE
-        if (_wsclientRequests->at(i).requestData == wsclient_t::FLOWERCARE_DATA) { flowerCare->onValues(nullptr); }
+        if (this->_wsclientRequests->at(i).requestData == wsclient_t::FLOWERCARE_DATA) { flowerCare->onValues(nullptr); }
         #endif
 
-        if (_wsclientRequests->at(i).requestData == wsclient_t::ADS1115_DATA) { LevelSensor->onValues(nullptr); }
-        if (_wsclientRequests->at(i).requestData == wsclient_t::FLOWCONTROL_DATA) { FlowCtrl->onValues(nullptr); }
-        if (_wsclientRequests->at(i).requestData == wsclient_t::LOG_DATA) { Config->onLogValues(nullptr); }
+        if (this->_wsclientRequests->at(i).requestData == wsclient_t::ADS1115_DATA) { LevelSensor->onValues(nullptr); }
+        if (this->_wsclientRequests->at(i).requestData == wsclient_t::FLOWCONTROL_DATA) { FlowCtrl->onValues(nullptr); }
+        if (this->_wsclientRequests->at(i).requestData == wsclient_t::LOG_DATA) { Config->onLogValues(nullptr); }
 
-        _wsclientRequests->erase(_wsclientRequests->begin() + i);
+        this->_wsclientRequests->erase(this->_wsclientRequests->begin() + i);
       }
     }
     _wsclientRequests->shrink_to_fit();
@@ -182,17 +182,17 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
       if (action && action == "subscribe") {
         if (subaction && subaction == "flowercare_data") {
           #ifdef USE_FLOWERCARE
-            _wsclientRequests->push_back({client->id(), wsclient_t::FLOWERCARE_DATA});
+            this->_wsclientRequests->push_back({client->id(), wsclient_t::FLOWERCARE_DATA});
             flowerCare->onValues(std::bind(&MyWebServer::flowerCareGetValuesCallback, this, std::placeholders::_1, client->id()));
           #endif
         } else if (subaction && subaction == "ads1115_data") {
-          _wsclientRequests->push_back({client->id(), wsclient_t::ADS1115_DATA});
+          this->_wsclientRequests->push_back({client->id(), wsclient_t::ADS1115_DATA});
           LevelSensor->onValues(std::bind(&MyWebServer::LevelSensorGetValuesCallback, this, std::placeholders::_1, client->id()));
         } else if (subaction && subaction == "flowcontrol_data") {
-          _wsclientRequests->push_back({client->id(), wsclient_t::FLOWCONTROL_DATA});
+          this->_wsclientRequests->push_back({client->id(), wsclient_t::FLOWCONTROL_DATA});
           FlowCtrl->onValues(std::bind(&MyWebServer::flowControlGetValuesCallback, this, std::placeholders::_1, client->id()));
         } else if (subaction && subaction == "log_data") {
-          _wsclientRequests->push_back({client->id(), wsclient_t::LOG_DATA});
+          this->_wsclientRequests->push_back({client->id(), wsclient_t::LOG_DATA});
           Config->onLogValues(std::bind(&MyWebServer::logGetValuesCallback, this, std::placeholders::_1, json, client->id()));
         }
       }
