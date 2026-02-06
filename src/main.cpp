@@ -75,10 +75,15 @@ void setup() {
 
   Config = new BaseConfig(configFS);
 
+#if defined(ARDUINO_USB_CDC_ON_BOOT)
+  // Serial is USB-CDC: no pins here
+  Serial.begin(115200);
+#else
   Serial.begin(115200,
                  SERIAL_8N1,
                  Config->GetSerialRx(),
                  Config->GetSerialTx());  // RX, TX, zb.: 33, 32
+#endif
 
   Serial.println("");
   Serial.println("ready");

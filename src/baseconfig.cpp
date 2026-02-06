@@ -23,18 +23,11 @@ BaseConfig::BaseConfig(fs::LittleFSFS& configFS) :
   max_threads(0)
   {
   
-  #ifdef ESP8266
-    this->pin_sda = 5;
-    this->pin_scl = 4;
-  #endif
+    this->pin_sda = (DEFAULT_I2C_SDA_PIN ? DEFAULT_I2C_SDA_PIN : 32);
+    this->pin_scl = (DEFAULT_I2C_SCL_PIN ? DEFAULT_I2C_SCL_PIN : 33);
   
-  #ifdef ESP32
-    this->pin_sda = 32;
-    this->pin_scl = 33;
-  #endif
-  
-  this->disabledGPIO.setOffset(200); // offset for GPIO numbers
-  LoadJsonConfig();
+    this->disabledGPIO.setOffset(200); // offset for GPIO numbers
+    LoadJsonConfig();
 }
 
 void BaseConfig::LoadJsonConfig() {
