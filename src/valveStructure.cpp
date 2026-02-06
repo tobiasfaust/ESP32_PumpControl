@@ -240,8 +240,8 @@ void valveStructure::LoadJsonConfig() {
     Config->logN(3, "lade Ventile DefaultConfig");
     valve v;
     
-    uint8_t defaultPort1 = (DEFAULT_VALVE1_PIN? DEFAULT_VALVE1_PIN : 13);
-    uint8_t defaultPort2 = (DEFAULT_VALVE2_PIN? DEFAULT_VALVE2_PIN : 17);
+    uint8_t defaultPort1 = DEFAULT_VALVE1_PIN;
+    uint8_t defaultPort2 = DEFAULT_VALVE2_PIN;
 
     v.init(this->ValveHW, defaultPort1 + 200, "Valve1");
     this->Valves->push_back(v);

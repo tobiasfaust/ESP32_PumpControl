@@ -23,8 +23,8 @@ BaseConfig::BaseConfig(fs::LittleFSFS& configFS) :
   max_threads(0)
   {
   
-    this->pin_sda = (DEFAULT_I2C_SDA_PIN ? DEFAULT_I2C_SDA_PIN : 32);
-    this->pin_scl = (DEFAULT_I2C_SCL_PIN ? DEFAULT_I2C_SCL_PIN : 33);
+    this->pin_sda = DEFAULT_I2C_SDA_PIN;
+    this->pin_scl = DEFAULT_I2C_SCL_PIN;
   
     this->disabledGPIO.setOffset(200); // offset for GPIO numbers
     LoadJsonConfig();
