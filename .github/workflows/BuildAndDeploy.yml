@@ -78,21 +78,15 @@ jobs:
           cp .pio/build/${{ matrix.variant.firmware }}/firmware.bin firmware/
           cp .pio/build/${{ matrix.variant.firmware }}/partitions.bin firmware/
           cp .pio/build/${{ matrix.variant.firmware }}/bootloader.bin firmware/
-          ls -R firmware/
           if [ -d "data" ]; then
             platformio run --target buildfs -e ${{ matrix.variant.firmware }}
             cp .pio/build/${{ matrix.variant.firmware }}/littlefs.bin firmware/
           fi
-          ls -R firmware/
           python .github/scripts/createMergedFirmware.py \
             --ChipFamily ${{ matrix.variant.architecture }} \
             --BuildDir firmware \
             --PathOfPartitionsCSV partitions.csv \
             >> "$GITHUB_OUTPUT"
-
-      - name: Display generated files
-        run: |
-          ls -R firmware/
 
       - name: Build merged Firmware
         if: ${{ steps.buildFw.outputs.command != 'None' }}
