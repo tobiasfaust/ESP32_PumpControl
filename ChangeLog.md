@@ -11,6 +11,7 @@ Release 3.2.0:
   - fix broken ethernet connection handling by adding global gpio handling (#7)
   - feature: add sensor calibration options for ADS1115 moisture sensors
   - feature: specific board settings via board.h, important for ESP32-C3
+  - Fix: change gitpod to github codespace
 
 Release 3.1.3:
   - fix broken sensor config handling (#12)
