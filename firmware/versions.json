@@ -7,10 +7,10 @@
         "variant": "standard",
         "build": 91,
         "chipFamilies": [
-            "ESP32",
-            "ESP32-C3",
             "ESP32-S3",
-            "ESP32-S2"
+            "ESP32",
+            "ESP32-S2",
+            "ESP32-C3"
         ],
         "builds": [
             {
@@ -161,10 +161,10 @@
         "variant": "standard",
         "build": 93,
         "chipFamilies": [
-            "ESP32",
-            "ESP32-C3",
             "ESP32-S3",
-            "ESP32-S2"
+            "ESP32",
+            "ESP32-S2",
+            "ESP32-C3"
         ],
         "builds": [
             {
@@ -315,10 +315,10 @@
         "variant": "standard",
         "build": 90,
         "chipFamilies": [
-            "ESP32",
-            "ESP32-C3",
             "ESP32-S3",
-            "ESP32-S2"
+            "ESP32",
+            "ESP32-S2",
+            "ESP32-C3"
         ],
         "builds": [
             {
@@ -469,10 +469,10 @@
         "variant": "standard",
         "build": 97,
         "chipFamilies": [
-            "ESP32",
-            "ESP32-C3",
             "ESP32-S3",
-            "ESP32-S2"
+            "ESP32",
+            "ESP32-S2",
+            "ESP32-C3"
         ],
         "builds": [
             {
@@ -623,10 +623,10 @@
         "variant": "standard",
         "build": 95,
         "chipFamilies": [
-            "ESP32",
-            "ESP32-C3",
             "ESP32-S3",
-            "ESP32-S2"
+            "ESP32",
+            "ESP32-S2",
+            "ESP32-C3"
         ],
         "builds": [
             {
@@ -815,10 +815,10 @@
         "variant": "standard",
         "build": 55,
         "chipFamilies": [
-            "ESP32",
             "ESP32-S3",
-            "ESP32-C3",
-            "ESP32-S2"
+            "ESP32",
+            "ESP32-S2",
+            "ESP32-C3"
         ],
         "builds": [
             {
@@ -1007,10 +1007,10 @@
         "variant": "standard",
         "build": 49,
         "chipFamilies": [
-            "ESP32",
             "ESP32-S3",
-            "ESP32-C3",
-            "ESP32-S2"
+            "ESP32",
+            "ESP32-S2",
+            "ESP32-C3"
         ],
         "builds": [
             {
@@ -1199,10 +1199,10 @@
         "variant": "standard",
         "build": 63,
         "chipFamilies": [
-            "ESP32",
             "ESP32-S3",
-            "ESP32-C3",
-            "ESP32-S2"
+            "ESP32",
+            "ESP32-S2",
+            "ESP32-C3"
         ],
         "builds": [
             {
@@ -1353,10 +1353,10 @@
         "variant": "standard",
         "build": 92,
         "chipFamilies": [
-            "ESP32",
-            "ESP32-C3",
             "ESP32-S3",
-            "ESP32-S2"
+            "ESP32",
+            "ESP32-S2",
+            "ESP32-C3"
         ],
         "builds": [
             {
