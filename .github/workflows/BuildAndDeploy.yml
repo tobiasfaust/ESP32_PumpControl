@@ -74,6 +74,7 @@ jobs:
         id: buildFw
         run: |
           platformio run -e ${{ matrix.variant.firmware }}
+          ls -R .pio/build/${{ matrix.variant.firmware }}/
           if [ -d "data" ]; then
             platformio run --target buildfs -e ${{ matrix.variant.firmware }}
           fi
