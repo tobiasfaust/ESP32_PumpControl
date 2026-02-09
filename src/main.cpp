@@ -75,19 +75,14 @@ void setup() {
 
   Config = new BaseConfig(configFS);
 
-#if defined(ARDUINO_USB_CDC_ON_BOOT)
-  // Serial is USB-CDC: no pins here
-  Serial.begin(115200);
-#else
   Serial.begin(115200,
                  SERIAL_8N1,
                  Config->GetSerialRx(),
                  Config->GetSerialTx());  // RX, TX, zb.: 33, 32
-#endif
 
   Serial.println("");
   Serial.println("ready");
-
+  
   Config->logN(1, "Start of ESP PumpControl");
 
   Config->logN(3, "***** File System *****");
@@ -116,12 +111,13 @@ void setup() {
   #endif
 
   Config->logN(1, "Starting Wifi and MQTT");
+  WiFi.setTxPower(WIFI_POWER_8_5dBm);
   mqtt = new MyMQTT(Config->GetMqttServer().c_str(),
                     Config->GetMqttPort(),
                     Config->GetMqttBasePath().c_str(),
                     Config->GetMqttRoot().c_str());
   mqtt->setCallback(myMQTTCallBack);
-  
+
   #ifdef USE_OLED
     mqtt->SetOled(oled);
   #endif
@@ -150,7 +146,7 @@ void setup() {
   mywebserver = new MyWebServer(sysFS, configFS, &server, &dns);
 
   //VStruct->OnForTimer("Valve1", 10); // Test
-
+ 
   Config->logN(1, "Setup finished");
 }
 

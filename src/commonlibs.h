@@ -27,22 +27,10 @@
 #include <helper.h>
 #include <ESPAsyncWebServer.h>
 #include <DNSServer.h>
+#include <board.h>
 
 #if defined(USE_OLED) || defined(USE_PCF8574) || defined(USE_TB6612)
   #define USE_I2C
-#endif
-
-#ifndef DEFAULT_I2C_SDA_PIN
-  #define DEFAULT_I2C_SDA_PIN 32
-#endif
-#ifndef DEFAULT_I2C_SCL_PIN
-  #define DEFAULT_I2C_SCL_PIN 33
-#endif
-#ifndef DEFAULT_VALVE1_PIN
-  #define DEFAULT_VALVE1_PIN 13
-#endif
-#ifndef DEFAULT_VALVE2_PIN
-  #define DEFAULT_VALVE2_PIN 17
 #endif
 
 #ifdef ESP8266

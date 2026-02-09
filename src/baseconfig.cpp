@@ -9,6 +9,8 @@ BaseConfig::BaseConfig(fs::LittleFSFS& configFS) :
   mqtt_UseRandomClientID(true),
   keepalive(0),
   debuglevel(3),
+  pin_sda(DEFAULT_I2C_SDA_PIN),
+  pin_scl(DEFAULT_I2C_SCL_PIN),
   pin_1wire(0),
   enable_oled(false),
   oled_type(0),
@@ -18,14 +20,10 @@ BaseConfig::BaseConfig(fs::LittleFSFS& configFS) :
   ventil3wege_port(0),
   max_parallel(0),
   useETH(0),
-  serial_rx(3),
-  serial_tx(1),
+  serial_rx(DEFAULT_SERIAL_RX_PIN),
+  serial_tx(DEFAULT_SERIAL_TX_PIN),
   max_threads(0)
-  {
-  
-    this->pin_sda = DEFAULT_I2C_SDA_PIN;
-    this->pin_scl = DEFAULT_I2C_SCL_PIN;
-  
+  {  
     this->disabledGPIO.setOffset(200); // offset for GPIO numbers
     LoadJsonConfig();
 }

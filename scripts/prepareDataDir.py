@@ -2,22 +2,16 @@ Import("env");
 import sys, os, re;
 from shutil import copytree;
 
-if (re.match(r".*ESP32.*", env["PIOENV"])):
-    print("prepareDataDir.py: ESP32 detected");
-    esptype = "esp32"
-elif (re.match(r".*ESP8266.*", env["PIOENV"])):
-    print("prepareDataDir.py: ESP8266 detected");
-    esptype = "esp8266"
+# Print environment variables for debugging
+#print("Environment dump:")
+#for key, value in env.items():
+#   print(f"  {key}: {value}")
+#print()
+
+
+data_master_dir = "esp_files";
+if (os.path.exists(data_master_dir +"/"+ env["BOARD"])):
+    copytree(data_master_dir +"/"+ env["BOARD"] + "/" , ".", dirs_exist_ok=True);
+    print("copy board specific files from:<" + data_master_dir +"/"+ env["BOARD"] + "> to <root>");
 else:
-    print("dont match any esp");
-    exit;
-
-if (esptype):
-    data_master_dir = "esp_files";
-    data_dir = "data/esp";
-
-    if (os.path.exists(data_master_dir +"/"+ esptype)):
-        copytree(data_master_dir +"/"+ esptype + "/" , data_dir, dirs_exist_ok=True);
-        print("copy :<" + data_master_dir +"/"+ esptype + "> to <" + data_dir + ">");
-    else:
-        print("path not exists: " + data_master_dir +"/"+ esptype + "/");
+    print("path not exists: " + data_master_dir +"/"+ env["BOARD"] + "/");

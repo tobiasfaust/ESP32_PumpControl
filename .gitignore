@@ -4,3 +4,5 @@
 data/esp
 data/handlefiles*
 data/webserial*
+include/board.h
+data/gpio.js

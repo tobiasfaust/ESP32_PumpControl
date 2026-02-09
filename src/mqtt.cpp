@@ -232,7 +232,7 @@ void MQTT::reconnect() {
   }
   snprintf(LWT, sizeof(LWT), "%s/state", this->mqtt_root.c_str());
 
-  Config->logN(1, "Attempting MQTT connection as %s ", topic);
+  Config->logN(1, "Attempting MQTT connection as %s at %s:%d", topic, Config->GetMqttServer().c_str(), Config->GetMqttPort());
 
   if (PubSubClient::connect(topic,
                             Config->GetMqttUsername().c_str(),
@@ -241,7 +241,7 @@ void MQTT::reconnect() {
                             true,
                             false,
                             "Offline")) {
-    Config->logN(1, "connected... ");
+    Config->logN(1, "MQTT Server connected... ");
     // Once connected, publish basics ...
     this->Publish_IP();
     this->Publish_String("ssid", WiFi.SSID(), false);
@@ -390,7 +390,7 @@ void MQTT::loop() {
 
   // WIFI ok, MQTT lost
   if (!PubSubClient::connected() && this->ConnectStatusWifi) {
-    if (millis() - mqttreconnect_lasttry > 10000) {
+    if (millis() - mqttreconnect_lasttry > 30000) { // try to reconnect every 30 seconds
       this->reconnect();
       this->mqttreconnect_lasttry = millis();
     }
