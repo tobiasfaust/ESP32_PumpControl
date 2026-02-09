@@ -111,7 +111,9 @@ void setup() {
   #endif
 
   Config->logN(1, "Starting Wifi and MQTT");
-  WiFi.setTxPower(WIFI_POWER_8_5dBm);
+  #ifdef WIFI_TX_POWER
+    WiFi.setTxPower(WIFI_TX_POWER);
+  #endif
   mqtt = new MyMQTT(Config->GetMqttServer().c_str(),
                     Config->GetMqttPort(),
                     Config->GetMqttBasePath().c_str(),
