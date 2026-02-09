@@ -83,6 +83,10 @@ jobs:
             --PathOfPartitionsCSV partitions.csv \
             >> "$GITHUB_OUTPUT"
 
+      - name: Display generated files
+        run: |
+          ls -R .pio/build/${{ matrix.variant.firmware }}/
+
       - name: Build merged Firmware
         if: ${{ steps.buildFw.outputs.command != 'None' }}
         run: |
