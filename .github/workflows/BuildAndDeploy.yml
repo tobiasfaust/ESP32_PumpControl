@@ -107,6 +107,7 @@ jobs:
                 --stage ${{ env.BRANCH_NAME }} \
                 --repository ${{ env.REPOSITORY }} \
                 --binarypath firmware/ \
+                --firmwarename ${{ matrix.variant.firmware }} \
                 --releasepath release \
                 --artifactpath artifacts \
                 --build ${{ github.run_number }} \
