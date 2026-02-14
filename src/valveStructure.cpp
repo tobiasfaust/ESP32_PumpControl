@@ -1,0 +1,330 @@
+#include "valveStructure.h"
+
+valveStructure::valveStructure(fs::LittleFSFS& configFS, uint8_t sda, uint8_t scl) :
+  configFS(configFS), pin_sda(sda), pin_scl(scl) {
+  this->ValveHW = new valveHardware(sda, scl);
+  if (Config->Enabled1Wire()) { this->ValveHW->add1WireDevice(Config->GetPin1Wire());}
+  
+  this->Valves = std::make_shared<std::vector<valve>>();
+  this->waitingQueue = new std::vector<waitingQueue_t>();
+
+  LoadJsonConfig();
+}
+
+void valveStructure::OnForTimer(String SubTopic, unsigned int duration) {
+  valve* v = this->GetValveItem(SubTopic);
+  if (v) { this->OnForTimer(v, duration); }
+}
+
+void valveStructure::OnForTimer(uint8_t Port, unsigned int duration) {
+  valve* v = this->GetValveItem(Port);
+  if (v) { this->OnForTimer(v, duration); }
+}
+
+void valveStructure::OnForTimer(valve* valve, unsigned int duration) {
+  if (!valve->GetUse4ParallelThreads() || Config->GetMaxThreads() == 0 || (Config->GetMaxThreads() > 0 && this->CountActiveThreads() < Config->GetMaxThreads())) {
+    if (valve && valve->OnForTimer(duration)) {
+      if (mqtt) {mqtt->Publish_Int("Threads", (int)this->CountActiveThreads(), false); }
+    }
+  } else if (valve) {
+    push_back_unique(this->waitingQueue, { valve->GetPort1(), duration }, true);
+    Config->logN(3, "MaxParallelThreads reached (max: %d), Port %d (duration: %d sec) has been added to queue", Config->GetMaxThreads(), valve->GetPort1(), duration);
+  }
+}
+
+void valveStructure::SetOn(String SubTopic) {
+  valve* v = this->GetValveItem(SubTopic);
+  if (v) { this->SetOn(v); }
+}
+
+void valveStructure::SetOn(uint8_t Port) {
+  valve* v = this->GetValveItem(Port);
+  if (v) { this->SetOn(v); }
+}
+
+void valveStructure::SetOn(valve* v) {
+  if (!v->GetUse4ParallelThreads() || Config->GetMaxThreads()==0 || (Config->GetMaxThreads() > 0 && this->CountActiveThreads() < Config->GetMaxThreads())) {
+    if (v && v->SetOn()) {
+      if (mqtt) { mqtt->Publish_Int("Threads", (int)this->CountActiveThreads(), false); }
+    }
+  } else if (v) {
+    push_back_unique(this->waitingQueue, { v->GetPort1(), 0 }, true);
+    Config->logN(3, "MaxParallelThreads reached (max: %d), Port %d has been added to queue", Config->GetMaxThreads(), v->GetPort1());
+  }
+}
+
+void valveStructure::SetOff(String SubTopic) {
+  valve* v = this->GetValveItem(SubTopic);
+  if (v) { this->SetOff(v); }
+}
+
+void valveStructure::SetOff(uint8_t Port) {
+  valve* v = this->GetValveItem(Port);
+  if (v) { this->SetOff(v); }
+}
+
+void valveStructure::SetOff(valve* v) {
+  v->SetOff(); 
+  // check if there are waiting items in the queue
+  if (this->waitingQueue->size() > 0) {
+    waitingQueue_t item = this->waitingQueue->front();
+    this->waitingQueue->erase(this->waitingQueue->begin());
+    if (item.duration == 0) {
+      Config->logN(3, "processing Port %d from queue with 'SetOn'", item.Port); 
+      this->SetOn(item.Port);
+    } else {
+      Config->logN(3, "processing Port %d from queue with 'OnForTimer' and duration %d sec", item.Port, item.duration);
+      this->OnForTimer(item.Port, item.duration); 
+    }
+  }
+  if (mqtt) { mqtt->Publish_Int("Threads", (int)this->CountActiveThreads(), false); }
+}
+
+bool valveStructure::GetState(uint8_t Port) {
+  if (GetValveItem(Port)) { return GetValveItem(Port)->GetActive(); }
+  return NULL;
+}
+
+bool valveStructure::GetEnabled(uint8_t Port) {
+  if (GetValveItem(Port)) { return GetValveItem(Port)->GetEnabled();}
+  return NULL;
+}
+
+void valveStructure::SetEnable(uint8_t Port, bool state) {
+  if (GetValveItem(Port)) { GetValveItem(Port)->SetActive(state); }
+}
+
+void valveStructure::loop() {
+  for (uint8_t i=0; i<Valves->size(); i++) {
+    Valves->at(i).loop();
+  }
+
+  if (Config->Enabled1Wire() && Config->GetPin1Wire() != this->ValveHW->GetPin1wire()) {
+    Config->logN(2, "Der 1Wire hat sich geändert, initiiere den 1Wire Bus neu.....");
+    ValveHW->add1WireDevice(Config->GetPin1Wire());
+  }
+}
+
+void valveStructure::ReceiveMQTT(String topic, unsigned int value) {
+  String SubTopic(topic); // nur das konfigurierte Subtopic, zb. "valve1"
+  SubTopic = SubTopic.substring(SubTopic.lastIndexOf("/", SubTopic.lastIndexOf("/")-1)+1, SubTopic.lastIndexOf("/"));
+  if (topic == "/test/on-for-timer") { Valves->at(0).OnForTimer(value); }
+
+  if (topic.startsWith(mqtt->getTopic("", false)) && topic.endsWith("on-for-timer")) { this->OnForTimer(SubTopic, value); }
+  if (topic.startsWith(mqtt->getTopic("", false)) && topic.endsWith("setstate") && value==1) { this->SetOn(SubTopic); }
+  if (topic.startsWith(mqtt->getTopic("", false)) && topic.endsWith("setstate") && value==0) { this->SetOff(SubTopic); }
+  if (topic.startsWith(mqtt->getTopic("", false)) && topic.endsWith("state") && value==0) { this->SetOff(SubTopic); }
+  if (topic.endsWith("state")) { this->handleDeps(topic, value); } 
+}
+
+void valveStructure::handleDeps(String topic, unsigned int value) {
+  // topic: PumpControlDev/Valve1/state
+  // Check auf Ventile, die auf Relationen ansprechen sollen
+  String BaseTopic(topic); // das komplette topic ohne Kommando, zb. "PumpControlDev/Valve1"
+  BaseTopic = BaseTopic.substring(0, BaseTopic.lastIndexOf("/"));
+  
+  std::vector<uint8_t> Ports;
+  ValveRel->GetPortDependencies(&Ports, BaseTopic);
+  for (uint8_t i=0; i<Ports.size(); i++) {
+    if (value == 1 && topic.endsWith("state")) {
+      if (!ValveRel->CheckEnabledByBypass(Ports.at(i), BaseTopic) || !Config->Enabled3Wege() || 
+         (ValveRel->CheckEnabledByBypass(Ports.at(i), BaseTopic) && Config->Enabled3Wege() && this->GetState(Config->Get3WegePort()))) { 
+        this->SetOn(Ports.at(i));
+        ValveRel->AddSubscriber(Ports.at(i), BaseTopic);
+      }
+    } else if (value == 0 && topic.endsWith("state")) {
+      ValveRel->DelSubscriber(BaseTopic);
+      if(ValveRel->CountActiveSubscribers(Ports.at(i)) == 0) { this->SetOff(Ports.at(i)); }
+    }
+  }
+}
+
+valve* valveStructure::GetValveItem(uint8_t Port) {
+  for (uint8_t i=0; i<Valves->size(); i++) {
+    if (Valves->at(i).GetPort1() == Port) {return &Valves->at(i);}
+  }
+  return NULL;
+}
+
+valve* valveStructure::GetValveItem(String SubTopic) {
+  for (uint8_t i=0; i<Valves->size(); i++) {
+    if (Valves->at(i).subtopic == SubTopic) { return &Valves->at(i);}
+  }
+  return NULL;
+}
+
+uint8_t valveStructure::CountActiveThreads() {
+  uint8_t count = 0;
+  for (uint8_t i=0; i<Valves->size(); i++) {
+    if (Valves->at(i).GetActive() && Valves->at(i).GetUse4ParallelThreads() && (Valves->at(i).GetPort1() != Config->Get3WegePort() || !Config->Enabled3Wege() )) {count++;}
+  }
+  return count;
+}
+
+uint8_t valveStructure::Get1WireCountDevices() {
+  return this->ValveHW->Get1WireCountDevices();
+}
+
+uint8_t valveStructure::Refresh1WireDevices() {
+  return this->ValveHW->Refresh1WireDevices();
+}
+
+/* load json config from littlefs */
+void valveStructure::LoadJsonConfig() {
+  bool loadDefaultConfig = false;
+  Config->disabledGPIO.deleteAll(BaseConfig::GpioIdentifier::VALVES);
+
+  if (!Valves->empty()) { 
+    Valves->erase(Valves->begin(), Valves->end());
+  }
+
+  if (configFS.exists("/valveconfig.json")) {
+    //file exists, reading and loading
+    Config->logN(3, "reading valveconfig.json file....");
+    File configFile = configFS.open("/valveconfig.json", "r");
+    if (configFile) {
+      Config->logN(3, "valveconfig.json is now open");
+
+      ReadBufferingStream stream{configFile, 64};
+      stream.find("\"data\":[");
+      do {
+        JsonDocument elem;
+        DeserializationError error = deserializeJson(elem, stream); 
+
+        if (error) {
+          loadDefaultConfig = true;
+          Config->logN(1, "Failed to parse valveconfig.json data: %s, load default config", error.c_str()); 
+        } else {
+          // Print the result
+          Config->logN(4, "parsing JSON ok");
+          Config->log(5, elem);
+
+          valve myValve;
+            
+          if (elem["port_a"] && elem["port_a"].as<int>() > 0) { myValve.AddPort1(this->ValveHW, elem["port_a"].as<int>()); }
+          if (elem["type"]) {myValve.SetValveType(elem["type"].as<String>()); }
+          if (elem["active"] && elem["active"] == 1) {myValve.SetActive(true);} else {myValve.SetActive(false);}
+          if (elem["mqtttopic"]) {myValve.subtopic = elem["mqtttopic"].as<String>();}
+          if (elem["port_b"] && elem["port_b"].as<int>() > 0) { myValve.AddPort2(ValveHW, elem["port_b"].as<int>());}
+          if (elem["imp_a"]) { myValve.port1ms = _max(10, _min(elem["imp_a"].as<int>(), 999));}
+          if (elem["imp_b"]) { myValve.port2ms = _max(10, _min(elem["imp_b"].as<int>(), 999));}
+          if (elem["reverse"] && elem["reverse"] == 1) {myValve.SetReverse(true);} else {myValve.SetReverse(false);}
+          if (elem["use4parallelthreads"] && elem["use4parallelthreads"] == 1) {myValve.SetUse4ParallelThreads(true);} else {myValve.SetUse4ParallelThreads(false);}
+          if (elem["autooff"] && elem["autooff"].as<int>() > 0) { myValve.SetAutoOff(elem["autooff"].as<int>()); }
+
+          // initiiere bistabile ventile
+          if (myValve.GetValveType() == "b") {
+            myValve.OnForTimer(1);
+          }
+
+          Valves->push_back(myValve);
+          
+          if (myValve.GetPort1() >=200) {
+            // gpio used - mark this gpio as disabled for other purposes
+            Config->disabledGPIO.addValue(myValve.GetPort1() - 200, BaseConfig::GpioIdentifier::VALVES);
+          }
+        }
+
+      } while (stream.findUntil(",","]"));    
+      configFile.close(); 
+    } else {
+      loadDefaultConfig = true;
+      Config->logN(1, "failed to load valveconfig.json, load default config");
+    }
+  } else {
+    loadDefaultConfig = true;
+    Config->logN(3, "valveconfig.json File not exists, load default config");
+  }
+  
+  if (loadDefaultConfig) {
+    Config->logN(3, "lade Ventile DefaultConfig");
+    valve v;
+    
+    uint8_t defaultPort1 = DEFAULT_VALVE1_PIN;
+    uint8_t defaultPort2 = DEFAULT_VALVE2_PIN;
+
+    v.init(this->ValveHW, defaultPort1 + 200, "Valve1");
+    this->Valves->push_back(v);
+    
+    v.init(this->ValveHW, defaultPort2 + 200, "Valve2");
+    this->Valves->push_back(v);
+  }
+  Config->logN(3, "%d valves are now loaded ", this->Valves->size());
+}
+
+void valveStructure::GetInitData(JsonDocument& json) {
+  json["data"].to<JsonObject>();
+  JsonArray row = json["data"]["rows"].to<JsonArray>();
+  
+  for(uint8_t i=0; i<Valves->size(); i++) {
+    row[i]["active"] = (Valves->at(i).GetEnabled()?1:0);
+    row[i]["mqtttopic"] = Valves->at(i).subtopic;
+
+    if (Valves->at(i).GetValveType() == "b") {
+      row[i]["typ_n"]["className"] = "hide";
+    } else if (Valves->at(i).GetValveType() == "n") {
+      row[i]["typ_b"]["className"] = "hide";
+    }
+      
+    row[i]["AllePorts_PortA"] = Valves->at(i).GetPort1();
+    row[i]["imp_a"] = Valves->at(i).port1ms;
+    row[i]["AllePorts_PortB"] = Valves->at(i).GetPort2();
+    row[i]["imp_b"] = Valves->at(i).port2ms;
+    row[i]["AllePorts"] = Valves->at(i).GetPort1(); 
+
+    row[i]["type_opt_n"] = (Valves->at(i).GetValveType()=="n"?1:0);
+    row[i]["type_opt_b"] = (Valves->at(i).GetValveType()=="b"?1:0);
+
+    row[i]["reverse"] = (Valves->at(i).GetReverse()?1:0);
+    row[i]["use4parallelthreads"] = (Valves->at(i).GetUse4ParallelThreads()?1:0);
+    row[i]["autooff"] = Valves->at(i).GetAutoOff();
+    row[i]["action"] = (Valves->at(i).GetActive()?"Set Off":"Set On");
+  }
+
+  json["response"].to<JsonObject>();
+  json["response"]["status"] = 1;
+  json["response"]["text"] = "successful";
+}
+
+void valveStructure::GetInitData1Wire(JsonDocument& json) {
+  if (Config->Enabled1Wire()) { ValveHW->GetInitData1Wire(json); }
+}
+
+void valveStructure::getWebJsParameter(JsonDocument& json) {
+  String availablePorts("[");
+  
+#ifdef USE_I2C
+  uint8_t count=0;
+  for (uint8_t p=1; p<=254; p++) {
+    if (ValveHW->IsValidPort(p) && (I2Cdetect->i2cIsPresent(ValveHW->GetI2CAddress(p)) || ValveHW->GetI2CAddress(p) == 0x01) && (!Config->EnabledOled() || Config->GetI2cOLED()!=ValveHW->GetI2CAddress(p))) {
+      // i2cDetect muss den ic2Port finden oder es ist 0x01 OneWire 
+      //ohne die OLED i2c Adresse
+      availablePorts += String((count>0?",":"")) + String(p);
+      count++;
+    }
+  }
+#elif defined(USE_ONEWIRE)
+  uint8_t count=0;
+  for (uint8_t p=1; p<=254; p++) {
+    if (ValveHW->IsValidPort(p) && ValveHW->GetI2CAddress(p) == 0x01 && (!Config->EnabledOled() || Config->GetI2cOLED()!=ValveHW->GetI2CAddress(p))) {
+      // i2cDetect muss den ic2Port finden oder es ist 0x01 OneWire 
+      //ohne die OLED i2c Adresse
+      availablePorts += String((count>0?",":"")) + String(p);
+      count++;
+    }
+  }
+#endif
+
+  availablePorts.concat("]");
+  json["js"]["availablePorts"] = availablePorts;
+
+  //konfigurierte Ports / Namen
+  String configuredPorts("[");
+  for(uint8_t i=0; i < Valves->size(); i++) {
+    configuredPorts += String("{\"port\":") + String(Valves->at(i).GetPort1()) + String(", \"name\":\"") + Valves->at(i).subtopic + String("\"}") + String((i<Valves->size()-1?",":""));
+  }
+  configuredPorts.concat("]");
+
+  json["js"]["configuredPorts"] = configuredPorts;
+
+}

@@ -1,0 +1,61 @@
+<<<<<<< HEAD
+CAM-Ausgabe für Projekt / CAM Output for Project ESP_PumpControl.T3001
+Ausgabe am / Output Date 19. Mrz 2025, 11:00h
+Projekt erzeugt mit / Project created with TARGET 32.2.0.72 discover
+Ausgabe erzeugt mit / Output created with TARGET 3001! V32.2.0.72
+Projekt von TARGET NC-Edition: Kommerzielle Nutzung ist strafbar!
+Project created with TARGET NC edition: Commercial use will be punished!
+Lieferanschrift / Delivery address:
+=======
+CAM-Ausgabe für aktuelles Projekt ESP_PumpControl.T3001
+Ausgabe am 24. Nov 2021, 14:31h
+Aktuelles Projekt erzeugt mit TARGET 30.3.0.82 discover
+Ausgabe erzeugt mit TARGET 3001! V30.3.0.82
+Aktuelles Projekt von TARGET NC-Edition: Kommerzielle Nutzung ist strafbar!
+LIEFERANSCHRIFT:
+>>>>>>> origin/prelive
+  
+  
+  
+  D- 
+  Tel: 
+  FAX: 
+  eMail: 
+<<<<<<< HEAD
+Größe der Platine / Size of PCB: 70 mm x 85 mm
+Dicke der Platine / Thickness of PCB: 1,6 mm
+KupferDicke / Copper thickness: 35 µm
+
+Beschreibung der erzeugten Dateien / Description of generated files:
+
+ESP_PumpControl.Top = 16 = Kupfer oben / Copper top L1   ( *.Top )
+ESP_PumpControl.Bot = 2 = Kupfer unten / Copper bottom L2   ( *.Bot )
+ESP_PumpControl.Tool = Bohrerliste / Drill tool list
+ESP_PumpControl.Drill = Durchkontaktierte Bohrungen / Plated through drills
+ESP_PumpControl.Outline = 23 = Platinen-Umriss / PCB outline   ( *.Outline )
+ESP_PumpControl.StopTop = 18 = Lötstoppmaske oben / Solder stop top   ( *.StopTop )
+ESP_PumpControl.StopBot = 4 = Lötstoppmaske unten / Solder stop bottom   ( *.StopBot )
+ESP_PumpControl.PosiTop = 21 = Bestückungsdruck oben / Silk screen top   ( *.PosiTop )
+ESP_PumpControl.NamesTop = 33 = Bauteilnamen oben / Names top   ( extra in Datei: *.NamesTop )
+ESP_PumpControl.ValuesTop = 32 = Bauteilwerte oben / Values top   ( extra in Datei: *.ValuesTop )
+ESP_PumpControl.NamesBot = 31 = Bauteilnamen unten / Names bottom   ( extra in Datei: *.NamesBot )
+
+
+Achtung: Dünnste Schrift (Font too thin) ist kleiner 0,150mm: (0,130 bei 112,957554 | -35,670656) auf Ebene 32
+=======
+Größe der Platine: 70 mm x 85 mm
+
+Folgend die Beschreibung der erzeugten Dateien:
+
+ESP_PumpControl.Top = 16 = Kupfer oben L1   ( *.Top )
+ESP_PumpControl.Bot = 2 = Kupfer unten L2   ( *.Bot )
+ESP_PumpControl.Tool = Bohrerliste
+ESP_PumpControl.Drill = Durchkontaktierte Bohrungen
+ESP_PumpControl.Outline = 23 = Platinen-Umriss   ( *.Outline )
+ESP_PumpControl.StopTop = 18 = Lötstoppmaske oben   ( *.StopTop )
+ESP_PumpControl.StopBot = 4 = Lötstoppmaske unten   ( *.StopBot )
+ESP_PumpControl.PosiTop = 21 = Bestückungsdruck oben   ( *.PosiTop )
+ESP_PumpControl.X3T = Gerber X3 Bauteil-Informationen oben
+ESP_PumpControl.X3B = Gerber X3 Bauteil-Informationen unten
+
+>>>>>>> origin/prelive

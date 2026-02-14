@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'/>
+    <meta charset='utf-8'>
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css' >
+    <link rel='stylesheet' type='text/css' href='./Style.css'>
+    <script language='javascript' type='text/javascript' src='./esp/gpio.js'></script>
+
+    <script language='javascript' type='module' src='./Javascript.js'></script>
+    <script language='javascript' type='module' src='./valvefunctions.js'></script>
+    <script language='javascript' type='module' src='./relations.js'></script>
+    
+    
+    <script type='module'>
+      import { init } from './relations.js';
+      import { onSubmit, radioselection, initDataValues } from './Javascript.js';
+      import { addrow, delrow } from './valvefunctions.js';
+      window.onSubmit = onSubmit;
+      window.radioselection = radioselection;
+      window.initDataValues = initDataValues;
+      window.addrow = addrow;	
+      window.delrow = delrow;
+
+      window.addEventListener('DOMContentLoaded', init, false);
+
+      import { initExternalSite } from './navi.js';
+      window.initExternalSite = initExternalSite;
+      window.addEventListener('DOMContentLoaded', () => initExternalSite(document), false);
+    </script>
+
+    <title>Pumpcontrol</title>
+  </head>
+  <body>
+    <div id="loader"></div>    
+    <button onclick="onSubmit('DataForm', 'active.*');initDataValues();" style="position: fixed; top: 0; left: 0;">Save</button>
+    <button onclick="addrow('maintable')" style="position: fixed; top: 30px; left: 0;">&#10010; add new relation</button>
+
+    <div id="needToSave" class="hide needToSave">
+      <i class="fa fa-exclamation-triangle" style="color: gold; font-size: 20px;"></i>
+      <span style="font-size: 70%;">Änderungen nicht gespeichert</span>
+    </div>
+
+    <form id='DataForm'>
+      <table id='maintable' class='editorDemoTable'>
+        <thead>
+          <tr>
+            <td style='width: 25px;'>Nr</td>
+            <td style='width: 25px;'>Active</td>
+            <td style='width: 250px;'>Trigger Topic</td>
+            <td style='width: 250px;'>Port</td>
+            <td style='width: 25px;'>Enable if Bypass</td>
+            <td style='width: 25px;'>Delete</td>
+
+          </tr>
+        </thead>
+      <tbody>
+        <template id="rows">
+          <tr>
+            <td></td>
+            <td>
+              <input id="active" type='checkbox' name='active'>
+            </td>
+
+            <td><input id='mqtttopic' name='mqtttopic' type='text' size='30' spellcheck='false'/></td>
+            <td><input id='ConfiguredPort' name='port' type='number' min='10' max='999'/></td>
+          
+            <td>
+              <input type='checkbox' name='EnableByBypass' id='EnableByBypass'>
+            </td>
+              
+            <td><input type='button' value='&#10008;' onclick='delrow(this)'></td>
+          </tr>
+        </template>
+      </tbody>
+      </table>
+    </form><br />
+      
+    <br>
+    <div id="footer"></div>
+  </body>
+</html>

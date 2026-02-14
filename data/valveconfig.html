@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'/>
+    <meta charset='utf-8'/>
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css' >
+    <link rel='stylesheet' type='text/css' href='./Style.css'/>
+    <script language='javascript' type='text/javascript' src='./esp/gpio.js'></script>
+    
+
+    <script language='javascript' type='module' src='./Javascript.js'></script>
+    <script language='javascript' type='module' src='./valvefunctions.js'></script>
+    <script language='javascript' type='module' src='./valveconfig.js'></script>
+    
+    
+    <script type='module'>
+      import { init } from './valveconfig.js';
+      import { onSubmit, radioselection, initDataValues } from './Javascript.js';
+      import { addrow, delrow, ChangeEnabled, ChangeType, ChangeValve } from './valvefunctions.js';
+      window.onSubmit = onSubmit;
+      window.radioselection = radioselection;
+      window.initDataValues = initDataValues;
+      window.addrow = addrow;	
+      window.delrow = delrow;
+      window.ChangeEnabled = ChangeEnabled;
+      window.ChangeType = ChangeType;
+      window.ChangeValve = ChangeValve;
+
+      window.addEventListener('DOMContentLoaded', init, false);
+
+      import { initExternalSite } from './navi.js';
+      window.initExternalSite = initExternalSite;
+      window.addEventListener('DOMContentLoaded', () => initExternalSite(document), false);
+    </script>
+
+    <title>Pumpcontrol</title>
+  </head>
+  <body>
+    <div id="loader"></div>
+    <button onclick="onSubmit('DataForm', 'active.*');initDataValues();" style="position: fixed; top: 0; left: 0;">Save</button>
+    <button onclick="addrow('maintable')" style="position: fixed; top: 30px; left: 0;">&#10010; add new Port</button>
+
+    <div id="needToSave" class="hide needToSave">
+      <i class="fa fa-exclamation-triangle" style="color: gold; font-size: 20px;"></i>
+      <span style="font-size: 70%;">Änderungen nicht gespeichert</span>
+    </div>
+
+    <form id='DataForm'>
+    <table id='maintable' class='editorDemoTable'>
+    <thead>
+    <tr>
+    <td style='width: 25px;'>Nr</td>
+    <td style='width: 25px;'>Active</td>
+    <td style='width: 250px;'>MQTT SubTopic</td>
+    <td style='width: 210 px;'>Port</td>
+    <td style='width: 80px;'>Type</td>
+    <td style='width: 80px;'>
+      <span title="Reverse the valve action, e.g. on=close, off=open">Reverse
+        <i class="fa fa-question-circle" style="font-size: 12px; cursor: pointer; color: gold;"></i>
+      </span>
+    </td>
+    <td style='width: 80px;'>
+      <span title="Use this valve for calculating parallel threads">use4p
+        <i class="fa fa-question-circle" style="font-size: 12px; cursor: pointer; color: gold;"></i>
+      </span>
+    </td>
+    <td style='width: 80px;'>
+      <span title="Automatically turn off the valve after this time (ms)">AutoOff
+        <i class="fa fa-question-circle" style="font-size: 12px; cursor: pointer; color: gold;"></i>
+      </span>
+    </td>
+    <td style='width: 25px;'>Delete</td>
+    <td style='width: 25px;'>Action</td>
+    </tr>
+    </thead>
+    <tbody>
+  
+      <template id="rows">
+      <tr>
+        <td></td>
+        <td>
+          <input type='checkbox' name='active' onclick='ChangeEnabled(this)' id='active'/>
+        </td>
+        <td><input id="mqtttopic" size='30' name='mqtttopic' type='text' spellcheck='false'/></td>
+
+        <td id='tdport'>
+          <div id="typ_b">
+            <div id='PortA'>
+              <div class='inline'>
+                <input id='AllePorts_PortA' name='port_a' type='number' min='0' max='220'/>
+                <label>for</label>
+                <input id='imp_a' name='imp_a' type='number' min='10' max='999'/>
+                <label>ms</label>
+              </div>
+              </div>
+              <div id='PortB'>
+                <div class='inline'>
+                  <input id='AllePorts_PortB' name='port_b' type='number' min='0' max='220'/>
+                  <label>for</label>
+                  <input id='imp_b' name='imp_b' type='number' min='10' max='999'/>
+                  <label>ms</label>
+                  </div>
+            </div>
+          </div>
+  
+          <div id="typ_n">
+            <div id='Port'>
+              <input id='AllePorts' name='port_a' type='number' min='0' max='220'/>
+            </div>
+          </div> 
+        </td>
+  
+        <td>
+          <select id='type_select' name='type' onchange='ChangeType(this)'>
+            <option id='type_opt_n' value='n'>normal</option>
+            <option id='type_opt_b' value='b'>bistabil</option>
+          </select>         
+        </td>
+  
+        <td>
+          <input type='checkbox' name='reverse' id='reverse'/>
+        </td>
+
+        <td>
+          <input type='checkbox' name='use4parallelthreads' id='use4parallelthreads'/>
+        </td>
+  
+        <td>
+            <input id='autooff' name='autooff' type='number' min='0' max='65000' style='width: 4em'/>
+        </td>
+      
+        <td><button style='font-size:18px' class='fa' title='delete it' onclick='delrow(this)'>&#xf014</button></td>
+  
+        <td>
+          <input type='button' id='action' onclick='ChangeValve(this)'/>
+        </td>
+  
+      </tr>
+  
+      </template>
+  
+    </tbody>
+    </table>
+    </form>
+
+    <br>
+    <div id="footer"></div>
+  </body>
+</html>

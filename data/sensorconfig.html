@@ -1,0 +1,261 @@
+<!DOCTYPE html> 
+<html lang="en">
+  <head>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'/>
+    <meta charset='utf-8'/>
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css' >
+    <link rel='stylesheet' type='text/css' href='./Style.css'/>
+    <script language='javascript' type='text/javascript' src='./esp/gpio.js'></script>
+    <script language='javascript' type='module' src='./Javascript.js'></script>
+
+    <script language='javascript' type='module' src='./valvefunctions.js'></script>
+    <script language='javascript' type='module' src='./sensorconfig.js'></script>
+    
+    
+    <script type='module'>
+      import { init } from './sensorconfig.js';
+      import { onSubmit, radioselection, initDataValues } from './Javascript.js';
+      import { addrow, delrow } from './valvefunctions.js';
+      window.onSubmit = onSubmit;
+      window.radioselection = radioselection;
+      window.initDataValues = initDataValues;
+      window.addrow = addrow;	
+      window.delrow = delrow;
+
+      window.addEventListener('DOMContentLoaded', init, false);
+
+      import { initExternalSite } from './navi.js';
+      window.initExternalSite = initExternalSite;
+      window.addEventListener('DOMContentLoaded', () => initExternalSite(document), false);
+    </script>
+
+    <title>Pumpcontrol</title>
+  </head>
+  <body>
+    <div id="loader"></div>
+    <button onclick="onSubmit('DataForm', 'mqtttopic.*');initDataValues();" style="position: fixed; top: 0; left: 0;">Save</button>
+    
+    <div id="needToSave" class="hide needToSave">
+      <i class="fa fa-exclamation-triangle" style="color: gold; font-size: 20px;"></i>
+      <span style="font-size: 70%;">Changes not saved</span>
+    </div>
+
+    <form id='DataForm'>
+      <table id='maintable' class='editorDemoTable'>
+        <thead>
+          <tr>
+            <td style='width: 250px;'>Name</td>
+            <td style='width: 200px;'>Wert</td>
+          </tr>
+        </thead>
+        <tbody>
+
+          <tr>
+            <td colspan='2'>
+              <div class='inline'>
+                <input type='radio' id='sel0' name='selection' value='none' onclick="radioselection([],['all_1','all_2','all_3','analog_0','analog_1','analog_2','hcsr04_1','hcsr04_2','hcsr04_3','hcsr04_4','extern_1','ads1115_0','ads1115_1'])"/>
+                <label for='sel0'>No level measurement</label>
+              </div>
+
+              <div class='inline'>
+                <input type='radio' id='sel1' name='selection' value='hcsr04' onclick="radioselection(['all_1','all_2','all_3','hcsr04_1','hcsr04_2','hcsr04_3','hcsr04_4'],['analog_0','analog_1','analog_2','extern_1','ads1115_0','ads1115_1'])"/>
+                <label for='sel1'>Level measurement with ultrasonic sensor HC-SR04</label>
+              </div>
+
+              <div class='inline'>
+                <input type='radio' id='sel2' name='selection' value='analog' onclick="radioselection(['all_1','all_2','all_3','analog_0','analog_1','analog_2'],['hcsr04_1','hcsr04_2','hcsr04_3','hcsr04_4','extern_1','ads1115_0','ads1115_1'])"/>
+                <label for='sel2'>level measurement with analog signal of ESP</label>
+              </div>
+
+                <div id="sel_ADS1115" class='inline'>
+                  <input type='radio' id='sel3' name='selection' value='ads1115' onclick="radioselection(['all_1','all_2','all_3','analog_1','analog_2','ads1115_0','ads1115_1'],['hcsr04_1','hcsr04_2','hcsr04_3','hcsr04_4','extern_1','analog_0'])"/>
+                  <label for='sel3'>level measurement with analog signal of ADS1115</label>
+                </div>
+
+
+              <div class='inline'>
+                <input type='radio' id='sel4' name='selection' value='extern' onclick="radioselection(['all_2','all_3','extern_1'],['all_1','hcsr04_1','hcsr04_2','hcsr04_3','hcsr04_4','analog_0','analog_1','analog_2','ads1115_0','ads1115_1'])"/>
+                <label for='sel4'>level measurement with external signal via MQTT</label>
+              </div>
+
+            </td>
+          </tr>
+
+          <tr id='all_1'>
+            <td>measurement interval</td>
+            <td>
+              <input id="measurecycle" min='0' max='254' name='measurecycle' type='number' />
+            </td>
+          </tr>
+
+          <tr id='hcsr04_1'>
+            <td>Distance Sensor min (in cm)</td>
+            <td>
+              <input id="measureDistMin" min='0' max='254' name='measureDistMin' type='number'/>
+            </td>
+          </tr>
+
+          <tr id='hcsr04_2'>
+            <td>Distance Sensor max (in cm)</td>
+            <td>
+              <input id='measureDistMax' min='0' max='254' name='measureDistMax' type='number'/>
+              </td>
+          </tr>
+
+          <tr id='hcsr04_3'>
+            <td>Pin HC-SR04 Trigger</td>
+            <td>
+              <input min='0' max='15' id='GpioPin_pinhcsr04trigger' name='pinhcsr04trigger' type='number'/>
+            </td>
+          </tr>
+
+          <tr id='hcsr04_4'>
+            <td>Pin HC-SR04 Echo</td>
+            <td>
+              <input min='0' max='15' id='GpioPin_pinhcsr04echo' name='pinhcsr04echo' type='number' />
+            </td>
+          </tr>
+
+          <tr id='analog_0'>
+            <td>GPIO where the signal is connected</td>
+            <td>
+              <input min='0' size='15' id='AnalogPin_1' name='pinanalog' type='number' />
+              </td>
+          </tr>
+
+          <tr id='ads1115_0'>
+            <td>i2c address of ADS1115</td>
+              <td>
+                <input id="ads1115_i2c" maxlength='2' name='ads1115_i2c' type='text' spellcheck='false'/>
+              </td>
+            </tr>
+
+            <tr id='ads1115_1'>
+              <td>Port number on ADS1115 where the signal is connected</td>
+              <td>
+                <input id="ads1115_port" min='0' max='4' size='15'  name='ads1115_port' type='number'/>
+                </td>
+            </tr>
+
+          <tr id='analog_1'>
+            <td>Calibration: 0% corresponds to RAW value</td>
+            <td>
+              <input id="a_measureDistMin" min='0' size='5' name='measureDistMin' type='number'/>
+            </td>
+          </tr>
+
+          <tr id='analog_2'>
+            <td>Calibration: 100% corresponds to RAW value</td>
+            <td>
+              <input id="a_measureDistMax" min='0' name='measureDistMax' type='number'/>
+            </td>
+          </tr>
+
+          <tr id='extern_1'>
+            <td>MQTT-topic of external sensor (level in %)</td>
+            <td>
+              <input id="externalSensor" size='30' name='externalSensor' type='text' spellcheck='false'/>
+            </td>
+          </tr>
+
+          <tr id='all_2'>
+            <td >Sensor threshold Min for 3-way valve</td>
+            <td>
+              <input id="threshold_min" min='0' max='254' name='threshold_min' type='number'/>
+            </td>
+          </tr>
+
+          <tr id='all_3'>
+            <td>Sensor threshold Max for 3-way valve</td>
+            <td>
+              <input id="threshold_max" min='0' max='254' name='threshold_max' type='number'/>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p/>
+
+      <table id="moistureTable" class='editorDemoTable'>
+        <thead>
+          <tr>
+            <td style='width: 130px;'>
+              <input type='radio' id='sel_moisture1' name='sel_moisture' value='off' onclick="radioselection([],['moisture'])"/>
+              <label for='sel_moisture1'>Off</label>
+              <input type='radio' id='sel_moisture2' name='sel_moisture' value='on' onclick="radioselection(['moisture'],[])"/>
+              <label for='sel_moisture2'>On</label>
+            </td>
+            <td>soil moisture sensors via ADS1115</td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr id='moisture'>
+            <td valign="top" class="noborder">  
+              <input type='button' value='&#10010; add new Port' onclick="addrow('moistureRows')"/>
+            </td>
+            <td class="noborder">
+              <table id='moistureRows' class='editorDemoTable'>
+                <thead>
+                <tr>
+                  <td style='width: 25px;'>Nr</td>
+                  <td style='width: 250px;'>
+                    <span title="MQTT topic where the value will be published">MQTT Topic
+                      <i class="fa fa-question-circle" style="font-size: 12px; cursor: pointer; color: gold;"></i>
+                    </span>
+                  </td>
+                  <td style='width: 100px;'>
+                    <span title="i2c address of ADS1115">ADS1115 Addr
+                      <i class="fa fa-question-circle" style="font-size: 12px; cursor: pointer; color: gold;"></i>
+                    </span>
+                  </td>
+                  <td style='width: 100px;'>
+                    <span title="connected to port of ADS1115 (0-3)">Port
+                      <i class="fa fa-question-circle" style="font-size: 12px; cursor: pointer; color: gold;"></i>
+                    </span>
+                  </td>
+                  
+                  <td style="width: 100px;">
+                    <span title="Calibration: 0% corresponds to RAW value">Calibration: Min
+                      <i class="fa fa-question-circle" style="font-size: 12px; cursor: pointer; color: gold;"></i>
+                    </span>
+                  </td>
+                  <td style="width: 100px;">
+                    <span title="Calibration: 100% corresponds to RAW value">Calibration: Max
+                      <i class="fa fa-question-circle" style="font-size: 12px; cursor: pointer; color: gold;"></i>
+                    </span>
+                  </td>
+            
+                  <td style="width: 100px;">
+                    <span title="current measured value">Value
+                      <i class="fa fa-question-circle" style="font-size: 12px; cursor: pointer; color: gold;"></i>
+                    </span>
+                  </td>
+
+                  <td style='width: 100px;'>Delete</td>
+                </tr>
+                </thead>
+                <tbody>
+                  <template id="rows">
+                    <tr>
+                      <td></td>
+                      <td><input id='mqtttopic' name='mqtttopic' type='text' size='30' placeholder='topic' spellcheck='false'/></td>
+                      <td><input id="ads_addr" size='3' maxlength='2' name='ads_addr' type='text' spellcheck='false'/></td>
+                      <td><input id='ads_port' name='ads_port' type='number' min='0' max='4' style='width: 4em'/></td>
+                      <td><input id='ads_min' name='ads_min' type='number' min='0' max='3300' style='width: 4em'/></td>
+                      <td><input id='ads_max' name='ads_max' type='number' min='0' max='3300' style='width: 4em'/></td>
+                      <td><span id='ads_value' class='ajaxchange'>-</span></td>
+                      <td><input type='button' value='&#10008;' onclick='delrow(this)'/></td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </td>
+          </tr>
+        </tbody>
+      </table>  
+    </form>
+
+    <br>
+    <div id="footer"></div>
+  </body>
+</html>
