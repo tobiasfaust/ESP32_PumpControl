@@ -6,12 +6,24 @@
 #include <StreamUtils.h>
 #include <iomanip>  // needed by setw / setfill
 #include <sstream>
+#include <vectorlist.h>
 #include <_Release.h>
 
 class BaseConfig {
 
   public:
-    BaseConfig();
+
+    // Speaking identifiers
+    enum class GpioIdentifier : uint8_t {
+      BASECONFIG = 0,
+      FLOWCONTROL,
+      SENSOR,
+      VALVES,
+      ETH,
+      OTHER
+    };
+
+    BaseConfig(fs::LittleFSFS& configFS);
     void      LoadJsonConfig();
 
     /**
@@ -22,6 +34,13 @@ class BaseConfig {
     void log(const int loglevel, const char* format, ...);
     void logN(const int loglevel, const char* format, ...);
     void log(const int loglevel, const JsonDocument& json);
+
+    // callbacks
+    /************************
+     * @brief Callback for getting the values
+     * @param function(const char&) the callback function
+     ************************/
+    void onLogValues(std::function<void(const char*)> callback);
 
     const uint8_t&  GetPinSDA()      const {return pin_sda;}
     const uint8_t&  GetPinSCL()      const {return pin_scl;}
@@ -48,10 +67,16 @@ class BaseConfig {
     const String&   GetLANBoard()      const {return LANBoard;}
     const uint8_t&  GetSerialRx()     const {return serial_rx;}
     const uint8_t&  GetSerialTx()     const {return serial_tx;}
-    
+    const uint8_t&  GetMaxThreads()   const {return max_threads;}
+
     size_t          getFragmentation();
-     
+
+  // Maintains a list of currently 'reserved' GPIOs (SDA, SCL, 1Wire, Serial, etc.)
+
+  vectorlist<uint8_t, GpioIdentifier> disabledGPIO;
+
   private:
+    fs::LittleFSFS configFS; 
     String    mqtt_server;
     String    mqtt_username;
     String    mqtt_password;
@@ -75,6 +100,10 @@ class BaseConfig {
     String    LANBoard;
     uint8_t   serial_rx;
     uint8_t   serial_tx;
+    uint8_t   max_threads;
+
+    std::function<void(const char*)> onLogValuesCallback; // Callback function pointer
+
 };
 
 extern BaseConfig* Config;

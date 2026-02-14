@@ -1,4 +1,8 @@
-.pio/**
-.vscode/**
-data/web/esp
-data/web/handlefiles*
+.pio/
+.vscode/
+.git/
+data/esp
+data/handlefiles*
+data/webserial*
+include/board.h
+data/gpio.js

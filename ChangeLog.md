@@ -1,3 +1,24 @@
+Release 3.2.0:
+    +++++++ This version is not OTA compatible with older versions +++++++
+    +++++++ Please do a fresh installation by web-installer +++++++
+    
+  - feature: move userconfig to separate LittleFS partition to prevet loosing config by upgrading version via OTA
+  - feature: add maxParallelThreads functionality
+  - feature: add FlowControl support (#15)
+  - feature: add FlowControl and ADS1115 SoilMoisture values for constant updates in the web UI 
+  - feature: add new webserial log monitor page for all variants
+  - feature: add DoIF for flowercare and other moisture sensors
+  - fix broken ethernet connection handling by adding global gpio handling (#7)
+  - feature: add sensor calibration options for ADS1115 moisture sensors
+  - feature: specific board settings via board.h, important for ESP32-C3
+  - Fix: change gitpod to github codespace
+
+Release 3.1.3:
+  - fix broken sensor config handling (#12)
+  - fix broken keepalive message
+  - fix storing config of dynamicMqttClientID (#12)
+  - fix storing mqtt basepath, emtpy basepath now allowed (#12)
+  
 Release 3.1.2:
   - fix using ETH01 Board (#7)
   - fix broken communication for relations
@@ -9,12 +30,12 @@ Release 3.1.1:
 Release 3.1.0:
   - exchange debug variable to common log-function
   - change backend ajax-communication to websocket
-  - add flowercare support to request moisture of Xiaomi flowercare BLE devices
-  - add functionality to switch on valves by incomimg mqtt moisture messages
+  - feature: add flowercare support to request moisture of Xiaomi flowercare BLE devices
+  - feature: add functionality to switch on valves by incomimg mqtt moisture messages
   
 Release 3.0.1:
-  - add: initialize bistable valves at start to prevent open valves
-  - add: configurable serial output pins
+  - feature: initialize bistable valves at start to prevent open valves
+  - feature: configurable serial output pins
   - improve wifi reconnect handling
   
 Release 3.0.0:

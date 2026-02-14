@@ -6,6 +6,7 @@
 #include "mymqtt.h"
 #include "mywebserver.h"
 #include "sensor.h"
+#include "flowcontrol.h"
 
 #ifdef USE_OLED
   #include "oled.h"
@@ -25,6 +26,11 @@ valveStructure* VStruct = nullptr;
 MyMQTT* mqtt = nullptr;
 sensor* LevelSensor = nullptr;
 MyWebServer* mywebserver = nullptr;
+flowControl* FlowCtrl = nullptr;
+
+// Initialize littlefs data partitions  
+fs::LittleFSFS sysFS;
+fs::LittleFSFS configFS;
 
 /* debugmodes --> in der WebUI -> Basisconfig einstellbar
     0 -> nothing
@@ -48,56 +54,54 @@ void myMQTTCallBack(char* topic, byte* payload, unsigned int length) {
   if (LevelSensor->GetExternalSensor() && (strcmp(LevelSensor->GetExternalSensor().c_str(), topic)==0)) {
     LevelSensor->SetLvl(atoi(msg.c_str()));
   }
+  else if (strstr(topic, "flowercare/") || strstr(topic, "moisture")) {
+    mywebserver->DoIfOnMqttMessage(topicStr, msg);
+  } 
   else if (strstr(topic, "/raw") ||  strstr(topic, "/level") ||  strstr(topic, "/mem") ||  strstr(topic, "/rssi")) {
     /*SensorMeldungen - ignore!*/
-  }
-
-  #ifdef USE_FLOWERCARE
-    else if (strstr(topic, "flowercare/")) {
-      mywebserver->flowerCareOnMqttMessage(topicStr, msg);
-    }
-  #endif  
-  
+  } 
   else {
-    VStruct->ReceiveMQTT(topicStr, atoi(msg.c_str()));
+    VStruct->ReceiveMQTT(topicStr, static_cast<unsigned int>(atoi(msg.c_str())));
   }
 }
 
 void setup() {
-  #ifdef ESP8266
-    LittleFS.begin();
-  #endif
-
-  #ifdef ESP32
-    LittleFS.begin(true); // true: format LittleFS/NVS if mount fails
-  #endif
+  boolean systemPartitionMounted = sysFS.begin(true, "/web", 5, "webdata");
+  boolean configPartitionMounted = configFS.begin(true, "/config", 5, "config");
   
   // Flash Write Issue
   // https://github.com/esp8266/Arduino/issues/4061#issuecomment-428007580
   //LittleFS.format();
 
-  Config = new BaseConfig();
+  Config = new BaseConfig(configFS);
 
-  #ifndef USE_WEBSERIAL
-    #ifdef ESP8266
-    Serial.begin(115200, SERIAL_8N1, SERIAL_FULL, Config->GetSerialTx());
-    #else
+  #ifdef ARDUINO_USB_CDC_ON_BOOT
+    Serial.begin(115200);
+  #else
     Serial.begin(115200,
                  SERIAL_8N1,
                  Config->GetSerialRx(),
                  Config->GetSerialTx());  // RX, TX, zb.: 33, 32
-    #endif
-    Serial.println("");
-    Serial.println("ready");
   #endif
 
-  #ifdef USE_WEBSERIAL
-    WebSerial.onMessage([](const String& msg) { Serial.println(msg); });
-    WebSerial.begin(&server);
-    WebSerial.setBuffer(100);
-  #endif
-
+  Serial.println("");
+  Serial.println("ready");
+  
   Config->logN(1, "Start of ESP PumpControl");
+
+  Config->logN(3, "***** File System *****");
+
+  Config->logN(3, "%s",systemPartitionMounted?"System partition is mounted":"System partition is not mounted");
+  Config->logN(3, "Size: %d byte",systemPartitionMounted?sysFS.totalBytes():0);
+  Config->logN(3, "Used: %d byte",systemPartitionMounted?sysFS.usedBytes():0);
+
+  Config->logN(3, "***** ********** *****");
+
+  Config->logN(3, "%s",configPartitionMounted?"User partition is mounted":"User partition is not mounted");
+  Config->logN(3, "Size: %d byte",configPartitionMounted?configFS.totalBytes():0);
+  Config->logN(3, "Used: %d byte",configPartitionMounted?configFS.usedBytes():0);
+
+  Config->logN(3, "***** ********** *****\n\n");
 
   #ifdef USE_I2C
     Config->logN(1, "Starting WIRE at (SDA, SCL)): %d, %d ", Config->GetPinSDA(), Config->GetPinSCL());
@@ -111,12 +115,15 @@ void setup() {
   #endif
 
   Config->logN(1, "Starting Wifi and MQTT");
+  #ifdef WIFI_TX_POWER
+    WiFi.setTxPower(WIFI_TX_POWER);
+  #endif
   mqtt = new MyMQTT(Config->GetMqttServer().c_str(),
                     Config->GetMqttPort(),
                     Config->GetMqttBasePath().c_str(),
                     Config->GetMqttRoot().c_str());
   mqtt->setCallback(myMQTTCallBack);
-  
+
   #ifdef USE_OLED
     mqtt->SetOled(oled);
   #endif
@@ -127,22 +134,25 @@ void setup() {
   #endif
   
   Config->logN(1, "Starting Sensor");
-  LevelSensor = new sensor();
+  LevelSensor = new sensor(configFS);
   #ifdef USE_OLED
     LevelSensor->SetOled(oled);
   #endif
 
   Config->logN(1, "Starting Valve Relations");
-  ValveRel = new valveRelation();
- 
+  ValveRel = new valveRelation(configFS);
+
+  Config->logN(1, "Starting Flow Control");
+  FlowCtrl = new flowControl(configFS);
+
   Config->logN(1, "Starting Valve Structure");
-  VStruct = new valveStructure(Config->GetPinSDA(), Config->GetPinSCL());
+  VStruct = new valveStructure(configFS, Config->GetPinSDA(), Config->GetPinSCL());
 
   Config->logN(1, "attempting to start WebServer");
-  mywebserver = new MyWebServer(&server, &dns);
+  mywebserver = new MyWebServer(sysFS, configFS, &server, &dns);
 
   //VStruct->OnForTimer("Valve1", 10); // Test
-
+ 
   Config->logN(1, "Setup finished");
 }
 
@@ -151,12 +161,9 @@ void loop() {
   mqtt->loop();
   LevelSensor->loop();
   mywebserver->loop();
+  FlowCtrl->loop();
   
   #ifdef USE_OLED
     oled->loop();  
-  #endif
-
-  #ifdef USE_WEBSERIAL
-    WebSerial.loop();
   #endif
 }

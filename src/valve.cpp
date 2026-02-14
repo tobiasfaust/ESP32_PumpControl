@@ -1,6 +1,6 @@
 #include "valve.h"
 
-valve::valve() : port1ms(10), port2ms(10), enabled(true), active(false), ValveType(NONE), autooff(0), reverse(false) {
+valve::valve() : port1ms(10), port2ms(10), enabled(true), active(false), ValveType(NONE), autooff(0), reverse(false), use4parallelthreads(true) {
   this->myHWdev = new HWdev_t();
   this->myHWdev->i2cAddress = 0;
 }
@@ -9,7 +9,7 @@ void valve::init(valveHardware* vHW, uint8_t Port, String SubTopic) {
   this->valveHWClass = vHW;
   bool ret = valveHWClass->RegisterPort(this->myHWdev, Port);
   if (!ret) {
-    Config->logN(3, "Cannot locate port %d, set port as disabled ", Port); this->enabled = false; 
+    Config->logN(3, "Cannot locate port %d, set port as disabled ", Port); this->SetActive(false);
   }
   this->ValveType = NORMAL;
   this->port1 = Port;
@@ -20,7 +20,7 @@ void valve::AddPort1(valveHardware* Device, uint8_t Port1) {
   this->valveHWClass = Device;
   bool ret = Device->RegisterPort(this->myHWdev, Port1);
   if (!ret) {
-    Config->logN(3, "Cannot locate port %d, set port as disabled", Port1); this->enabled = false;
+    Config->logN(3, "Cannot locate port %d, set port as disabled", Port1); this->SetActive(false);
   }
   this->port1 = Port1;  
   if (Config->GetDebugLevel()>=4) {
@@ -31,7 +31,7 @@ void valve::AddPort1(valveHardware* Device, uint8_t Port1) {
 void valve::AddPort2(valveHardware* Device, uint8_t Port2) {
   bool ret = Device->RegisterPort(this->myHWdev, Port2);
   if (!ret) {
-    Config->logN(3, "Cannot locate port %d, set port as disabled", Port2); this->enabled = false;
+    Config->logN(3, "Cannot locate port %d, set port as disabled", Port2); this->SetActive(false);
   }
   this->port2 = Port2;
   Config->logN(4, "Registrierung für Port %d (0x%02x) abgeschlossen", this->GetPort2(), this->GetI2cAddress());
@@ -48,6 +48,10 @@ void valve::SetReverse(bool value) {
 
 void valve::SetAutoOff(uint16_t value) {
   this->autooff = value;
+}
+
+void valve::SetUse4ParallelThreads(bool value) {
+  this->use4parallelthreads = value;
 }
 
 bool valve::OnForTimer(int duration) {

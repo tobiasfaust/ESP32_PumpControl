@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="210mm"
+   height="297mm"
+   version="1.1"
+   viewBox="0 0 210 297"
+   id="svg9"
+   sodipodi:docname="soil_moisture.svg"
+   inkscape:version="1.4.2 (f4327f4, 2025-05-13)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs9" />
+  <sodipodi:namedview
+     id="namedview9"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="0.45700758"
+     inkscape:cx="396.0547"
+     inkscape:cy="561.25984"
+     inkscape:window-width="1366"
+     inkscape:window-height="715"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg9" />
+  <g
+     data-id="soilmoisture_gehaeuse"
+     transform="matrix(1.1892844,0,0,1.1892844,-14.119397,-7.3505111)"
+     fill="none"
+     id="g2">
+    <rect
+       x="79.799004"
+       y="90.628998"
+       width="44.785999"
+       height="41.296001"
+       rx="5.0893002"
+       ry="4.7238002"
+       fill="none"
+       stroke="#000000"
+       stroke-width="1.7077"
+       id="rect1" />
+    <g
+       id="g3"
+       transform="translate(-2.1167,38.1)">
+      <rect
+         x="86.434998"
+         y="93.918999"
+         width="9.3543997"
+         height="102.15"
+         fill="none"
+         stroke="#000000"
+         stroke-width="1.5"
+         style="paint-order:stroke fill markers"
+         id="rect2" />
+      <path
+         transform="matrix(0.29918,0,0,0.50435,50.14,142.12)"
+         d="m 136.95,136.95 -16.202,-28.063 h 32.405 z"
+         fill="none"
+         stroke="#000000"
+         stroke-width="2.4129"
+         style="paint-order:stroke fill markers"
+         id="path2" />
+    </g>
+    <use
+       transform="translate(25.268,0.26458)"
+       xlink:href="#g3"
+       id="use2" />
+  </g>
+  <rect
+     x="93.333168"
+     y="108.59717"
+     width="28.331135"
+     height="12.282929"
+     rx="4.8657193"
+     ry="4.6661577"
+     fill="none"
+     stroke="#000000"
+     stroke-width="1.2257"
+     style="paint-order:stroke fill markers"
+     id="rect3" />
+  <ellipse
+     cx="107.24303"
+     cy="128.89587"
+     rx="3.6186359"
+     ry="3.7759781"
+     fill="none"
+     stroke="#000000"
+     stroke-width="1.5"
+     style="paint-order:stroke fill markers"
+     id="ellipse3" />
+  <g
+     stroke="#000000"
+     id="g5"
+     transform="matrix(1.1892844,0,0,1.1892844,-17.679401,-8.2405121)">
+    <path
+       d="M 84.741,93.116 A 42.36,42.625 0 0 1 64.699,45.151 42.36,42.625 0 0 1 105.681,13.422 42.36,42.625 0 0 1 146.62,45.208 42.36,42.625 0 0 1 126.512,93.145"
+       fill="none"
+       stroke-width="0.94604"
+       style="paint-order:stroke fill markers;stroke-width:2.52252531;stroke-dasharray:none"
+       id="path3" />
+    <path
+       d="m 115.51,61.553 c 0,10.189 -8.7519,18.449 -19.548,18.449 -10.796,-2e-6 -19.548,-8.2598 -19.548,-18.449 0,-10.189 16.103,-33.682 19.214,-33.682 2.7764,0 19.882,23.493 19.882,33.682 z"
+       stroke-width="3"
+       style="fill:#7373ff !important;paint-order:stroke;stroke-width:3.36336708;stroke-dasharray:none;"
+       id="path4"
+       inkscape:label="tropfen_gross" />
+    <path
+       d="m 133.32,69.364 c 0,5.5951 -4.8059,10.131 -10.734,10.131 -5.9284,-10e-7 -10.734,-4.5357 -10.734,-10.131 0,-5.5951 8.8428,-18.496 10.551,-18.496 1.5246,0 10.918,12.901 10.918,18.496 z"
+       stroke-width="3"
+       style="fill:#7373ff !important;opacity:1;mix-blend-mode:normal;stroke-width:3.36337;stroke-dasharray:none;paint-order:stroke fill markers"
+       id="path5"
+       inkscape:label="tropfen_klein" />
+  </g>
+  <g
+     id="scan"
+     stroke="#000"
+     stroke-width="3"
+     style="stroke-width:4;stroke-dasharray:none;fill:none;fill-rule:evenodd">
+    <path
+       d="m37.8 263.28a29.487 43.132 0 0 1-18.026-40.776 29.487 43.132 0 0 1 19.337-39.47"
+       id="path6"
+       style="fill:none !important;stroke-width:4;stroke-dasharray:none;fill-rule:evenodd" />
+    <path
+       d="m54.529 245.17a16.959 24.807 0 0 1-10.367-23.452 16.959 24.807 0 0 1 11.121-22.701"
+       id="path7"
+       style="fill:none !important;stroke-width:4;stroke-dasharray:none;fill-rule:evenodd" />
+    <path
+       transform="scale(-1)"
+       d="m-173.88-183a29.487 43.132 0 0 1-18.026-40.776 29.487 43.132 0 0 1 19.337-39.47"
+       id="path8"
+       style="fill:none !important;stroke-width:4;stroke-dasharray:none;fill-rule:evenodd" />
+    <path
+       transform="scale(-1)"
+       d="m-159.41-198.97a16.959 24.807 0 0 1-10.367-23.452 16.959 24.807 0 0 1 11.121-22.701"
+       id="path9"
+       style="fill:none !important;stroke:#000000;stroke-opacity:1;stroke-width:4;stroke-dasharray:none;fill-rule:evenodd" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer3"
+     inkscape:label="Layer 1" />
+</svg>

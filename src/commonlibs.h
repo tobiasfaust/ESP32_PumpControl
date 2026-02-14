@@ -24,12 +24,10 @@
 
 #include <string.h>
 #include <LittleFS.h>
+#include <helper.h>
 #include <ESPAsyncWebServer.h>
 #include <DNSServer.h>
-
-#ifdef USE_WEBSERIAL
-  #include <WebSerial.h>
-#endif
+#include <board.h>
 
 #if defined(USE_OLED) || defined(USE_PCF8574) || defined(USE_TB6612)
   #define USE_I2C
@@ -40,6 +38,5 @@
 #else
   #define ESP_GetMaxFreeAvailableBlock() ESP.getMaxAllocHeap()
 #endif
-
 
 #endif

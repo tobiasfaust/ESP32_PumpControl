@@ -12,12 +12,18 @@
   #include <ADS1115_WE.h> 
 
   typedef struct {
+    String topic;
+    uint16_t cal_min = 0;
+    uint16_t cal_max = 3300;
+  } adsport_t;
+
+  typedef struct {
     ADS1115_WE device;
     uint8_t i2cAddress;
-    String topic_chan1;
-    String topic_chan2;
-    String topic_chan3;
-    String topic_chan4;
+    adsport_t port1 = {};
+    adsport_t port2 = {};
+    adsport_t port3 = {};
+    adsport_t port4 = {};
   } adsdev_t;
 
 #endif
@@ -34,13 +40,13 @@ enum sensorType_t {NONE, EXTERN, HCSR04, ONBOARD_ANALOG, ADS1115};
 class sensor {
 
   public:
-    sensor();
+    sensor(fs::LittleFSFS& configFS);
     void      init_hcsr04(uint8_t pinTrigger, uint8_t pinEcho);
     void      init_extern(String externalSensor);
     void      init_analog(uint8_t pinAnalog) ;
     
     #ifdef USE_ADS1115
-      void      init_ads1115(uint8_t i2c, uint8_t port, String topic="");
+      void      init_ads1115(uint8_t i2c, uint8_t port, String topic, uint16_t cal_min, uint16_t cal_max);
     #endif
 
     void      setSensorType(sensorType_t t);
@@ -60,7 +66,15 @@ class sensor {
       void      SetOled(OLED* oled);
     #endif
 
+    // callbacks
+    /************************
+     * @brief Callback for getting the values
+     * @param function(JsonDocument&) the callback function
+     ************************/
+    void onValues(std::function<void(JsonDocument&)> callback);
+
   private:
+    fs::LittleFSFS& configFS;
     void      loop_analog();
     void      loop_hcsr04();
     
@@ -98,6 +112,8 @@ class sensor {
     #ifdef USE_OLED
       OLED*    oled;
     #endif
+
+  std::function<void(JsonDocument&)> onValuesCallback; // Callback function pointer
     
 };
 

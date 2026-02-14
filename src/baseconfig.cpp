@@ -1,13 +1,16 @@
 #include "baseconfig.h"
 
-BaseConfig::BaseConfig(): 
+BaseConfig::BaseConfig(fs::LittleFSFS& configFS) :
+  configFS(configFS), 
   mqtt_server ("test.mosquitto.org"),
   mqtt_port(1883),
   mqtt_root("PumpControl"),
-  mqtt_basepath("home/"),
+  mqtt_basepath(""),
   mqtt_UseRandomClientID(true),
   keepalive(0),
   debuglevel(3),
+  pin_sda(DEFAULT_I2C_SDA_PIN),
+  pin_scl(DEFAULT_I2C_SCL_PIN),
   pin_1wire(0),
   enable_oled(false),
   oled_type(0),
@@ -17,28 +20,25 @@ BaseConfig::BaseConfig():
   ventil3wege_port(0),
   max_parallel(0),
   useETH(0),
-  serial_rx(3),
-  serial_tx(1)
-  {
-  
-  #ifdef ESP8266
-    this->pin_sda = 5;
-    this->pin_scl = 4;
-  #endif
-  
-  #ifdef ESP32
-    this->pin_sda = 21;
-    this->pin_scl = 22,
-  #endif
-  
-  LoadJsonConfig();
+  serial_rx(DEFAULT_SERIAL_RX_PIN),
+  serial_tx(DEFAULT_SERIAL_TX_PIN),
+  max_threads(0)
+  {  
+    this->disabledGPIO.setOffset(200); // offset for GPIO numbers
+    LoadJsonConfig();
 }
 
 void BaseConfig::LoadJsonConfig() {
-  if (LittleFS.exists("/config/baseconfig.json")) {
+  // Clear any existing disabled GPIOs completely
+  this->disabledGPIO.deleteAll(GpioIdentifier::BASECONFIG);
+
+  // reset certain values because null values in config are allowed
+  this->mqtt_basepath = "";
+  
+  if (configFS.exists("/baseconfig.json")) {
     //file exists, reading and loading
     this->logN(3, "reading baseconfig.json file");
-    File configFile = LittleFS.open("/config/baseconfig.json", "r");
+    File configFile = configFS.open("/baseconfig.json", "r");
     if (configFile) {
       this->logN(3, "baseconfig.json is now open");
       ReadBufferingStream stream{configFile, 64};
@@ -61,8 +61,8 @@ void BaseConfig::LoadJsonConfig() {
           if (elem["mqttport"])         { this->mqtt_port = elem["mqttport"].as<int>();}
           if (elem["mqttuser"])         { this->mqtt_username = elem["mqttuser"].as<String>();}
           if (elem["mqttpass"])         { this->mqtt_password = elem["mqttpass"].as<String>();}
-          if (elem["mqttbasepath"])     { this->mqtt_basepath = elem["mqttbasepath"].as<String>();}
-          if (elem["sel_UseRandomClientID"]){ if (strcmp(elem["sel_UseRandomClientID"], "none")==0) { this->mqtt_UseRandomClientID=false;} else {this->mqtt_UseRandomClientID=true;}}
+          if (elem["mqttbasepath"])     { this->mqtt_basepath = elem["mqttbasepath"].as<String>();} 
+          if (elem["UseRandomClientID"]){ if (elem["UseRandomClientID"].as<String>() == "none") { this->mqtt_UseRandomClientID=false;} else {this->mqtt_UseRandomClientID=true;}}
           if (elem["keepalive"])        { if (elem["keepalive"].as<int>() == 0) { this->keepalive = 0;} else { this->keepalive = _max(elem["keepalive"].as<int>(), 10);}}
           if (elem["debuglevel"])       { this->debuglevel = _max(elem["debuglevel"].as<int>(), 0);}
           if (elem["pinsda"])           { this->pin_sda = (elem["pinsda"].as<int>()) - 200;}
@@ -76,6 +76,7 @@ void BaseConfig::LoadJsonConfig() {
           if (elem["ventil3wege_port"]) { this->ventil3wege_port = elem["ventil3wege_port"].as<int>();}
           if (elem["serial_rx"])        { this->serial_rx = (elem["serial_rx"].as<int>()) - 200;}
           if (elem["serial_tx"])        { this->serial_tx = (elem["serial_tx"].as<int>()) - 200;}
+          if (elem["max_threads"])      { this->max_threads = (elem["max_threads"].as<int>()); }
         }
       } while (stream.findUntil(",","]"));
     } else {
@@ -85,10 +86,19 @@ void BaseConfig::LoadJsonConfig() {
     this->logN(1, "baseconfig.json config File not exists, load default BaseConfig");
   }
 
-  // Data Cleaning
+  // Data Cleaning, needed without trailing slash
   if(this->mqtt_basepath.endsWith("/")) {
     this->mqtt_basepath = this->mqtt_basepath.substring(0, this->mqtt_basepath.length()-1); 
   }
+
+  // add disabled GPIOs with speaking identifiers
+  this->disabledGPIO.addValue(this->pin_sda, GpioIdentifier::BASECONFIG);
+  this->disabledGPIO.addValue(this->pin_scl, GpioIdentifier::BASECONFIG);
+  if (this->pin_1wire>0 && this->enable_1wire) { this->disabledGPIO.addValue(this->pin_1wire, GpioIdentifier::BASECONFIG); }
+  this->disabledGPIO.addValue(this->serial_rx, GpioIdentifier::BASECONFIG);
+  this->disabledGPIO.addValue(this->serial_tx, GpioIdentifier::BASECONFIG);
+  if (this->enable_3wege && this->ventil3wege_port>0) { this->disabledGPIO.addValue(this->ventil3wege_port, GpioIdentifier::BASECONFIG); }
+    
 }
 
 const String BaseConfig::GetReleaseName() {
@@ -115,7 +125,9 @@ void BaseConfig::GetInitData(JsonDocument& json) {
   json["data"]["sel_URCID1"]  = ((this->mqtt_UseRandomClientID)?0:1);
   json["data"]["sel_URCID2"]  = ((this->mqtt_UseRandomClientID)?1:0);
   json["data"]["keepalive"] = this->keepalive;
-  
+  json["data"]["GpioPin_serial_rx"] = this->serial_rx + 200;
+  json["data"]["GpioPin_serial_tx"] = this->serial_tx + 200;
+
   #ifdef ESP32
     json["data"]["sel_wifi"] = ((this->useETH)?0:1);
     json["data"]["sel_eth"]  = ((this->useETH)?1:0);
@@ -139,14 +151,6 @@ void BaseConfig::GetInitData(JsonDocument& json) {
   #else
     json["data"]["tr_owSelect"]["className"] = "hide";
     json["data"]["onewire_0"]["className"] = "hide";
-  #endif
-
-  #ifdef USE_WEBSERIAL
-    json["data"]["tr_serial_rx"]["className"] = "hide";
-    json["data"]["tr_serial_tx"]["className"] = "hide";
-  #else
-    json["data"]["GpioPin_serial_rx"] = this->serial_rx + 200;
-    json["data"]["GpioPin_serial_tx"] = this->serial_tx + 200;
   #endif
 
   #ifdef USE_OLED
@@ -173,6 +177,7 @@ void BaseConfig::GetInitData(JsonDocument& json) {
   json["data"]["sel_3wege_0"] = ((this->enable_3wege)?0:1);
   json["data"]["sel_3wege_1"] = ((this->enable_3wege)?1:0);
   json["data"]["ConfiguredPort_0"] = this->ventil3wege_port;
+  json["data"]["max_threads"] = this->max_threads;
   
   json["response"].to<JsonObject>();
   json["response"]["status"] = 1;
@@ -186,15 +191,13 @@ void BaseConfig::logN(const int loglevel, const char* format, ...) {
   va_start(args, format);
   char buffer[256];
   vsnprintf(buffer, sizeof(buffer), format, args);
-  #ifdef USE_WEBSERIAL
-    WebSerial.printf("[Log %d] ", loglevel);
-    //if (this->GetDebugLevel() >= 4) { WebSerial.printf("FreeHeap: %d Bytes\n ", ESP.getFreeHeap()); }
-    WebSerial.println(buffer);
-  #else
-    Serial.printf("[Log %d] ", loglevel);
-    //if (this->GetDebugLevel() >= 4) { Serial.printf("FreeHeap: %d Bytes\n ", ESP.getFreeHeap()); }
-    Serial.println(buffer);
-  #endif
+  Serial.printf("[Log %d] ", loglevel);
+  Serial.println(buffer);
+  
+  if (this->onLogValuesCallback) {
+      this->onLogValuesCallback(buffer);
+  }
+
   va_end(args);
 }
 
@@ -205,22 +208,29 @@ void BaseConfig::log(const int loglevel, const char* format, ...) {
   va_start(args, format);
   char buffer[256];
   vsnprintf(buffer, sizeof(buffer), format, args);
-  #ifdef USE_WEBSERIAL
-    WebSerial.print(buffer);
-  #else
-    Serial.print(buffer);
-  #endif
+  
+  Serial.printf("[Log %d] ", loglevel);
+  Serial.print(buffer);
+
+  if (this->onLogValuesCallback) {
+      this->onLogValuesCallback(buffer);
+  }
+
   va_end(args);
 }
 
 void BaseConfig::log(const int loglevel, const JsonDocument& json) {
   if (this->GetDebugLevel() < loglevel) return;
   
-  #ifdef USE_WEBSERIAL
-    serializeJsonPretty(json, WebSerial);
-    WebSerial.println();
-  #else
-    serializeJsonPretty(json, Serial);
-    Serial.println();
-  #endif
+  Serial.printf("[Log %d] ", loglevel);
+  serializeJsonPretty(json, Serial);
+  Serial.println();
+
+  if (this->onLogValuesCallback) {
+      this->onLogValuesCallback(json.as<String>().c_str());
+  }
+}
+
+void BaseConfig::onLogValues(std::function<void(const char*)> callback) {
+    this->onLogValuesCallback = callback;
 }

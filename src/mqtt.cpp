@@ -51,6 +51,9 @@ MQTT::MQTT(const char* MqttServer, uint16_t MqttPort, String MqttBasepath, Strin
   if (Config->GetUseETH()) {
     #ifdef ESP32
       eth_shield_t* shield = this->GetEthShield(Config->GetLANBoard());
+     
+      // reserve all ETH pins
+      Config->disabledGPIO.addValues(shield->blockedGpio, BaseConfig::GpioIdentifier::ETH);
 
       // ETH.begin(1, 16, 23, 18, ETH_PHY_LAN8720, ETH_CLOCK_GPIO0_IN);
       ETH.begin(shield->PHY_ADDR,
@@ -65,6 +68,7 @@ MQTT::MQTT(const char* MqttServer, uint16_t MqttPort, String MqttBasepath, Strin
 
   } else {
     // use Wifi
+    Config->disabledGPIO.deleteAll(BaseConfig::GpioIdentifier::ETH); // free all ETH pins
     improvSerial.ConnectToWifi();
   }
 
@@ -220,13 +224,15 @@ void MQTT::reconnect() {
   memset(&topic[0], 0, sizeof(topic));
 
   if (Config->UseRandomMQTTClientID()) {
+    Config->logN(1, "Using random MQTT ClientID");
     snprintf (topic, sizeof(topic), "%s-%s", this->mqtt_root.c_str(), String(random(0xffff)).c_str());
   } else {
+    Config->logN(1, "Using fixed MQTT ClientID");
     snprintf (topic, sizeof(topic), "%s-%08X", this->mqtt_root.c_str(), ESP_getChipId());
   }
   snprintf(LWT, sizeof(LWT), "%s/state", this->mqtt_root.c_str());
 
-  Config->logN(1, "Attempting MQTT connection as %s ", topic);
+  Config->logN(1, "Attempting MQTT connection as %s at %s:%d", topic, Config->GetMqttServer().c_str(), Config->GetMqttPort());
 
   if (PubSubClient::connect(topic,
                             Config->GetMqttUsername().c_str(),
@@ -235,7 +241,7 @@ void MQTT::reconnect() {
                             true,
                             false,
                             "Offline")) {
-    Config->logN(1, "connected... ");
+    Config->logN(1, "MQTT Server connected... ");
     // Once connected, publish basics ...
     this->Publish_IP();
     this->Publish_String("ssid", WiFi.SSID(), false);
@@ -384,7 +390,7 @@ void MQTT::loop() {
 
   // WIFI ok, MQTT lost
   if (!PubSubClient::connected() && this->ConnectStatusWifi) {
-    if (millis() - mqttreconnect_lasttry > 10000) {
+    if (millis() - mqttreconnect_lasttry > 30000) { // try to reconnect every 30 seconds
       this->reconnect();
       this->mqttreconnect_lasttry = millis();
     }
@@ -399,9 +405,15 @@ void MQTT::loop() {
     this->ConnectStatusMqtt = false;
   }
 
-  if (Config->GetDebugLevel() >=4 && millis() - this->last_keepalive > (30 * 1000))  {
+  if (Config->GetKeepAlive() > 0 && millis() - this->last_keepalivemsg > (Config->GetKeepAlive() * 1000)) {
+    this->last_keepalivemsg = millis();
+    this->Publish_String("state", "Online", false);
+    Config->logN(4, "KeepAlive: Publish state Online");
+  }
+
+  if (Config->GetDebugLevel() >=4 && millis() - this->last_debugmsg > (30 * 1000))  {
     // send messages for debugging every 30 seconds
-    this->last_keepalive = millis();
+    this->last_debugmsg = millis();
 
     if (Config->GetDebugLevel() >=4) {
       char buffer[100] = {0};

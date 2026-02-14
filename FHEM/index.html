@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <!--
+    /* FHEM tablet ui - FTUI */
+    /**
+    * UI builder framework for FHEM
+    *
+    * Version: 3.0.0
+    *
+    * Copyright (c) 2015-2021 Mario Stephan <mstephan@shared-files.de>
+    * Under MIT License (http://www.opensource.org/licenses/mit-license.php)
+    * https://github.com/knowthelist/ftui
+    *
+    * FHEM Wiki Seite: https://wiki.fhem.de/wiki/Kategorie:FHEM_Tablet_UI_V3
+    * Fhem ftui Forum : https://forum.fhem.de/index.php?board=71.0
+    */
+    -->
+  <script src="ftui.js"></script>
+
+  <link href="ftui.css" rel="stylesheet">
+  <link href="themes/ftui-theme.css" rel="stylesheet">
+  <link href="favicon.ico" rel="icon" type="image/x-icon" />
+  <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css' >
+  <!-- Font Awesome 6 Free for newer icons (e.g., watering)-->
+  <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css'>
+  
+  <!-- avoid 300ms delay on click-->
+  <meta name="viewport" content="width=device-width">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="toast_position" content="topLeft">
+
+  <style>
+    @keyframes sprinkleFillFade {
+      0% { color: black; }
+      100% { color: rgb(0, 182, 0); }
+    }
+
+    /* Animate the sprinkle icon's fill when the parent button's value is on */
+    ftui-button.sprinkle[value="on"] ftui-icon,
+    ftui-button.sprinkle[value="on"] ftui-icon svg,
+    ftui-button.sprinkle[value="on"] ftui-icon path,
+    ftui-button.sprinkle[value="on"] ftui-icon use {
+      animation: sprinkleFillFade 1s ease-in-out infinite alternate;
+    }
+
+    /*damit die Tooltips der Slider sich nicht gegenseitig verdecken*/
+    ftui-row { overflow: visible; }
+    ftui-column { overflow: visible; }
+    ftui-slider { overflow: visible; }
+    ftui-slider::part(tooltip) { z-index: 10000; }
+    ftui-slider::part(thumb) { z-index: 9999; }
+    /* If the tooltip uses a slotted element */
+    ftui-slider ::slotted(.tooltip) { z-index: 10000 !important; }
+  </style>
+
+  <!-- verbose level 0-4 -->
+  <meta name="debug" content="0">
+
+  <title>FTUI PumpControl Example</title>
+</head>
+
+<body>
+  <ftui-grid base-width="40" base-height="40" margin="5" shape="round">
+
+    <ftui-grid-tile row="1" col="1" height="20" width="2">
+      <ftui-column>
+        <ftui-tab view="view_sprinkle" size="large">
+          <i class="fa-solid fa-faucet-drip"></i>&nbsp;
+          <i class="fa-solid fa-droplet"></i>
+        </ftui-tab>
+      </ftui-column>
+    </ftui-grid-tile>
+
+    <!-- View starts here -->
+    
+    <ftui-tab-view id="view_sprinkle">
+      <ftui-grid-tile row="1" col="3" height="2" width="3" align-items="top">
+        <ftui-label text="Status" size="20px" padding="0em 1em" style="background-color: #fff9c4; border-radius: 8px;"></ftui-label> 
+      </ftui-grid-tile>
+      <ftui-grid-tile row="1" col="6" height="2" width="2">
+        <ftui-label text="Wassertonne" size="12px"></ftui-label>
+        <ftui-label [text]="PumpControl:WaterLevel" unit="%" size="20px"></ftui-label>
+      </ftui-grid-tile>
+      <ftui-grid-tile row="1" col="8" height="2" width="2">
+        <ftui-label text="Wassertyp" size="12px"></ftui-label>
+        <ftui-icon 
+          path="../images/openautomation" 
+          name="sani_water_tap" 
+          size="large"
+          [hidden]="PumpControl:Frischwassernutzung | step('0:true, 1:false')"
+        ></ftui-icon>
+        <ftui-icon 
+          path="../images/openautomation" 
+          name="weather_rain_light" 
+          size="large"
+          [hidden]="PumpControl:Frischwassernutzung | step('0:false, 1:true')"
+        ></ftui-icon>
+      </ftui-grid-tile>
+      <ftui-grid-tile row="1" col="10" height="2" width="2">
+        <ftui-label text="Threads" size="12px"></ftui-label>
+        <ftui-label [text]="PumpControl:Threads" size="20px"></ftui-label>
+      </ftui-grid-tile>
+      <ftui-grid-tile row="1" col="12" height="2" width="2">
+        <ftui-label text="Niederschlag<br>heute" size="12px"></ftui-label>
+        <ftui-label [text]="AgroWeather:fc0_rain" unit="mm" size="20px"></ftui-label>
+      </ftui-grid-tile>
+      <ftui-grid-tile row="1" col="14" height="2" width="2">
+        <ftui-label text="Einstrahlung" size="12px"></ftui-label>
+        <ftui-label [text]="AgroWeather:fc0_rad" size="20px"></ftui-label>
+      </ftui-grid-tile>
+      <ftui-grid-tile row="1" col="16" height="2" width="2">
+        <ftui-label text="Verdunstung" size="12px"></ftui-label>
+        <ftui-label [text]="AgroWeather:fc0_evapor" size="20px"></ftui-label>
+      </ftui-grid-tile>
+
+      <ftui-grid-tile row="19" col="3" height="2" width="19">
+        <ftui-content file="template_sprinkle.html" lazy
+          name="Tomaten"
+          last_onoff="PC_Tomaten:VentilStatus:time"
+          last_sensor="BF_Tomaten:moisture:time"
+          moisture_soll="DOIF_Bew_Tomaten:2-treshold-moisture"
+          moisture_ist="BF_Tomaten:moisture"
+          fertility="BF_Tomaten:fertility"
+          battery_state="BF_Tomaten:batteryLevel"
+          auto_dev="DOIF_Bew_Tomaten"
+          pcdev="PC_Tomaten"
+          moisture_onlinestate="BF_Tomaten:active | map('dead:off,alive:on')"
+          pcdev_onlinestate="PC_Tomaten:active | map('dead:off,alive:on')"
+        ></ftui-content>
+      </ftui-grid-tile>
+
+    </ftui-tab-view>
+
+    
+  </body>
+
+</html>

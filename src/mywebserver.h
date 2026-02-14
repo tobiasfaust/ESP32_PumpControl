@@ -12,6 +12,8 @@
 #include "sensor.h"
 #include "valveStructure.h"
 #include "valveRelation.h"
+#include "flowcontrol.h"
+#include "doif.h"
 
 #include <ElegantOTA.h>
 
@@ -22,6 +24,7 @@
 extern sensor* LevelSensor;
 extern valveStructure* VStruct;
 extern valveRelation* ValveRel;
+extern flowControl* FlowCtrl;
 
 #ifdef USE_I2C
   extern i2cdetect* I2Cdetect;
@@ -30,39 +33,42 @@ extern valveRelation* ValveRel;
 class MyWebServer {
 
   typedef struct {
-    bool enabled;
-    String TriggerTopic = "";
-    uint8_t ActorPort; 
-    unsigned int threshold;
-    unsigned int duration;
-  } FlowercareRelation_t;
+    uint32_t ws_id;
+    enum requestData_t {LOG_DATA, FLOWERCARE_DATA, ADS1115_DATA, FLOWCONTROL_DATA} requestData;
+  } wsclient_t;
 
   public:
-    MyWebServer(AsyncWebServer *server, DNSServer* dns);
-    void      loop();
+    MyWebServer(fs::LittleFSFS& sysFS, fs::LittleFSFS& configFS, AsyncWebServer *server, DNSServer* dns);
+    void  loop();
 
-    void  flowerCareOnMqttMessage(String& topic, String& JsonMsg);
+    void  DoIfOnMqttMessage(String& topic, String& msg);
 
   private:
 
     AsyncWebServer* server;
     DNSServer* dns;
     AsyncWebSocket* ws;
+    fs::LittleFSFS& sysFS;
+    fs::LittleFSFS& configFS;
 
     bool      DoReboot;
     unsigned long RequestRebootTime;
     unsigned long ota_progress_millis = 0;
-    std::vector<FlowercareRelation_t>* _relationen  = NULL;
-      
+    std::vector<wsclient_t>* _wsclientRequests = NULL;
+
     handleFiles* fsfiles;
+    doIf* doif;
 
     #ifdef USE_FLOWERCARE
-      FlowerCare* flowerCare = nullptr;
-      void      flowerCareGetValuesCallback(JsonDocument& json);
+      flowercareWeb* flowerCare = nullptr;
+      void      flowerCareGetValuesCallback(JsonDocument& json, uint32_t wsclient_id);
       void      flowerCareOnScanEndCallback();
     #endif
 
-    
+    void      flowControlGetValuesCallback(JsonDocument& json, uint32_t wsclient_id);
+    void      LevelSensorGetValuesCallback(JsonDocument& json, uint32_t wsclient_id);
+    void      logGetValuesCallback(const char* logline, JsonDocument& json, uint32_t wsclient_id);
+
     void      handleNotFound(AsyncWebServerRequest *request);
     void      handleRoot(AsyncWebServerRequest *request);
     bool      handleReset();
@@ -76,8 +82,6 @@ class MyWebServer {
     void      onImprovWiFiConnectedCb(const char *ssid, const char *password);
     void      onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len);
 
-    void      GetInitDataFlowerCare(JsonDocument& json);
-    void      LoadFlowerCareConfig();      
 };
 
 #endif

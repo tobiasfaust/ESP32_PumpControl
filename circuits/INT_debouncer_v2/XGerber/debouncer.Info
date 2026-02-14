@@ -1,0 +1,34 @@
+CAM-Ausgabe für Projekt / CAM Output for Project debouncer.T3001
+Ausgabe am / Output Date 08. Sep 2025, 19:06h
+Projekt erzeugt mit / Project created with TARGET 33.6.0.16 discover
+Ausgabe erzeugt mit / Output created with TARGET 3001! V33.6.0.16
+Created with TARGET 3001! NC edition: Commercial use is illegal!
+Lieferanschrift / Delivery address:
+  
+  
+  
+  D- 
+  Tel: 
+  FAX: 
+  eMail: 
+Größe der Platine / Size of PCB: 70 mm x 30 mm
+Dicke der Platine / Thickness of PCB: 1,6 mm
+KupferDicke / Copper thickness: 35 µm
+
+Beschreibung der erzeugten Dateien / Description of generated files:
+
+debouncer.Top = 16 = Kupfer oben / Copper top L1   ( *.Top )
+debouncer.Bot = 2 = Kupfer unten / Copper bottom L2   ( *.Bot )
+debouncer.Tool = Bohrerliste / Drill tool list
+debouncer.Drill = Durchkontaktierte Bohrungen / Plated through drills
+debouncer.Outline = 23 = Platinen-Umriss / PCB outline   ( *.Outline )
+debouncer.StopTop = 18 = Lötstoppmaske oben / Solder stop top   ( *.StopTop )
+debouncer.StopBot = 4 = Lötstoppmaske unten / Solder stop bottom   ( *.StopBot )
+debouncer.PosiTop = 21 = Bestückungsdruck oben / Silk screen top   ( *.PosiTop )
+debouncer.ValuesBot = 30 = Bauteilwerte unten / Values bottom   ( extra in Datei: *.ValuesBot )
+debouncer.PasteTop = 19 = Lötpaste oben / Paste top   ( *.PasteTop )
+debouncer_BOM.xlsx = BOM / Bill Of Material (JLCPCB)
+debouncer_CPL.xlsx = CPL / Component Placement List (JLCPCB)
+
+
+Achtung: Dünnste Schrift (Font too thin) ist kleiner 0,150mm: (0,104 bei 4,172388 | 12,798457) auf Ebene 21
