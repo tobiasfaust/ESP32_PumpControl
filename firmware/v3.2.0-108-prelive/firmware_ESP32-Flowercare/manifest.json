@@ -1,0 +1,14 @@
+{
+    "name": "ESP32_PumpControl (v3.2.0-prelive)",
+    "chipFamily": "ESP32",
+    "stage": "prelive",
+    "build": 108,
+    "variant": "flowercare",
+    "version": "v3.2.0",
+    "parts": [
+        {
+            "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.0-108-prelive/firmware_ESP32-Flowercare/merged-firmware.ESP32.v3.2.0-108.flowercare.prelive.bin",
+            "offset": 0
+        }
+    ]
+}
