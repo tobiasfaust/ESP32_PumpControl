@@ -1,32 +1,15 @@
-<<<<<<< HEAD
-T1 0.600000mm  28x [36.900000 | -31.700000]
-T2 0.800000mm  38x [23.770000 | -34.700000]
-T3 0.800000mm  26x [33.930000 | -34.700000]
-T4 1.000000mm  38x [51.400000 | -22.100000]
+T1 0.600000mm  30x [34.000000 | -31.700000]
+T2 0.800000mm  41x [23.770000 | -34.700000]
+T3 0.800000mm  23x [33.930000 | -34.700000]
+T4 1.000000mm  50x [49.500000 | -22.200000]
 T5 1.000000mm  20x [23.870000 | -1.175000]
 T6 1.400000mm  4x [33.060000 | 14.000000]
 T7 12.000000mm  1x [21.848889 | 8.223439]
 
 ; 7 Werkzeuge
-; 155 Bohrungen
+; 169 Bohrungen
 ; Duennster Bohrer: 0.600000mm
 
 ; Die angegebenen Durchmesser sind Endmaße. / The diameters indicated are final dimensions.
-=======
-T1 0.600000mm  18x [32.900000 | -31.700000]
-T2 0.800000mm  38x [23.770000 | -34.700000]
-T3 0.800000mm  26x [33.930000 | -34.700000]
-T4 0.900000mm  2x [23.870000 | -6.255000]
-T5 1.000000mm  28x [51.400000 | -22.100000]
-T6 1.000000mm  20x [-11.730000 | 10.625000]
-T7 1.400000mm  4x [33.060000 | 14.000000]
-T8 12.000000mm  1x [21.848889 | 8.223439]
-
-; 8 Werkzeuge
-; 137 Bohrungen
-; Duennster Bohrer: 0.600000mm
-
-; Die angegebenen Durchmesser sind Endmaße.
->>>>>>> origin/prelive
 ; Die wirklichen Bohrerdurchmesser müssen erfahrungsgemäß anders gewählt werden!
 
