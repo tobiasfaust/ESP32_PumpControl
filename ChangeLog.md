@@ -1,5 +1,5 @@
 Release 3.2.1:
-  - ..
+  - fix blocking wifi device inImprovLib: update Wifi credentials if current credentials are not working anymore
   
 Release 3.2.0:
     +++++++ This version is not OTA compatible with older versions +++++++

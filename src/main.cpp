@@ -75,7 +75,7 @@ void setup() {
 
   Config = new BaseConfig(configFS);
 
-  #ifdef ARDUINO_USB_CDC_ON_BOOT
+  #ifdef ARDUINO_USB_CDC_ON_BOOT  // ESP32 C3/S2: Serial is via onboard CDC
     Serial.begin(115200);
   #else
     Serial.begin(115200,
