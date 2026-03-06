@@ -13,7 +13,7 @@
     
     
     <script type='module'>
-      import { init } from './sensorconfig.js';
+      import { init, RefreshMeasurementMoisture } from './sensorconfig.js';
       import { onSubmit, radioselection, initDataValues } from './Javascript.js';
       import { addrow, delrow } from './valvefunctions.js';
       window.onSubmit = onSubmit;
@@ -21,6 +21,7 @@
       window.initDataValues = initDataValues;
       window.addrow = addrow;	
       window.delrow = delrow;
+      window.RefreshMeasurementMoisture = RefreshMeasurementMoisture;
 
       window.addEventListener('DOMContentLoaded', init, false);
 
@@ -180,12 +181,17 @@
         <thead>
           <tr>
             <td style='width: 130px;'>
-              <input type='radio' id='sel_moisture1' name='sel_moisture' value='off' onclick="radioselection([],['moisture'])"/>
+              <input type='radio' id='sel_moisture1' name='sel_moisture' value='off' onclick="radioselection([],['moisture', 'btnRefreshMeasurementMoisture'])"/>
               <label for='sel_moisture1'>Off</label>
-              <input type='radio' id='sel_moisture2' name='sel_moisture' value='on' onclick="radioselection(['moisture'],[])"/>
+              <input type='radio' id='sel_moisture2' name='sel_moisture' value='on' onclick="radioselection(['moisture', 'btnRefreshMeasurementMoisture'],[])"/>
               <label for='sel_moisture2'>On</label>
             </td>
             <td>soil moisture sensors via ADS1115</td>
+            <td style="width: 100px;">
+              <button id="btnRefreshMeasurementMoisture" type='button' onclick="RefreshMeasurementMoisture()">
+                <i class="fa fa-refresh" aria-hidden="true"></i> Refresh measurement
+              </button>
+            </td>
           </tr>
         </thead>
         <tbody>
@@ -193,7 +199,7 @@
             <td valign="top" class="noborder">  
               <input type='button' value='&#10010; add new Port' onclick="addrow('moistureRows')"/>
             </td>
-            <td class="noborder">
+            <td class="noborder" colspan="2">
               <table id='moistureRows' class='editorDemoTable'>
                 <thead>
                 <tr>

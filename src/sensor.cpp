@@ -275,12 +275,19 @@ void sensor::loop_hcsr04() {
     raw = device->device.getResult_mV(); // get raw value in mV
     return (uint16_t) abs(raw);
   }
+
+  void sensor::RequestMeasurementMoisture() {
+    if (this->moistureEnabled) {
+      Config->logN(4, "Manual measurement of moisture requested");
+      loop_ads1115_moisture();
+    }
+  }
 #endif
 
 void sensor::loop() {
-  /*start measuring soil moisture, every 5sec */
+  /*start measuring soil moisture, every 5min */
 #ifdef USE_ADS1115
-  if (millis() - this->previousMillis_moisture > 5*1000) {
+  if (this->moistureEnabled && (this->previousMillis_moisture == 0 || (millis() - this->previousMillis_moisture > 300*1000))) {
     this->previousMillis_moisture = millis();
     loop_ads1115_moisture();
   }

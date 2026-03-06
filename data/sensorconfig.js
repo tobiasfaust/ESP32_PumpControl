@@ -45,14 +45,22 @@ function MyCallback() {
   document.querySelector("#loader").style.visibility = "hidden";
   document.querySelector("body").style.visibility = "visible";
 
-    var data = {};
-    data['cmd'] = {};
-    data['cmd']['action'] = "subscribe";
-    data['cmd']['subaction'] = "ads1115_data";
-    data["cmd"]["highlight"] = "true";
+  var data = {};
+  data['cmd'] = {};
+  data['cmd']['action'] = "subscribe";
+  data['cmd']['subaction'] = "ads1115_data";
+  data["cmd"]["highlight"] = "true";
   
-    global.requestData(data);
+  global.requestData(data);
   
+}
+
+export function RefreshMeasurementMoisture() {
+  var data = {};
+  data['cmd'] = {};
+  data['cmd']['action'] = "sensor";
+  data['cmd']['subaction'] = "requestMeasurementMoisture";
+  global.requestData(data);
 }
 
 // ************************************************

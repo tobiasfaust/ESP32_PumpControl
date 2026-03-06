@@ -294,6 +294,16 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
         fsfiles->HandleRequest(json);
       }
      
+      #ifdef USE_ADS1115
+      if (action && action == "sensor") {
+        if (subaction && subaction == "requestMeasurementMoisture") {
+          LevelSensor->RequestMeasurementMoisture();
+          json["response"]["status"] = 1;
+          json["response"]["text"] = "Measurement requested";
+        }
+      }
+      #endif
+
       #ifdef USE_FLOWERCARE
       if (action && action == "flowercare") {
         if (flowerCare && subaction && subaction == "scan") {

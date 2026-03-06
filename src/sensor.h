@@ -47,13 +47,14 @@ class sensor {
     
     #ifdef USE_ADS1115
       void      init_ads1115(uint8_t i2c, uint8_t port, String topic, uint16_t cal_min, uint16_t cal_max);
+      void      RequestMeasurementMoisture(); 
     #endif
 
     void      setSensorType(sensorType_t t);
     void      loop();
     void      SetLvl(uint8_t lvl);
     void      LoadJsonConfig();
-    void      GetInitData(JsonDocument& json);    
+    void      GetInitData(JsonDocument& json);
     
     const uint16_t& GetRaw() const {return raw;}
     const uint8_t&  GetLvl() const {return level; }
