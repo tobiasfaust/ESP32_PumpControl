@@ -2,7 +2,8 @@
 .vscode/
 .git/
 data/esp
-data/handlefiles*
-data/webserial*
+data/handlefiles.*
+data/webserial.*
 include/board.h
 data/gpio.js
+**/[Bb]ackup*/
