@@ -15,6 +15,7 @@
     String topic;
     uint16_t cal_min = 0;
     uint16_t cal_max = 3300;
+    bool invert = false;
   } adsport_t;
 
   typedef struct {
@@ -46,7 +47,7 @@ class sensor {
     void      init_analog(uint8_t pinAnalog) ;
     
     #ifdef USE_ADS1115
-      void      init_ads1115(uint8_t i2c, uint8_t port, String topic, uint16_t cal_min, uint16_t cal_max);
+      void      init_ads1115(uint8_t i2c, uint8_t port, String topic, uint16_t cal_min, uint16_t cal_max, bool invert = false);
       void      RequestMeasurementMoisture(); 
     #endif
 

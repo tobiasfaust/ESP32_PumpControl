@@ -548,6 +548,7 @@ void MyWebServer::LevelSensorGetValuesCallback(JsonDocument& json, uint32_t wscl
   JsonArray rows = json.as<JsonArray>();
   for (JsonObject elem : rows) {
     wsjson["data-id"][String(elem["name"].as<String>()) + "_val"] = String(elem["moisture"].as<String>() + "%");
+    wsjson["data-id"][String(elem["name"].as<String>()) + "_rawval"] = String(elem["raw"].as<String>());
   }
   wsjson["cmd"]["highlight"] = "true";
   this->ws->text(wsclient_id, wsjson.as<String>());

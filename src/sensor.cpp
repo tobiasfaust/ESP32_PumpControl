@@ -120,7 +120,7 @@ void sensor::loop_hcsr04() {
 }
 
 #ifdef USE_ADS1115
-  void sensor::init_ads1115(uint8_t i2c, uint8_t port, String topic, uint16_t cal_min, uint16_t cal_max) {  
+  void sensor::init_ads1115(uint8_t i2c, uint8_t port, String topic, uint16_t cal_min, uint16_t cal_max, bool invert) {  
     // check, if device already exists
     adsdev_t* device = this->getAdsDevice(i2c);
     
@@ -154,9 +154,10 @@ void sensor::loop_hcsr04() {
         portptr->topic = topic;
         portptr->cal_min = cal_min;
         portptr->cal_max = cal_max;
+        portptr->invert = invert;
       }
       
-      Config->logN(3, "Channel %d to ADS1115 at i2cAddress 0x%02x added with topic '%s' ", port, i2c, topic.c_str());
+      Config->logN(3, "Channel %d to ADS1115 at i2cAddress 0x%02x added with topic '%s', invert: %s ", port, i2c, topic.c_str(), invert?"true":"false");
     }
   }
 
@@ -229,13 +230,16 @@ void sensor::loop_hcsr04() {
         *  0-3.3V -> 0-100%
         *  moisture sensor gets 100% = dry, but we want a moisture: 100% = wet  
         */
-        level = 100 - map(raw, portptr->cal_min, portptr->cal_max, 0, 100); // 0-3.3V -> 0-100%
+        level = map(raw, portptr->cal_min, portptr->cal_max, 0, 100); // 0-3.3V -> 0-100%
+        if (portptr->invert) level = 100 - level; // invert level, if requested
+
         Config->logN(4, "read moisture of ADS1115 (0x%02x) channel %d: raw: %d, calculated level: %d", this->ads1115_devices->at(i).i2cAddress, chan, raw, level);
 
         if (raw > 0 ) { 
           JsonObject obj = rows.add<JsonObject>();
           obj["name"] = portptr->topic.c_str();
           obj["moisture"] = level;
+          obj["raw"] = raw;
         }
       }
     }
@@ -375,7 +379,8 @@ void sensor::LoadJsonConfig() {
                 uint8_t port = (elem["ads_port"])? elem["ads_port"].as<int>() : 0;
                 uint16_t cal_min = (elem["ads_min"])? elem["ads_min"].as<int>() : 0;
                 uint16_t cal_max = (elem["ads_max"])? elem["ads_max"].as<int>() : 0;
-                this->init_ads1115(strtoul(elem["ads_addr"].as<String>().c_str(), NULL, 16), port, elem["mqtttopic"].as<String>(), cal_min, cal_max);
+                bool invert = (elem["invert"] && elem["invert"].as<int>() > 0) ? true : false;
+                this->init_ads1115(strtoul(elem["ads_addr"].as<String>().c_str(), NULL, 16), port, elem["mqtttopic"].as<String>(), cal_min, cal_max, invert);
               }
         #endif
         
@@ -388,7 +393,7 @@ void sensor::LoadJsonConfig() {
       else if (selection == "none")     { this->setSensorType(NONE); Config->logN(3, "No LevelSensor requested"); }
 
       #ifdef USE_ADS1115
-        else if(selection == "ads1115") { this->setSensorType(ADS1115); this->init_ads1115(this->ads1115_i2c, this->ads1115_port, "", this->measureDistMin, this->measureDistMax); }
+        else if(selection == "ads1115") { this->setSensorType(ADS1115); this->init_ads1115(this->ads1115_i2c, this->ads1115_port, "", this->measureDistMin, this->measureDistMax, false); }
       #endif
 
     } else {
@@ -454,7 +459,9 @@ void sensor::GetInitData(JsonDocument& json) {
       json["data"]["rows"][counter]["ads_addr"] = String(i2caddrhex);
       json["data"]["rows"][counter]["ads_min"] = portptr->cal_min;
       json["data"]["rows"][counter]["ads_max"] = portptr->cal_max;
+      json["data"]["rows"][counter]["invert"] = (portptr->invert?1:0);
       json["data"]["rows"][counter]["ads_value"]["data-id"] = String(portptr->topic.c_str()) + "_val";
+      json["data"]["rows"][counter]["ads_rawvalue"]["data-id"] = String(portptr->topic.c_str()) + "_rawval";
       counter++;
       }
     }
@@ -467,6 +474,7 @@ void sensor::GetInitData(JsonDocument& json) {
     json["data"]["rows"][0]["ads_addr"] = "48";
     json["data"]["rows"][0]["ads_min"] = 0;
     json["data"]["rows"][0]["ads_max"] = 3300;
+    json["data"]["rows"][0]["invert"] = 0;
   }
 
 #else 

@@ -230,6 +230,11 @@
                       <i class="fa fa-question-circle" style="font-size: 12px; cursor: pointer; color: gold;"></i>
                     </span>
                   </td>
+                  <td style="width:100px">
+                    <span title="Invert signal for calculation moisture level, 0%=MaxValue, 100%=MinValue">Invert
+                      <i class="fa fa-question-circle" style="font-size: 12px; cursor: pointer; color: gold;"></i>
+                    </span>
+                  </td>
             
                   <td style="width: 100px;">
                     <span title="current measured value">Value
@@ -249,7 +254,12 @@
                       <td><input id='ads_port' name='ads_port' type='number' min='0' max='4' style='width: 4em'/></td>
                       <td><input id='ads_min' name='ads_min' type='number' min='0' max='3300' style='width: 4em'/></td>
                       <td><input id='ads_max' name='ads_max' type='number' min='0' max='3300' style='width: 4em'/></td>
-                      <td><span id='ads_value' class='ajaxchange'>-</span></td>
+                      <td><input type='checkbox' name='invert' id='invert'/></td>
+                      <td>
+                        raw: <span id='ads_rawvalue' class='ajaxchange'>-</span>
+                        <br>
+                        level: <span id='ads_value' class='ajaxchange'>-</span>
+                      </td>
                       <td><input type='button' value='&#10008;' onclick='delrow(this)'/></td>
                     </tr>
                   </template>
