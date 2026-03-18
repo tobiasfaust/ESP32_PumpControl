@@ -6,8 +6,7 @@ export function init1() {
   data['cmd']['action'] = "GetInitData";
   data['cmd']['subaction'] = "status";
   data['cmd']['callbackFn'] = "status_Callback";
-  data['data'] = {'wifiname': 'test'};
-
+  
   global.handleJsonItems(data);
 
 }

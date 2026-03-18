@@ -14,11 +14,14 @@
       window.DoReset = DoReset;
       window.RefreshI2C = RefreshI2C;
       window.Refresh1Wire = Refresh1Wire;
-      window.addEventListener('DOMContentLoaded', init, false);
-
+      
       import { initExternalSite } from './navi.js';
       window.initExternalSite = initExternalSite;
-      window.addEventListener('DOMContentLoaded', () => initExternalSite(document), false);
+      
+      window.addEventListener('DOMContentLoaded', () => {
+        initExternalSite(document);
+        init();
+      }, false);
 
     </script>
 

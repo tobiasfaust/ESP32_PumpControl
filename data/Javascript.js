@@ -82,6 +82,7 @@ export function connectWebSocket() {
     }
   }, false);
 
+/*
   document.addEventListener('visibilitychange', function() {
     if (document.visibilityState === 'visible') {
       if (!ws || ws.readyState === WebSocket.CLOSED) {
@@ -100,6 +101,7 @@ export function connectWebSocket() {
     console.log('Not connecting WebSocket due to visibility state:', document.visibilityState);
     return;
   }
+*/
 
   //ws = new WebSocket(location.origin.replace(/^http/, 'ws') + '/ajaxws');
   //ws = new WebSocket('ws://10.0.2.231/ajaxws'); 
