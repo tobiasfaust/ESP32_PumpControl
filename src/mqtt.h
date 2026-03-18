@@ -86,7 +86,7 @@ class MQTT: PubSubClient {
     void              Publish_Int(const char* subtopic, int number, bool fulltopic);
     void              Publish_Float(const char* subtopic, float number, bool fulltopic);
     void              Publish_String(const char* subtopic, String value, bool fulltopic);
-    void              Publish_IP();
+    void              Publish_State();
     String            getTopic(String subtopic, bool fulltopic);
     void              disconnect();
     const String&     GetRoot()  const {return mqtt_root;}

@@ -243,11 +243,8 @@ void MQTT::reconnect() {
                             "Offline")) {
     Config->logN(1, "MQTT Server connected... ");
     // Once connected, publish basics ...
-    this->Publish_IP();
-    this->Publish_String("ssid", WiFi.SSID(), false);
-    this->Publish_String("version", Config->GetReleaseName(), false);
-    this->Publish_String("state", "Online", false);  // LWT reset
-
+    this->Publish_State();
+    
     // ... and resubscribe if needed
     for (uint8_t i=0; i< this->subscriptions->size(); i++) {
       String topic = this->subscriptions->at(i);
@@ -308,11 +305,23 @@ String MQTT::getTopic(String subtopic, bool fulltopic) {
   return std::move(subtopic);
 }
 
-void MQTT::Publish_IP() {
+void MQTT::Publish_State() {
   char buffer[16] = {0};
   memset(&buffer[0], 0, sizeof(buffer));
   snprintf(buffer, sizeof(buffer), "%s", this->ipadresse.toString().c_str());
-  Publish_String("IP", buffer, false);
+
+  // Create JSON object with state information
+  JsonDocument doc;
+  doc["ssid"] = WiFi.SSID();
+  doc["bssid"] = WiFi.BSSIDstr();
+  doc["rssi"] = WiFi.RSSI();
+  doc["version"] = Config->GetReleaseName();
+  doc["state"] = "Online";
+  doc["ip"] = buffer;
+  
+  String jsonString;
+  serializeJson(doc, jsonString);
+  this->Publish_String("state", jsonString, false);
 }
 
 /*******************************************************
@@ -407,8 +416,8 @@ void MQTT::loop() {
 
   if (Config->GetKeepAlive() > 0 && millis() - this->last_keepalivemsg > (Config->GetKeepAlive() * 1000)) {
     this->last_keepalivemsg = millis();
-    this->Publish_String("state", "Online", false);
-    Config->logN(4, "KeepAlive: Publish state Online");
+    this->Publish_State();
+    Config->logN(4, "KeepAlive: Publish state message to show connection is alive");
   }
 
   if (Config->GetDebugLevel() >=4 && millis() - this->last_debugmsg > (30 * 1000))  {
