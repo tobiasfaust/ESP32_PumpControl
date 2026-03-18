@@ -243,7 +243,7 @@ void MQTT::reconnect() {
                             "Offline")) {
     Config->logN(1, "MQTT Server connected... ");
     // Once connected, publish basics ...
-    this->Publish_State();
+    this->Publish_State(false);
     
     // ... and resubscribe if needed
     for (uint8_t i=0; i< this->subscriptions->size(); i++) {
@@ -305,19 +305,28 @@ String MQTT::getTopic(String subtopic, bool fulltopic) {
   return std::move(subtopic);
 }
 
-void MQTT::Publish_State() {
-  char buffer[16] = {0};
-  memset(&buffer[0], 0, sizeof(buffer));
-  snprintf(buffer, sizeof(buffer), "%s", this->ipadresse.toString().c_str());
-
-  // Create JSON object with state information
+void MQTT::Publish_State(bool debug) {
   JsonDocument doc;
   doc["ssid"] = WiFi.SSID();
   doc["bssid"] = WiFi.BSSIDstr();
   doc["rssi"] = WiFi.RSSI();
   doc["version"] = Config->GetReleaseName();
   doc["state"] = "Online";
-  doc["ip"] = buffer;
+  doc["ip"] = this->ipadresse.toString();
+
+  if(debug) {
+    unsigned long uptime = millis() / 1000;
+    unsigned int hours = uptime / 3600;
+    unsigned int minutes = (uptime % 3600) / 60;
+    unsigned int seconds = uptime % 60;
+    char uptimeStr[20];
+    snprintf(uptimeStr, sizeof(uptimeStr), "%02d:%02d:%02d", hours, minutes, seconds);
+
+    doc["memory"] = String(ESP.getFreeHeap() / 1024) + " kb";
+    doc["uptime"] = uptimeStr;
+    doc["variant"] = String(GIT_VARIANT);
+    doc["build"] = String(GITHUB_RUN).toInt();
+  }
   
   String jsonString;
   serializeJson(doc, jsonString);
@@ -416,32 +425,7 @@ void MQTT::loop() {
 
   if (Config->GetKeepAlive() > 0 && millis() - this->last_keepalivemsg > (Config->GetKeepAlive() * 1000)) {
     this->last_keepalivemsg = millis();
-    this->Publish_State();
+    this->Publish_State((Config->GetDebugLevel() >=4)?true:false);
     Config->logN(4, "KeepAlive: Publish state message to show connection is alive");
-  }
-
-  if (Config->GetDebugLevel() >=4 && millis() - this->last_debugmsg > (30 * 1000))  {
-    // send messages for debugging every 30 seconds
-    this->last_debugmsg = millis();
-
-    if (Config->GetDebugLevel() >=4) {
-      char buffer[100] = {0};
-      memset(buffer, 0, sizeof(buffer));
-
-      snprintf(buffer, sizeof(buffer), "%d kb", ESP.getFreeHeap() / 1024);
-      this->Publish_String("memory", buffer, false);
-
-      snprintf(buffer, sizeof(buffer), "%d", WiFi.RSSI());
-      this->Publish_String("rssi", buffer, false);
-
-      unsigned long uptime = millis() / 1000;
-      unsigned int hours = uptime / 3600;
-      unsigned int minutes = (uptime % 3600) / 60;
-      unsigned int seconds = uptime % 60;
-      char uptimeStr[20];
-      snprintf(uptimeStr, sizeof(uptimeStr), "%02d:%02d:%02d", hours, minutes, seconds);
-
-      this->Publish_String("uptime", uptimeStr, false);
-    }
   }
 }

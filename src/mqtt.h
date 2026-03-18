@@ -86,7 +86,7 @@ class MQTT: PubSubClient {
     void              Publish_Int(const char* subtopic, int number, bool fulltopic);
     void              Publish_Float(const char* subtopic, float number, bool fulltopic);
     void              Publish_String(const char* subtopic, String value, bool fulltopic);
-    void              Publish_State();
+    void              Publish_State(bool debug = false);
     String            getTopic(String subtopic, bool fulltopic);
     void              disconnect();
     const String&     GetRoot()  const {return mqtt_root;}
@@ -114,7 +114,6 @@ class MQTT: PubSubClient {
     String            mqtt_root = "";
     String            mqtt_basepath = "";
     uint64_t          mqttreconnect_lasttry = 0;
-    uint64_t          last_debugmsg = 0;
     uint64_t          last_keepalivemsg = 0;
     bool              ConnectStatusWifi;
     bool              ConnectStatusMqtt;
