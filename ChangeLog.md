@@ -3,7 +3,8 @@ Release 3.2.1:
   - feature: measure ADS1115 based moisture every 5min, add measure request button in webui
   - feature: add invertation checkbox to ADS1115 moisture sensors
   - feature: add raw value of ADS1115 to webui and mqtt, so you can calibrate your sensor by yourself
-  
+  - feature: change online state msg format to json with more details
+
 Release 3.2.0:
     +++++++ This version is not OTA compatible with older versions +++++++
     +++++++ Please do a fresh installation by web-installer +++++++
