@@ -68,7 +68,8 @@ void myMQTTCallBack(char* topic, byte* payload, unsigned int length) {
 void setup() {
   boolean systemPartitionMounted = sysFS.begin(true, "/web", 5, "webdata");
   boolean configPartitionMounted = configFS.begin(true, "/config", 5, "config");
-  
+  randomSeed(analogRead(0)); // init random generator with random value from floating pin to avoid same random numbers after each reboot, especially for MQTT ClientID
+
   // Flash Write Issue
   // https://github.com/esp8266/Arduino/issues/4061#issuecomment-428007580
   //LittleFS.format();
