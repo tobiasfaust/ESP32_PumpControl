@@ -78,6 +78,9 @@ MQTT::MQTT(const char* MqttServer, uint16_t MqttPort, String MqttBasepath, Strin
   espClient = WiFiClient();
 
   PubSubClient::setClient(espClient);
+  PubSubClient::setBufferSize(512); // Standard ist oft nur 128 oder 256
+  PubSubClient::setKeepAlive(60);
+  PubSubClient::setSocketTimeout(3); // Wartet maximal 3 Sek. auf den Broker
   PubSubClient::setServer(Config->GetMqttServer().c_str(), Config->GetMqttPort());
 }
 
@@ -219,28 +222,22 @@ void MQTT::WaitForConnect() {
 
 void MQTT::reconnect() {
   char topic[50];
-  char LWT[50];
-  memset(&LWT[0], 0, sizeof(LWT));
   memset(&topic[0], 0, sizeof(topic));
 
   if (Config->UseRandomMQTTClientID()) {
     Config->logN(1, "Using random MQTT ClientID");
-    snprintf (topic, sizeof(topic), "%s-%s", this->mqtt_root.c_str(), String(random(0xffff)).c_str());
+    snprintf (topic, sizeof(topic), "%s-%08X-%s", this->mqtt_root.c_str(), ESP_getChipId(), String(random(0xffff)).c_str());
   } else {
     Config->logN(1, "Using fixed MQTT ClientID");
     snprintf (topic, sizeof(topic), "%s-%08X", this->mqtt_root.c_str(), ESP_getChipId());
   }
-  snprintf(LWT, sizeof(LWT), "%s/state", this->mqtt_root.c_str());
 
   Config->logN(1, "Attempting MQTT connection as %s at %s:%d", topic, Config->GetMqttServer().c_str(), Config->GetMqttPort());
 
   if (PubSubClient::connect(topic,
                             Config->GetMqttUsername().c_str(),
-                            Config->GetMqttPassword().c_str(),
-                            LWT,
-                            true,
-                            false,
-                            "Offline")) {
+                            Config->GetMqttPassword().c_str()
+                            )) {
     Config->logN(1, "MQTT Server connected... ");
     // Once connected, publish basics ...
     this->Publish_State(false);
@@ -255,7 +252,8 @@ void MQTT::reconnect() {
     }
 
   } else {
-    Config->logN(1, "failed, rc=%d - Trying again in 5 seconds", PubSubClient::state());
+    this->disconnect();
+    Config->logN(1, "failed, rc=%d - Trying again in 30 seconds", PubSubClient::state());
   }
 }
 
