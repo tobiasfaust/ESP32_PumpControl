@@ -48,6 +48,8 @@ MQTT::MQTT(const char* MqttServer, uint16_t MqttPort, String MqttBasepath, Strin
                              this,
                              std::placeholders::_1));
 
+  improvSerial.setBSSID(Config->GetWifiBSSID());
+
   if (Config->GetUseETH()) {
     #ifdef ESP32
       eth_shield_t* shield = this->GetEthShield(Config->GetLANBoard());

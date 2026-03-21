@@ -50,6 +50,7 @@ class BaseConfig {
     const uint8_t&  GetOledType()   const {return oled_type;}
     const bool&     Enabled1Wire()    const {return enable_1wire;}
     const String&   GetMqttServer()  const {return mqtt_server;}
+    const uint8_t*  GetWifiBSSID()   const {return wifibssid;}
     const uint16_t& GetMqttPort()   const {return mqtt_port;}
     const String&   GetMqttUsername()const {return mqtt_username;}
     const String&   GetMqttPassword()const {return mqtt_password;}
@@ -101,8 +102,11 @@ class BaseConfig {
     uint8_t   serial_rx;
     uint8_t   serial_tx;
     uint8_t   max_threads;
+    uint8_t   wifibssid[6] = {0};
 
     std::function<void(const char*)> onLogValuesCallback; // Callback function pointer
+
+    void      setWifiBSSID(String bssid_str);
 
 };
 

@@ -77,6 +77,7 @@ void BaseConfig::LoadJsonConfig() {
           if (elem["serial_rx"])        { this->serial_rx = (elem["serial_rx"].as<int>()) - 200;}
           if (elem["serial_tx"])        { this->serial_tx = (elem["serial_tx"].as<int>()) - 200;}
           if (elem["max_threads"])      { this->max_threads = (elem["max_threads"].as<int>()); }
+          if (elem["wifibssid"])        { this->setWifiBSSID(elem["wifibssid"].as<String>()); }
         }
       } while (stream.findUntil(",","]"));
     } else {
@@ -99,6 +100,20 @@ void BaseConfig::LoadJsonConfig() {
   this->disabledGPIO.addValue(this->serial_tx, GpioIdentifier::BASECONFIG);
   if (this->enable_3wege && this->ventil3wege_port>0) { this->disabledGPIO.addValue(this->ventil3wege_port, GpioIdentifier::BASECONFIG); }
     
+}
+
+void BaseConfig::setWifiBSSID(String bssid_str) {
+  // expect format "00:11:22:33:44:55"
+  // Parse MAC address string format "00:11:22:33:44:55"
+  uint8_t mac[6];
+  if (sscanf(bssid_str.c_str(), "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx", 
+         &mac[0], &mac[1], &mac[2], &mac[3], &mac[4], &mac[5]) == 6) {
+    for (int i = 0; i < 6; i++) {
+      this->wifibssid[i] = mac[i];
+    }
+  } else {
+    this->logN(1, "Invalid BSSID format: %s, expected format: 00:11:22:33:44:55", bssid_str.c_str());
+  }
 }
 
 const String BaseConfig::GetReleaseName() {
@@ -127,6 +142,12 @@ void BaseConfig::GetInitData(JsonDocument& json) {
   json["data"]["keepalive"] = this->keepalive;
   json["data"]["GpioPin_serial_rx"] = this->serial_rx + 200;
   json["data"]["GpioPin_serial_tx"] = this->serial_tx + 200;
+  
+  char bssid_hex[18];
+  sprintf(bssid_hex, "%02X:%02X:%02X:%02X:%02X:%02X",
+          this->wifibssid[0], this->wifibssid[1], this->wifibssid[2],
+          this->wifibssid[3], this->wifibssid[4], this->wifibssid[5]);
+  json["data"]["wifibssid"] = String(bssid_hex);
 
   #ifdef ESP32
     json["data"]["sel_wifi"] = ((this->useETH)?0:1);
