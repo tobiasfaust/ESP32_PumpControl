@@ -24,6 +24,15 @@ function GetInitData() {
   global.requestData(data); 
 }
 
+export function RefreshWifiAPs(id) {
+  global.setResponse(true, "Refreshing WiFi APs, please wait...");
+  
+  var data = {};
+  data['cmd'] = {};
+  data['cmd']['action'] = "RefreshWifiAPs";
+  global.requestData(data);
+}
+
 // ************************************************
 function MyCallback() {
   global.CreateSelectionListFromInputField('input[type=number][id^=GpioPin]', [gpio], JSON.parse(gpio_disabled));

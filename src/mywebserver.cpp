@@ -115,7 +115,6 @@ void MyWebServer::loop() {
       flowerCare->loop();
     }
   #endif
-
 }
 
 void MyWebServer::handleNotFound(AsyncWebServerRequest *request) {
@@ -142,7 +141,7 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
   
   } else if (type == WS_EVT_DISCONNECT) {
     Config->logN(4, "[Client: %u] WebSocket client disconnected", client->id());
-
+    
     // Remove client from WebSocket client requests if it exists
     for (uint8_t i = 0; i < this->_wsclientRequests->size(); i++) {
       if (this->_wsclientRequests->at(i).ws_id == client->id()) {
@@ -154,7 +153,7 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
         if (this->_wsclientRequests->at(i).requestData == wsclient_t::ADS1115_DATA) { LevelSensor->onValues(nullptr); }
         if (this->_wsclientRequests->at(i).requestData == wsclient_t::FLOWCONTROL_DATA) { FlowCtrl->onValues(nullptr); }
         if (this->_wsclientRequests->at(i).requestData == wsclient_t::LOG_DATA) { Config->onLogValues(nullptr); }
-
+        
         this->_wsclientRequests->erase(this->_wsclientRequests->begin() + i);
       }
     }
@@ -370,6 +369,13 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
         }
       }
 
+      if (action && action == "RefreshWifiAPs") {
+        bool result = Config->addWifiBssid(json, true);  
+
+        json["response"]["status"] = (result ? 1 : 0);
+        json["response"]["text"] = (result ? "Wifi AP-Scan completed" : "Wifi AP-Scan failed");
+      }
+
       #ifdef USE_I2C
       if (action && action == "RefreshI2C") {
         I2Cdetect->i2cScan();  
@@ -437,7 +443,6 @@ void MyWebServer::GetInitDataStatus(JsonDocument& json) {
   json["data"]["ipaddress"] = mqtt->GetIPAddress().toString();
   json["data"]["wifiname"] = (Config->GetUseETH()?"LAN":WiFi.SSID());
   json["data"]["macaddress"] = WiFi.macAddress();
-  json["data"]["bssid"] = (Config->GetUseETH()?"wired LAN":WiFi.BSSIDstr());
   json["data"]["mqtt_status"] = (mqtt->GetConnectStatusMqtt()?"Connected":"Not Connected");
   json["data"]["uptime"] = uptime_formatter::getUptime();
   json["data"]["freeheapmem"] = ESP.getFreeHeap();
@@ -479,6 +484,12 @@ void MyWebServer::GetInitDataStatus(JsonDocument& json) {
   #else
     json["data"]["rssi"] = WiFi.RSSI();
   #endif
+
+  if (Config->GetUseETH()) {
+    json["data"]["tr_bssid"]["className"] = "hide";
+  } else {
+    json["data"]["bssid"] = (Config->GetUseETH()?"wired LAN":WiFi.BSSIDstr());
+  }
 
   json["response"].to<JsonObject>();
   json["response"]["status"] = 1;

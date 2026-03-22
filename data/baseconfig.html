@@ -9,8 +9,9 @@
     <script language='javascript' type='module' src='./Javascript.js'></script>
     <script language='javascript' type='module' src='./baseconfig.js'></script>
     <script type='module'>
-      import { init } from './baseconfig.js';
+      import { init, RefreshWifiAPs } from './baseconfig.js';
       import { onSubmit, radioselection, initDataValues } from './Javascript.js';
+      window.RefreshWifiAPs = RefreshWifiAPs;
       window.onSubmit = onSubmit;
       window.radioselection = radioselection;
       window.initDataValues = initDataValues;
@@ -70,9 +71,17 @@
             </td>
           </tr>
 
-          <tr>
-            <td>Bind Wifi to AP BSSID</td>
-            <td><input size='30' name='wifibssid' id='wifibssid' type='text' spellcheck='false' placeholder='00:00:00:00:00:00'/></td>
+          <tr id="tr_bssid">
+            <td>Bind Wifi to AP BSSID
+              <a href='#' onclick="RefreshWifiAPs('wifibssid')" class='ButtonRefresh'>&#8634;</a>
+            </td>
+            <td>
+              <select name='wifibssid' id='wifibssid' size='1' style='width: 16em'>
+                <template id='bssid_rows'>
+                  <option id='bssid_row'></option>
+                </template>
+              </select>
+            </td>
           </tr>
           
           <tr>

@@ -116,6 +116,15 @@ void BaseConfig::setWifiBSSID(String bssid_str) {
   }
 }
 
+bool BaseConfig::isWifiBssidSet() {
+  for (int i = 0; i < 6; i++) {
+    if (this->wifibssid[i] != 0) {
+      return true; // At least one byte is non-zero, BSSID is set
+    }
+  }
+  return false; // All bytes are zero, BSSID is not set
+}
+
 const String BaseConfig::GetReleaseName() {
   return String(Release) + "(@" + String(GIT_BRANCH) + ")"; 
 }
@@ -125,11 +134,61 @@ size_t BaseConfig::getFragmentation() {
   return 100 - ESP_GetMaxFreeAvailableBlock() * 100 / ESP.getFreeHeap();
 }
 
+bool BaseConfig::addWifiBssid(JsonDocument& json, bool ScanForWifi) {
+  char bssid_hex[18];
+  sprintf(bssid_hex, "%02X:%02X:%02X:%02X:%02X:%02X",
+          this->wifibssid[0], this->wifibssid[1], this->wifibssid[2],
+          this->wifibssid[3], this->wifibssid[4], this->wifibssid[5]);
+  
+  json["data"]["bssid_rows"].to<JsonArray>();
+  json["data"]["bssid_rows"][0]["bssid_row"].to<JsonObject>();
+  json["data"]["bssid_rows"][0]["bssid_row"]["value"] = "00:00:00:00:00:00";
+  if (!this->isWifiBssidSet()) json["data"]["bssid_rows"][0]["bssid_row"]["selected"] = "selected";
+  json["data"]["bssid_rows"][0]["bssid_row"]["text"] = "not set";
+  
+  if (this->isWifiBssidSet() && !ScanForWifi) {
+    json["data"]["bssid_rows"][1]["bssid_row"].to<JsonObject>();
+    json["data"]["bssid_rows"][1]["bssid_row"]["value"] = String(bssid_hex);
+    json["data"]["bssid_rows"][1]["bssid_row"]["selected"] = "selected";
+    json["data"]["bssid_rows"][1]["bssid_row"]["text"] = String(bssid_hex);
+  }
+
+  if (ScanForWifi) {
+    Config->logN(5, "Scanning for WiFi networks...");
+    WiFi.scanDelete(); // delete previous scan results to free memory
+    int16_t n = WiFi.scanNetworks(false, false, false, 300, 0, WiFi.SSID().c_str()); // start scan only for current connected SSID to speed up the scan
+        
+    
+    for (int i = 0; i < n; i++) {
+      char scan_bssid_hex[18];
+      sprintf(scan_bssid_hex, "%02X:%02X:%02X:%02X:%02X:%02X",
+              WiFi.BSSID(i)[0], WiFi.BSSID(i)[1], WiFi.BSSID(i)[2],
+              WiFi.BSSID(i)[3], WiFi.BSSID(i)[4], WiFi.BSSID(i)[5]);
+      json["data"]["bssid_rows"][i + 1]["bssid_row"].to<JsonObject>();
+      json["data"]["bssid_rows"][i + 1]["bssid_row"]["value"] = String(scan_bssid_hex);
+      json["data"]["bssid_rows"][i + 1]["bssid_row"]["text"] = String(scan_bssid_hex) + " (" + WiFi.RSSI(i) + ")";
+      if (strcmp(scan_bssid_hex, bssid_hex) == 0) {
+        json["data"]["bssid_rows"][i + 1]["bssid_row"]["selected"] = "selected";
+      }
+      Config->logN(4, "Found WiFi network: %s, BSSID: %s, RSSI: %d\n", WiFi.SSID(i).c_str(), scan_bssid_hex, WiFi.RSSI(i));
+    }
+    if (n == 0) return false; else return true;
+    WiFi.scanDelete(); // delete scan results after use to free memory
+  } else { return true; }
+}
+
 void BaseConfig::GetInitData(JsonDocument& json) {
   std::ostringstream i2caddress_oled_hex;
   i2caddress_oled_hex << std::hex << std::uppercase << std::setw(2) << std::setfill('0') << (int)this->i2caddress_oled;
 
   json["data"].to<JsonObject>();
+  
+  if (this->GetUseETH()) {
+    json["data"]["tr_bssid"]["className"] = "hide";
+  } else {
+    this->addWifiBssid(json);
+  }
+  
   json["data"]["mqttroot"]    = this->mqtt_root;
   json["data"]["mqttserver"]  = this->mqtt_server;
   json["data"]["mqttport"]    = this->mqtt_port;
@@ -143,12 +202,6 @@ void BaseConfig::GetInitData(JsonDocument& json) {
   json["data"]["GpioPin_serial_rx"] = this->serial_rx + 200;
   json["data"]["GpioPin_serial_tx"] = this->serial_tx + 200;
   
-  char bssid_hex[18];
-  sprintf(bssid_hex, "%02X:%02X:%02X:%02X:%02X:%02X",
-          this->wifibssid[0], this->wifibssid[1], this->wifibssid[2],
-          this->wifibssid[3], this->wifibssid[4], this->wifibssid[5]);
-  json["data"]["wifibssid"] = String(bssid_hex);
-
   #ifdef ESP32
     json["data"]["sel_wifi"] = ((this->useETH)?0:1);
     json["data"]["sel_eth"]  = ((this->useETH)?1:0);

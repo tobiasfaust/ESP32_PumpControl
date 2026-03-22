@@ -105,7 +105,7 @@ void MQTT::WifiOnEvent(WiFiEvent_t event) {
             Config->logN(1, "WiFi interface ready");
             break;
         case ARDUINO_EVENT_WIFI_SCAN_DONE:
-            Config->logN(1, "Completed scan for access points");
+            Config->logN(3, "Completed scan for access points");
             break;
         case ARDUINO_EVENT_WIFI_STA_START:
             Config->logN(1, "WiFi client started");

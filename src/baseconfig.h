@@ -34,6 +34,7 @@ class BaseConfig {
     void log(const int loglevel, const char* format, ...);
     void logN(const int loglevel, const char* format, ...);
     void log(const int loglevel, const JsonDocument& json);
+    bool addWifiBssid(JsonDocument& json, bool ScanForWifi = false);
 
     // callbacks
     /************************
@@ -107,6 +108,7 @@ class BaseConfig {
     std::function<void(const char*)> onLogValuesCallback; // Callback function pointer
 
     void      setWifiBSSID(String bssid_str);
+    bool      isWifiBssidSet();
 
 };
 
