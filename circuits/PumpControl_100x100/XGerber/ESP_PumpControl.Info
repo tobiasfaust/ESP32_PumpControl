@@ -1,5 +1,5 @@
 CAM-Ausgabe für Projekt / CAM Output for Project ESP_PumpControl.T3001
-Ausgabe am / Output Date 03. Mrz 2026, 10:11h
+Ausgabe am / Output Date 23. Mrz 2026, 12:58h
 Projekt erzeugt mit / Project created with TARGET 33.7.0.10 discover
 Ausgabe erzeugt mit / Output created with TARGET 3001! V33.7.0.10
 Created with TARGET 3001! NC edition: Commercial use is illegal!
@@ -26,8 +26,10 @@ ESP_PumpControl.StopTop = 18 = Lötstoppmaske oben / Solder stop top   ( *.StopTo
 ESP_PumpControl.StopBot = 4 = Lötstoppmaske unten / Solder stop bottom   ( *.StopBot )
 ESP_PumpControl.PosiTop = 21 = Bestückungsdruck oben / Silk screen top   ( *.PosiTop )
 ESP_PumpControl.PosiBot = 7 = Bestückungsdruck unten / Silk screen bottom   ( *.PosiBot )
+ESP_PumpControl.PasteTop = 19 = Lötpaste oben / Paste top   ( *.PasteTop )
+ESP_PumpControl.PasteBot = 5 = Lötpaste unten / Paste bottom   ( *.PasteBot )
 ESP_PumpControl_BOM.xlsx = BOM / Bill Of Material (JLCPCB)
 ESP_PumpControl_CPL.xlsx = CPL / Component Placement List (JLCPCB)
 
 
-Achtung: Dünnste Schrift (Font too thin) ist kleiner 0,150mm: (0,130 bei 14,292446 | -36,170656) auf Ebene 7
+Achtung: Dünnste Schrift (Font too thin) ist kleiner 0,150mm: (0,130 bei 13,392446 | -36,270656) auf Ebene 7
