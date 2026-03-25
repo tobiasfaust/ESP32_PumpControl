@@ -209,7 +209,7 @@ void valveStructure::LoadJsonConfig() {
           if (elem["imp_a"]) { myValve.port1ms = _max(10, _min(elem["imp_a"].as<int>(), 999));}
           if (elem["imp_b"]) { myValve.port2ms = _max(10, _min(elem["imp_b"].as<int>(), 999));}
           if (elem["reverse"] && elem["reverse"] == 1) {myValve.SetReverse(true);} else {myValve.SetReverse(false);}
-          if (elem["use4parallelthreads"] && elem["use4parallelthreads"] == 1) {myValve.SetUse4ParallelThreads(true);} else {myValve.SetUse4ParallelThreads(false);}
+          if (elem["ufpt"] && elem["ufpt"] == 1) {myValve.SetUse4ParallelThreads(true);} else {myValve.SetUse4ParallelThreads(false);}
           if (elem["autooff"] && elem["autooff"].as<int>() > 0) { myValve.SetAutoOff(elem["autooff"].as<int>()); }
 
           // initiiere bistabile ventile
@@ -276,7 +276,7 @@ void valveStructure::GetInitData(JsonDocument& json) {
     row[i]["type_opt_b"] = (Valves->at(i).GetValveType()=="b"?1:0);
 
     row[i]["reverse"] = (Valves->at(i).GetReverse()?1:0);
-    row[i]["use4parallelthreads"] = (Valves->at(i).GetUse4ParallelThreads()?1:0);
+    row[i]["ufpt"] = (Valves->at(i).GetUse4ParallelThreads()?1:0);
     row[i]["autooff"] = Valves->at(i).GetAutoOff();
     row[i]["action"] = (Valves->at(i).GetActive()?"Set Off":"Set On");
   }
