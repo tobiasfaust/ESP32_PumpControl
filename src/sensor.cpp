@@ -195,6 +195,14 @@ void sensor::loop_hcsr04() {
   }
 
   void sensor::loop_ads1115_moisture() {
+    this->lastReadMoistureTimestamp = millis();
+    this->readMoistureCounter++;
+
+    if (this->readMoistureCounter == 1) {
+      Config->logN(4, "start moisture measurement with ADS1115");
+      this->previousMillis_moisture = millis();
+    }
+    
     uint16_t raw = 0;
     uint8_t  level = 0;
     JsonDocument json;
@@ -224,7 +232,7 @@ void sensor::loop_hcsr04() {
         } 
         if (portptr == nullptr) continue;  // should not happen
         if (portptr->topic.length() == 0) continue; // no topic defined, ignore it
-        
+
         raw = readADS1115Channel(&this->ads1115_devices->at(i), this->getAdsChannel(chan));
         /* map voltage to a moisture-level
         *  0-3.3V -> 0-100%
@@ -233,23 +241,50 @@ void sensor::loop_hcsr04() {
         level = map(raw, portptr->cal_min, portptr->cal_max, 0, 100); // 0-3.3V -> 0-100%
         if (portptr->invert) level = 100 - level; // invert level, if requested
 
-        Config->logN(4, "read moisture of ADS1115 (0x%02x) channel %d: raw: %d, calculated level: %d", this->ads1115_devices->at(i).i2cAddress, chan, raw, level);
+        Config->logN(5, "read %d/%d of moisture of ADS1115 (0x%02x) channel %d: raw: %d, calculated level: %d", this->readMoistureCounter, this->maxReadMoistureCounter, this->ads1115_devices->at(i).i2cAddress, chan, raw, level);
 
-        if (raw > 0 ) { 
+        if (this->readMoistureCounter == 1) { 
+          // first read, just save values in port struct
+          portptr->raw = raw;
+          portptr->value = level;
+        } else {
+          // later read, add the values to get a average over multiple reads, to get more stable values
+          portptr->raw += raw;
+          portptr->value += level;
+        }
+
+        if (this->readMoistureCounter == this->maxReadMoistureCounter) {
+          // this loop was the final loop, calculate average values and publish them
+          portptr->value = (portptr->value / (this->maxReadMoistureCounter)); // calculate average value
+          portptr->raw = portptr->raw / (this->maxReadMoistureCounter); // calculate average raw value
+          
+          if (portptr->lastValue > 0) {
+            // if there was a lastValue, apply EMA filter (Exponential Moving Average) to get more stable values
+            float alpha = 0.1;
+            portptr->value = (uint16_t)(alpha * portptr->value + (1 - alpha) * portptr->lastValue);
+          }
+          portptr->lastValue = portptr->value;
+
           JsonObject obj = rows.add<JsonObject>();
           obj["name"] = portptr->topic.c_str();
-          obj["moisture"] = level;
-          obj["raw"] = raw;
+          obj["moisture"] = portptr->value;
+          obj["raw"] = portptr->raw;
+
+          Config->logN(4, "avg moisture of ADS1115 (0x%02x) channel %d: raw: %d, level: %d", this->ads1115_devices->at(i).i2cAddress, chan, portptr->raw, portptr->value);
         }
       }
     }
 
-    if (rows.size() > 0) {
+    if (this->readMoistureCounter == this->maxReadMoistureCounter && rows.size() > 0) {
       Config->logN(4, "Sending Moisture data to MQTT: %s -> %s", mqtt->getTopic("moisture", false).c_str(), json.as<String>().c_str());
       mqtt->Publish_String("moisture", json.as<String>(), false);
       if (this->onValuesCallback) {
         this->onValuesCallback(json);
       }
+    }
+
+    if (this->readMoistureCounter == this->maxReadMoistureCounter) {
+      this->readMoistureCounter = 0; // reset counter for next moisture measurement cycle
     }
   }
 
@@ -283,17 +318,20 @@ void sensor::loop_hcsr04() {
   void sensor::RequestMeasurementMoisture() {
     if (this->moistureEnabled) {
       Config->logN(4, "Manual measurement of moisture requested");
-      loop_ads1115_moisture();
+      this->previousMillis_moisture = 0; // reset timer, so measurement will be done in next loop run
     }
   }
 #endif
 
 void sensor::loop() {
-  /*start measuring soil moisture, every 5min */
+
 #ifdef USE_ADS1115
-  if (this->moistureEnabled && (this->previousMillis_moisture == 0 || (millis() - this->previousMillis_moisture > 300*1000))) {
-    this->previousMillis_moisture = millis();
-    loop_ads1115_moisture();
+  if (this->moistureEnabled) {
+    /*start measuring soil moisture, every 5min */
+    if (this->previousMillis_moisture == 0 || (millis() - this->previousMillis_moisture > this->moistureMeasureInterval) ||
+        (this->readMoistureCounter > 0 && (millis() - this->lastReadMoistureTimestamp > this->moistureReadDelay))) {
+      loop_ads1115_moisture();
+    }    
   }
 #endif
 
@@ -460,6 +498,8 @@ void sensor::GetInitData(JsonDocument& json) {
       json["data"]["rows"][counter]["ads_min"] = portptr->cal_min;
       json["data"]["rows"][counter]["ads_max"] = portptr->cal_max;
       json["data"]["rows"][counter]["invert"] = (portptr->invert?1:0);
+      json["data"]["rows"][counter]["ads_value"]["innerHTML"] = portptr->value;
+      json["data"]["rows"][counter]["ads_rawvalue"]["innerHTML"] = portptr->raw;
       json["data"]["rows"][counter]["ads_value"]["data-id"] = String(portptr->topic.c_str()) + "_val";
       json["data"]["rows"][counter]["ads_rawvalue"]["data-id"] = String(portptr->topic.c_str()) + "_rawval";
       counter++;

@@ -16,6 +16,9 @@
     uint16_t cal_min = 0;
     uint16_t cal_max = 3300;
     bool invert = false;
+    uint16_t raw = 0; // raw value of last read measurement
+    uint16_t value = 0; // value of last read measurement
+    uint16_t lastValue = 0; // value of last sent final measurement
   } adsport_t;
 
   typedef struct {
@@ -84,6 +87,11 @@ class sensor {
       std::vector<adsdev_t>* ads1115_devices  = NULL;
       adsdev_t* getAdsDevice(uint8_t i2c);
       ADS1115_MUX getAdsChannel(uint8_t port);
+      uint8_t readMoistureCounter = 0;
+      uint32_t lastReadMoistureTimestamp = 0;
+      const uint8_t maxReadMoistureCounter = 30; // read all channels of each ADS1115 multiple times every 20ms, then publish results
+      const uint8_t moistureReadDelay = 20; // delay in ms between multiple reads of moisture channels to get more stable values
+      const uint32_t moistureMeasureInterval = (5*60*1000); // measure moisture every 5 minutes
 
       uint16_t  readADS1115Channel(adsdev_t* device, ADS1115_MUX channel);
       void      loop_ads1115_sensor();
