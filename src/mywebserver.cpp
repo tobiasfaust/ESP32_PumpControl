@@ -502,12 +502,6 @@ void MyWebServer::DoIfOnMqttMessage(String& topic, String& msg) {
 
 #ifdef USE_FLOWERCARE
 void MyWebServer::flowerCareGetValuesCallback(JsonDocument& json, uint32_t wsclient_id) {
-  // sending over MQTT
-  json["host"] = Config->GetMqttRoot();
-  String topic = "flowercare/" + json["address"].as<String>();
-  Config->logN(4, "Sending FlowerCare data to MQTT: %s -> %s", topic.c_str(), json.as<String>().c_str());
-  mqtt->Publish_String(topic.c_str(), json.as<String>(), true);
-
   // sending over WebSocket, has to reformat the json
   JsonDocument wsjson;
   wsjson["data-id"][String(json["address"].as<String>()) + "_temp"] = json["temperature"];

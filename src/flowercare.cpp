@@ -74,6 +74,15 @@ void FlowerCare::ReadSensor(FlowerCareDevice& device, bool getBatteryLevel) {
             success = this->updateDeviceData(json, device, pRemoteService);
             // get battery data
             if (success && getBatteryLevel) this->updateBatteryLevel(json, device, pRemoteService);
+
+            // sending over MQTT
+            if (mqtt) {
+                json["host"] = Config->GetMqttRoot();
+                String topic = "flowercare/" + json["address"].as<String>();
+                Config->logN(4, "Sending FlowerCare data to MQTT: %s -> %s", topic.c_str(), json.as<String>().c_str());
+                mqtt->Publish_String(topic.c_str(), json.as<String>(), true);
+            }
+  
             // Send data to callback function, if defined
             if (this->onValuesCallback) {
                 this->onValuesCallback(json);
@@ -251,8 +260,6 @@ void flowercareWeb::GetInitData(JsonDocument& json) {
 }
 
 void flowercareWeb::LoadJsonConfig() {
-  mqtt->ClearSubscriptions(MyMQTT::DOIF);
- 
   if (configFS.exists("/flowercare.json")) {
     //file exists, reading and loading
     Config->logN(3, "reading flowercare.json file....");
