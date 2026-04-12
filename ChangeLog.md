@@ -1,17 +1,17 @@
 Release 3.2.1:
-  - fix blocking wifi device inImprovLib: update Wifi credentials if current credentials are not working anymore
+  - fix blocking wifi device in ImprovLib: update Wifi credentials if current credentials are not working anymore
   - feature: measure ADS1115 based moisture every 5min, add measure request button in webui
   - feature: add invertation checkbox to ADS1115 moisture sensors
   - feature: add raw value of ADS1115 to webui and mqtt, so you can calibrate your sensor by yourself
   - feature: change online state msg format to json with more details
   - feature: add optional AP bssid to force connect to a specific AP
-  - feature: filter ADS1115 moisture values with mor samples and EMA filter to get more stable values
+  - feature: filter ADS1115 moisture values with more samples and EMA filter to get more stable values
 
 Release 3.2.0:
     +++++++ This version is not OTA compatible with older versions +++++++
     +++++++ Please do a fresh installation by web-installer +++++++
     
-  - feature: move userconfig to separate LittleFS partition to prevet loosing config by upgrading version via OTA
+  - feature: move userconfig to separate LittleFS partition to prevent losing config by upgrading version via OTA
   - feature: add maxParallelThreads functionality
   - feature: add FlowControl support (#15)
   - feature: add FlowControl and ADS1115 SoilMoisture values for constant updates in the web UI 
