@@ -67,10 +67,10 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install -U platformio
+          pip install -U pioarduino
           pip install -U esptool
 
-      - name: Run PlatformIO
+      - name: Run pioarduino
         id: buildFw
         run: |
           mkdir -p firmware/
