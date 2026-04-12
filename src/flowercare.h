@@ -113,7 +113,8 @@ class FlowerCare {
     
   protected:
     std::function<void()> OnScanEndCallback; // Callback function pointer
-
+    void log(int loglevel, const char* format, ...);
+    
   private:
 
     NimBLEScan* pBLEScan;
@@ -155,7 +156,6 @@ class FlowerCare {
 
     void printDebugHexValue(const char* value, int len);
 
-    void log(int loglevel, const char* format, ...);
     std::function<void(int, const char*)> onlogCallback; // Callback function pointer
     std::function<void(JsonDocument&)> onValuesCallback; // Callback function pointer
 };
