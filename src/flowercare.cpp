@@ -278,7 +278,7 @@ void flowercareWeb::LoadJsonConfig() {
         } else {
           // Print the result
           FlowerCare::log(3, "parsing JSON ok");
-          FlowerCare::log(4, elem);
+          FlowerCare::log(4, elem.as<String>().c_str());
  
           #ifdef USE_FLOWERCARE
           if (elem["address"]) {
