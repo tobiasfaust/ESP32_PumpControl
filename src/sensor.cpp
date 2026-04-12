@@ -93,7 +93,7 @@ void sensor::loop_analog() {
 
   this->raw = analogRead(pinanalog);
   
-  this->level = map(this->raw, measureDistMin, measureDistMax, 0, 100); // 0-100%
+  this->level = this->mapValue(this->raw, measureDistMin, measureDistMax);
 }
 
 void sensor::loop_hcsr04() {
@@ -114,7 +114,7 @@ void sensor::loop_hcsr04() {
     Config->logN(2, "Out of range");
   } else {
     if (this->measureDistMax - this->measureDistMin > 0) {
-      this->level = (((this->measureDistMax - this->raw)*100)/(this->measureDistMax - this->measureDistMin));
+      this->level = this->mapValue(this->raw, this->measureDistMin, this->measureDistMax);
     }
   }
 }
@@ -234,29 +234,21 @@ void sensor::loop_hcsr04() {
         if (portptr->topic.length() == 0) continue; // no topic defined, ignore it
 
         raw = readADS1115Channel(&this->ads1115_devices->at(i), this->getAdsChannel(chan));
-        /* map voltage to a moisture-level
-        *  0-3.3V -> 0-100%
-        *  moisture sensor gets 100% = dry, but we want a moisture: 100% = wet  
-        */
-        level = map(raw, portptr->cal_min, portptr->cal_max, 0, 100); // 0-3.3V -> 0-100%
-        if (portptr->invert) level = 100 - level; // invert level, if requested
-
-        Config->logN(5, "read %d/%d of moisture of ADS1115 (0x%02x) channel %d: raw: %d, calculated level: %d", this->readMoistureCounter, this->maxReadMoistureCounter, this->ads1115_devices->at(i).i2cAddress, chan, raw, level);
+        Config->logN(5, "read %d/%d of moisture of ADS1115 (0x%02x) channel %d: raw: %d", this->readMoistureCounter, this->maxReadMoistureCounter, this->ads1115_devices->at(i).i2cAddress, chan, raw);
 
         if (this->readMoistureCounter == 1) { 
           // first read, just save values in port struct
           portptr->raw = raw;
-          portptr->value = level;
         } else {
           // later read, add the values to get a average over multiple reads, to get more stable values
           portptr->raw += raw;
-          portptr->value += level;
         }
 
         if (this->readMoistureCounter == this->maxReadMoistureCounter) {
           // this loop was the final loop, calculate average values and publish them
-          portptr->value = (portptr->value / (this->maxReadMoistureCounter)); // calculate average value
           portptr->raw = portptr->raw / (this->maxReadMoistureCounter); // calculate average raw value
+          portptr->value = this->mapValue(portptr->raw, portptr->cal_min, portptr->cal_max); // 0-3.3V -> 0-100%
+          if (portptr->invert) portptr->value = 100 - portptr->value; // invert level, if requested
           
           if (portptr->lastValue > 0) {
             // if there was a lastValue, apply EMA filter (Exponential Moving Average) to get more stable values
@@ -270,7 +262,7 @@ void sensor::loop_hcsr04() {
           obj["moisture"] = portptr->value;
           obj["raw"] = portptr->raw;
 
-          Config->logN(4, "avg moisture of ADS1115 (0x%02x) channel %d: raw: %d, level: %d", this->ads1115_devices->at(i).i2cAddress, chan, portptr->raw, portptr->value);
+          Config->logN(4, "avg moisture of ADS1115 (0x%02x) channel %d: raw: %d, level: %d (calc between min: %d, max: %d)", this->ads1115_devices->at(i).i2cAddress, chan, portptr->raw, portptr->value, portptr->cal_min, portptr->cal_max) ;
         }
       }
     }
@@ -300,7 +292,7 @@ void sensor::loop_hcsr04() {
     
       this->raw = readADS1115Channel(this->getAdsDevice(this->ads1115_i2c), this->getAdsChannel(this->ads1115_port));
       
-      this->level = map(this->raw, measureDistMin, measureDistMax, 0, 100); // 0-100%
+      this->level = this->mapValue(this->raw, measureDistMin, measureDistMax); // 0-100%
     }
   }
 
@@ -498,7 +490,7 @@ void sensor::GetInitData(JsonDocument& json) {
       json["data"]["rows"][counter]["ads_min"] = portptr->cal_min;
       json["data"]["rows"][counter]["ads_max"] = portptr->cal_max;
       json["data"]["rows"][counter]["invert"] = (portptr->invert?1:0);
-      json["data"]["rows"][counter]["ads_value"]["innerHTML"] = portptr->value;
+      json["data"]["rows"][counter]["ads_value"]["innerHTML"] = String(portptr->value) + "%";
       json["data"]["rows"][counter]["ads_rawvalue"]["innerHTML"] = portptr->raw;
       json["data"]["rows"][counter]["ads_value"]["data-id"] = String(portptr->topic.c_str()) + "_val";
       json["data"]["rows"][counter]["ads_rawvalue"]["data-id"] = String(portptr->topic.c_str()) + "_rawval";
@@ -540,4 +532,11 @@ void sensor::GetInitData(JsonDocument& json) {
   json["response"].to<JsonObject>();
   json["response"]["status"] = 1;
   json["response"]["text"] = "successful";
+}
+
+template <typename T>
+uint8_t sensor::mapValue(T raw, T raw_min, T raw_max) {
+  if (raw <= raw_min) return 0;
+  if (raw >= raw_max) return 100;
+  return (uint8_t)(((raw - raw_min) * 100) / (raw_max - raw_min));
 }

@@ -119,6 +119,10 @@ class sensor {
     unsigned long previousMillis_sensor = 0;
     unsigned long previousMillis_moisture = 0;
 
+    // template to map a raw value to a level between 0 and 100%
+    template<typename T>
+    uint8_t mapValue(T raw, T raw_min, T raw_max);
+
     #ifdef USE_OLED
       OLED*    oled;
     #endif
