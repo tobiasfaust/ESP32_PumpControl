@@ -79,7 +79,7 @@ void FlowerCare::ReadSensor(FlowerCareDevice& device, bool getBatteryLevel) {
             if (mqtt) {
                 json["host"] = Config->GetMqttRoot();
                 String topic = "flowercare/" + json["address"].as<String>();
-                Config->logN(4, "Sending FlowerCare data to MQTT: %s -> %s", topic.c_str(), json.as<String>().c_str());
+                log(4, "Sending FlowerCare data to MQTT: %s -> %s", topic.c_str(), json.as<String>().c_str());
                 mqtt->Publish_String(topic.c_str(), json.as<String>(), true);
             }
   
@@ -262,10 +262,10 @@ void flowercareWeb::GetInitData(JsonDocument& json) {
 void flowercareWeb::LoadJsonConfig() {
   if (configFS.exists("/flowercare.json")) {
     //file exists, reading and loading
-    Config->logN(3, "reading flowercare.json file....");
+    log(3, "reading flowercare.json file....");
     File configFile = configFS.open("/flowercare.json", "r");
     if (configFile) {
-      Config->logN(3, "flowercare.json is now open");
+      log(3, "flowercare.json is now open");
  
       ReadBufferingStream stream{configFile, 64};
       stream.find("\"data\":[");
@@ -274,11 +274,11 @@ void flowercareWeb::LoadJsonConfig() {
         DeserializationError error = deserializeJson(elem, stream); 
  
         if (error) {
-           Config->logN(1, "Failed to parse flowercare.json data: %s", error.c_str()); 
+           log(1, "Failed to parse flowercare.json data: %s", error.c_str()); 
         } else {
-           // Print the result
-           Config->logN(3, "parsing JSON ok");
-           Config->log(4, elem);
+          // Print the result
+          log(3, "parsing JSON ok");
+          log(4, elem);
  
           #ifdef USE_FLOWERCARE
           if (elem["address"]) {
@@ -290,9 +290,9 @@ void flowercareWeb::LoadJsonConfig() {
         }
       } while (stream.findUntil(",","]"));
     } else {
-      Config->logN(1, "failed to load flowercare.json");
+      log(1, "failed to load flowercare.json");
     }
   } else {
-    Config->logN(3, "flowercare.json File not exists");
+    log(3, "flowercare.json File not exists");
   }
 }
