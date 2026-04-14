@@ -12,11 +12,15 @@
 #include "sensor.h"
 #include "valveStructure.h"
 #include "valveRelation.h"
-#include "flowcontrol.h"
-#include "doif.h"
-
 #include <ElegantOTA.h>
 
+#ifdef USE_FLOWCONTROL
+  #include "flowcontrol.h"
+  extern flowControl* FlowCtrl;
+#endif
+#ifdef USE_DOIF
+  #include "doif.h"
+#endif
 #ifdef USE_FLOWERCARE
   #include "flowercare.h"
 #endif
@@ -24,7 +28,7 @@
 extern sensor* LevelSensor;
 extern valveStructure* VStruct;
 extern valveRelation* ValveRel;
-extern flowControl* FlowCtrl;
+
 
 #ifdef USE_I2C
   extern i2cdetect* I2Cdetect;
@@ -41,8 +45,10 @@ class MyWebServer {
     MyWebServer(fs::LittleFSFS& sysFS, fs::LittleFSFS& configFS, AsyncWebServer *server, DNSServer* dns);
     void  loop();
 
-    void  DoIfOnMqttMessage(String& topic, String& msg);
-
+    #ifdef USE_DOIF
+      void  DoIfOnMqttMessage(String& topic, String& msg);
+    #endif
+    
   private:
 
     AsyncWebServer* server;
@@ -57,7 +63,11 @@ class MyWebServer {
     std::vector<wsclient_t>* _wsclientRequests = NULL;
 
     handleFiles* fsfiles;
-    doIf* doif;
+    
+    #ifdef USE_DOIF
+      doIf* doif;
+      void      flowControlGetValuesCallback(JsonDocument& json, uint32_t wsclient_id);
+    #endif
 
     #ifdef USE_FLOWERCARE
       flowercareWeb* flowerCare = nullptr;
@@ -65,7 +75,6 @@ class MyWebServer {
       void      flowerCareOnScanEndCallback();
     #endif
 
-    void      flowControlGetValuesCallback(JsonDocument& json, uint32_t wsclient_id);
     void      LevelSensorGetValuesCallback(JsonDocument& json, uint32_t wsclient_id);
     void      logGetValuesCallback(const char* logline, JsonDocument& json, uint32_t wsclient_id);
 

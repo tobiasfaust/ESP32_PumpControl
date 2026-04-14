@@ -6,6 +6,9 @@ Release 3.2.1:
   - feature: change online state msg format to json with more details
   - feature: add optional AP bssid to force connect to a specific AP
   - feature: filter ADS1115 moisture values with more samples and EMA filter to get more stable values
+  - feature: add optional alias for FlowerCare devices, so you can easier identify them in the webui
+  - feature: add delete button for FlowerCare devices in webui
+  - optional flowcontrol and doif modules, disabled for flowercare variant
 
 Release 3.2.0:
     +++++++ This version is not OTA compatible with older versions +++++++

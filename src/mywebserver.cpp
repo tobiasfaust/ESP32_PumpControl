@@ -15,8 +15,10 @@ MyWebServer::MyWebServer(fs::LittleFSFS& sysFS, fs::LittleFSFS& configFS, AsyncW
 
   _wsclientRequests = new std::vector<wsclient_t>();
   
-  Config->logN(1, "Starting DoIf Module");
-  doif = new doIf(configFS);
+  #ifdef USE_DOIF
+    Config->logN(1, "Starting DoIf Module");
+    doif = new doIf(configFS);
+  #endif
 
   #ifdef USE_FLOWERCARE
     Config->logN(1, "Starting FlowerCare");
@@ -149,9 +151,11 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
         #ifdef USE_FLOWERCARE
         if (this->_wsclientRequests->at(i).requestData == wsclient_t::FLOWERCARE_DATA) { flowerCare->onValues(nullptr); }
         #endif
+        #ifdef USE_FLOWCONTROL
+          if (this->_wsclientRequests->at(i).requestData == wsclient_t::FLOWCONTROL_DATA) { FlowCtrl->onValues(nullptr); }
+        #endif
 
         if (this->_wsclientRequests->at(i).requestData == wsclient_t::ADS1115_DATA) { LevelSensor->onValues(nullptr); }
-        if (this->_wsclientRequests->at(i).requestData == wsclient_t::FLOWCONTROL_DATA) { FlowCtrl->onValues(nullptr); }
         if (this->_wsclientRequests->at(i).requestData == wsclient_t::LOG_DATA) { Config->onLogValues(nullptr); }
         
         this->_wsclientRequests->erase(this->_wsclientRequests->begin() + i);
@@ -188,8 +192,10 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
           this->_wsclientRequests->push_back({client->id(), wsclient_t::ADS1115_DATA});
           LevelSensor->onValues(std::bind(&MyWebServer::LevelSensorGetValuesCallback, this, std::placeholders::_1, client->id()));
         } else if (subaction && subaction == "flowcontrol_data") {
-          this->_wsclientRequests->push_back({client->id(), wsclient_t::FLOWCONTROL_DATA});
-          FlowCtrl->onValues(std::bind(&MyWebServer::flowControlGetValuesCallback, this, std::placeholders::_1, client->id()));
+          #ifdef USE_FLOWCONTROL
+            this->_wsclientRequests->push_back({client->id(), wsclient_t::FLOWCONTROL_DATA});
+            FlowCtrl->onValues(std::bind(&MyWebServer::flowControlGetValuesCallback, this, std::placeholders::_1, client->id()));
+          #endif
         } else if (subaction && subaction == "log_data") {
           this->_wsclientRequests->push_back({client->id(), wsclient_t::LOG_DATA});
           Config->onLogValues(std::bind(&MyWebServer::logGetValuesCallback, this, std::placeholders::_1, json, client->id()));
@@ -237,17 +243,21 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
           ValveRel->GetInitData(json);
           VStruct->getWebJsParameter(json);
         } else if (subaction && subaction == "flowcontrol") {
-          FlowCtrl->GetInitData(json);
-          VStruct->getWebJsParameter(json);
-          json["js"]["gpio_disabled"] = Config->disabledGPIO.getArrayExcludeIdentifier(BaseConfig::GpioIdentifier::FLOWCONTROL);
+          #ifdef USE_FLOWCONTROL
+            FlowCtrl->GetInitData(json);
+            VStruct->getWebJsParameter(json);
+            json["js"]["gpio_disabled"] = Config->disabledGPIO.getArrayExcludeIdentifier(BaseConfig::GpioIdentifier::FLOWCONTROL);
+        #endif
         } else if (subaction && subaction == "flowercare") {
           #ifdef USE_FLOWERCARE
             flowerCare->GetInitData(json);
             VStruct->getWebJsParameter(json);
           #endif
         } else if (subaction && subaction == "doif") {
-          doif->GetInitData(json);
-          VStruct->getWebJsParameter(json);
+          #ifdef USE_DOIF
+             doif->GetInitData(json);
+            VStruct->getWebJsParameter(json);
+          #endif
         } else {
           json["response"]["status"] = 0;
           json["response"]["text"] = "unknown subaction";
@@ -271,19 +281,22 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
           ValveRel->LoadJsonConfig();
         }
 
-        if (subaction && subaction == "flowcontrol") {
-          FlowCtrl->LoadJsonConfig();
-        }
-
+        #ifdef USE_FLOWCONTROL
+          if (subaction && subaction == "flowcontrol") {
+            FlowCtrl->LoadJsonConfig();
+          }
+        #endif
         #ifdef USE_FLOWERCARE
           if (subaction && subaction == "flowercare") {
             flowerCare->LoadJsonConfig();
           }
         #endif
 
-        if (subaction && subaction == "doif") {
-          doif->LoadJsonConfig();
-        }
+        #ifdef USE_DOIF
+          if (subaction && subaction == "doif") {
+            doif->LoadJsonConfig();
+          }
+        #endif
       
         json["response"]["status"] = 1;
         json["response"]["text"] = "new config reloaded sucessfully";
@@ -323,6 +336,7 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
       }
       #endif
 
+      #ifdef USE_DOIF
       if (action && action == "doif") {
         if (subaction && subaction == "activateRelation") {
           if (item && item2 && newState) {
@@ -339,6 +353,7 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
           }
         }
       }
+      #endif
 
       if(action && action == "SetValve") {
         uint8_t port = item.toInt();
@@ -433,6 +448,16 @@ void MyWebServer::GetInitDataNavi(JsonDocument& json){
     json["data"]["flowercare"]["className"] = "hide";
   #endif
 
+  #ifndef USE_FLOWCONTROL
+    json["data"]["td_flowcontrol"]["className"] = "hide";
+    json["data"]["flowcontrol"]["className"] = "hide";
+  #endif
+
+  #ifndef USE_DOIF
+    json["data"]["td_doif"]["className"] = "hide";
+    json["data"]["doif"]["className"] = "hide";
+  #endif
+
   json["response"].to<JsonObject>();
   json["response"]["status"] = 1;
   json["response"]["text"] = "successful";
@@ -496,9 +521,11 @@ void MyWebServer::GetInitDataStatus(JsonDocument& json) {
   json["response"]["text"] = "successful";
 }
 
+#ifdef USE_FLOWCONTROL
 void MyWebServer::DoIfOnMqttMessage(String& topic, String& msg) {
   doif->onMqttMessage(VStruct, topic, msg);
 }
+#endif
 
 #ifdef USE_FLOWERCARE
 void MyWebServer::flowerCareGetValuesCallback(JsonDocument& json, uint32_t wsclient_id) {
@@ -535,6 +562,7 @@ void MyWebServer::flowerCareOnScanEndCallback() {
 }
 #endif
 
+#ifdef USE_FLOWCONTROL
 void MyWebServer::flowControlGetValuesCallback(JsonDocument& json, uint32_t wsclient_id) {
   // sending over WebSocket, has to reformat the json
   JsonDocument wsjson;
@@ -546,6 +574,7 @@ void MyWebServer::flowControlGetValuesCallback(JsonDocument& json, uint32_t wscl
   wsjson["cmd"]["highlight"] = "true";
   this->ws->text(wsclient_id, wsjson.as<String>());
 }
+#endif
 
 void MyWebServer::LevelSensorGetValuesCallback(JsonDocument& json, uint32_t wsclient_id) {
   // sending over WebSocket, has to reformat the json

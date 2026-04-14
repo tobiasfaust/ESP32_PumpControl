@@ -6,7 +6,11 @@
 #include "mymqtt.h"
 #include "mywebserver.h"
 #include "sensor.h"
-#include "flowcontrol.h"
+
+#ifdef USE_FLOWCONTROL
+  #include "flowcontrol.h"
+  flowControl* FlowCtrl = nullptr;
+#endif
 
 #ifdef USE_OLED
   #include "oled.h"
@@ -26,7 +30,7 @@ valveStructure* VStruct = nullptr;
 MyMQTT* mqtt = nullptr;
 sensor* LevelSensor = nullptr;
 MyWebServer* mywebserver = nullptr;
-flowControl* FlowCtrl = nullptr;
+
 
 // Initialize littlefs data partitions  
 fs::LittleFSFS sysFS;
@@ -54,9 +58,13 @@ void myMQTTCallBack(char* topic, byte* payload, unsigned int length) {
   if (LevelSensor->GetExternalSensor() && (strcmp(LevelSensor->GetExternalSensor().c_str(), topic)==0)) {
     LevelSensor->SetLvl(atoi(msg.c_str()));
   }
+
+  #ifdef USE_DOIF
   else if (strstr(topic, "flowercare/") || strstr(topic, "moisture")) {
     mywebserver->DoIfOnMqttMessage(topicStr, msg);
   } 
+  #endif
+
   else if (strstr(topic, "/raw") ||  strstr(topic, "/level") ||  strstr(topic, "/mem") ||  strstr(topic, "/rssi")) {
     /*SensorMeldungen - ignore!*/
   } 
@@ -143,8 +151,10 @@ void setup() {
   Config->logN(1, "Starting Valve Relations");
   ValveRel = new valveRelation(configFS);
 
-  Config->logN(1, "Starting Flow Control");
-  FlowCtrl = new flowControl(configFS);
+  #ifdef USE_FLOWCONTROL
+    Config->logN(1, "Starting Flow Control");
+    FlowCtrl = new flowControl(configFS);
+  #endif
 
   Config->logN(1, "Starting Valve Structure");
   VStruct = new valveStructure(configFS, Config->GetPinSDA(), Config->GetPinSCL());
@@ -162,7 +172,10 @@ void loop() {
   mqtt->loop();
   LevelSensor->loop();
   mywebserver->loop();
-  FlowCtrl->loop();
+
+  #ifdef USE_FLOWCONTROL
+    FlowCtrl->loop();
+  #endif
   
   #ifdef USE_OLED
     oled->loop();  
