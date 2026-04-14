@@ -58,12 +58,21 @@ MQTT::MQTT(const char* MqttServer, uint16_t MqttPort, String MqttBasepath, Strin
       Config->disabledGPIO.addValues(shield->blockedGpio, BaseConfig::GpioIdentifier::ETH);
 
       // ETH.begin(1, 16, 23, 18, ETH_PHY_LAN8720, ETH_CLOCK_GPIO0_IN);
-      ETH.begin(shield->PHY_ADDR,
+      #if ESP_ARDUINO_VERSION_MAJOR >= 3
+        ETH.begin(shield->PHY_TYPE,
+                shield->PHY_ADDR,
+                shield->PHY_MDC,
+                shield->PHY_MDIO,
+                shield->PHY_POWER,
+                shield->CLK_MODE);
+        #else
+        ETH.begin(shield->PHY_ADDR,
                 shield->PHY_POWER,
                 shield->PHY_MDC,
                 shield->PHY_MDIO,
                 shield->PHY_TYPE,
                 shield->CLK_MODE);
+        #endif
 
       this->WaitForConnect();
     #endif
