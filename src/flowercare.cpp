@@ -78,6 +78,7 @@ void FlowerCare::ReadSensor(FlowerCareDevice& device, bool getBatteryLevel) {
             // sending over MQTT
             if (mqtt) {
                 json["host"] = Config->GetMqttRoot();
+                if (device.alias.length() > 0) json["alias"] = device.alias.c_str();
                 String topic = "flowercare/" + json["address"].as<String>();
                 FlowerCare::log(4, "Sending FlowerCare data to MQTT: %s -> %s", topic.c_str(), json.as<String>().c_str());
                 mqtt->Publish_String(topic.c_str(), json.as<String>(), true);
