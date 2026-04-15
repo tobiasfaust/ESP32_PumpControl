@@ -16,14 +16,14 @@ void FlowerCare::ScanBLE() {
     }
 }
 
-void FlowerCare::addDevice(NimBLEAddress address) {
+void FlowerCare::addDevice(NimBLEAddress address, String alias) {
     for (auto& device : devices) {
         if (device.address == address) {
             return;
         }
     }
     FlowerCare::log(3, "Adding device: %s", address.toString().c_str());
-    devices.emplace_back(address);
+    devices.emplace_back(address, alias);
 }
 
 const FlowerCareDevice* FlowerCare::getDevice(NimBLEAddress address) {
@@ -196,6 +196,18 @@ bool FlowerCare::setActive(String macaddress, bool active) {
     return false;
 }
 
+bool FlowerCare::forceUpdate(String macaddress) {
+    for (auto& device : devices) {
+        if (device.address.toString() == macaddress.c_str()) {
+            device.lastRead = 0; // reset last update time to force update in next loop
+            device.lastBatteryUpdate = 0; // reset last update time to force update in next loop
+            FlowerCare::log(3, "Forcing update for device %s", macaddress.c_str());
+            return true;
+        }
+    }
+    return false;
+}
+
 void FlowerCare::loop() {
     unsigned long currentMillis = millis();
     if (!this->isScanActive && currentMillis - previousMillis >= 2000) { // check every second to do a job
@@ -227,6 +239,7 @@ void flowercareWeb::GetInitData(JsonDocument& json) {
       JsonObject o = f.add<JsonObject>();
       o["address"] = device.address.toString();
       o["mqtttopic"] = String("flowercare/") + String(device.address.toString().c_str());
+      if (device.alias.length() > 0) o["alias"] = device.alias.c_str();
       o["battery"]["innerHTML"] = device.battery;
       o["battery"]["data-id"] = String(device.address.toString().c_str()) + "_bat";
       o["firmwareVersion"]["innerHTML"] = device.firmwareVersion;
@@ -262,6 +275,7 @@ void flowercareWeb::GetInitData(JsonDocument& json) {
 void flowercareWeb::LoadJsonConfig() {
   if (configFS.exists("/flowercare.json")) {
     //file exists, reading and loading
+    this->clear(); // clear existing devices before loading
     FlowerCare::log(3, "reading flowercare.json file....");
     File configFile = configFS.open("/flowercare.json", "r");
     if (configFile) {
@@ -280,13 +294,11 @@ void flowercareWeb::LoadJsonConfig() {
           FlowerCare::log(3, "parsing JSON ok");
           FlowerCare::log(4, elem.as<String>().c_str());
  
-          #ifdef USE_FLOWERCARE
           if (elem["address"]) {
             // activation of known FlowerCare devices
-            FlowerCare::addDevice(NimBLEAddress(elem["address"].as<String>().c_str(), BLE_ADDR_PUBLIC));
+            FlowerCare::addDevice(NimBLEAddress(elem["address"].as<String>().c_str(), BLE_ADDR_PUBLIC), (elem["alias"]?elem["alias"].as<String>():""));
             FlowerCare::setActive(elem["address"].as<String>(), elem["active"].as<bool>());
           }
-          #endif
         }
       } while (stream.findUntil(",","]"));
     } else {

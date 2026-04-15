@@ -9,6 +9,8 @@ Release 3.2.1:
   - feature: add optional alias for FlowerCare devices, so you can easier identify them in the webui
   - feature: add delete button for FlowerCare devices in webui
   - optional flowcontrol and doif modules, disabled for flowercare variant
+  - feature: add "update" button for flowerCare devices to request new moisture values, so you can update the moisture value on demand and not wait for the next automatic update
+  - feature: automatic update of lastUpdateTimestamp for flowercare devices, so you can see when the last update was received
 
 Release 3.2.0:
     +++++++ This version is not OTA compatible with older versions +++++++

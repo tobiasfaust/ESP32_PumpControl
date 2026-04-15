@@ -324,6 +324,21 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
           json["response"]["text"] = "scan started, please wait 10sec .....";
         }
 
+        if (flowerCare && subaction && subaction == "forceUpdate") {
+          if (item && item.length() > 0) {
+            if (flowerCare->forceUpdate(item)) {
+              json["response"]["status"] = 1;
+              json["response"]["text"] = "update requested for device with macaddress: " + item;
+            } else {
+                json["response"]["status"] = 0;
+                json["response"]["text"] = "device with macaddress: " + item + " not found";
+            }
+          } else {
+            json["response"]["status"] = 0;
+            json["response"]["text"] = "no macaddress provided";
+          }
+        }
+
         if (flowerCare && subaction && subaction == "activateDevice") {
           if (flowerCare->setActive(item, newState)) {
             json["response"]["status"] = 1;

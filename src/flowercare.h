@@ -25,8 +25,9 @@ class FlowerCareDevice {
     unsigned long lastBatteryUpdate;
     uint8_t failedReads;
     unsigned long lastRead;
+    String alias;
 
-    FlowerCareDevice(NimBLEAddress addr) : 
+    FlowerCareDevice(NimBLEAddress addr, String alias = "") : 
         address(addr),
         active(true),
         battery(0),
@@ -38,7 +39,8 @@ class FlowerCareDevice {
         lastLiveDataUpdate(0),
         lastBatteryUpdate(0),
         lastRead(0),
-        failedReads(0)
+        failedReads(0),
+        alias(alias)
         {}
 };
 
@@ -63,8 +65,9 @@ class FlowerCare {
     /************************
      * @brief add a device to the list
      * @param NimBLEAddress the address of the device
+     * @param String the alias of the device
      ************************/
-    void addDevice(NimBLEAddress address);
+    void addDevice(NimBLEAddress address, String alias = "");
 
     /************************
      * @brief set the active state of a device
@@ -73,6 +76,18 @@ class FlowerCare {
      * @return bool true if successful
      ************************/
     bool setActive(String macaddress, bool active);
+
+    /************************
+     * @brief force update the values of a device
+     * @param String the mac address of the device like c4:7c:8d:64:42:d0
+     * @return bool true if macaddress was known
+     ************************/
+    bool forceUpdate(String macaddress);
+
+    /************************
+     * @brief clear the device list
+     ************************/
+    void clear() { devices.clear(); devices.shrink_to_fit(); }
 
     /************************
      * @brief get the device by address

@@ -10,12 +10,13 @@
     
     <script type='module'>
       import { delrow, addrow } from './valvefunctions.js';
-      import { init, scanBLE, ActivateDevice } from './flowercare.js';
+      import { init, scanBLE, ActivateDevice, forceUpdate } from './flowercare.js';
       import { onSubmit, initDataValues } from './Javascript.js';
       window.onSubmit = onSubmit;
       window.initDataValues = initDataValues;
       window.scanBLE = scanBLE;
       window.ActivateDevice = ActivateDevice;
+      window.forceUpdate = forceUpdate;
       window.addrow = addrow;
       window.deleteRow = delrow;
 
@@ -31,7 +32,7 @@
   <body>
     <div id="loader"></div>
     <button onclick="onSubmit('DataForm', 'active.*');initDataValues();" style="position: fixed; top: 0; left: 0;">Save</button>
-    <button onclick="scanBLE()" id="btn_scan" class="hide" style="position: fixed; top: 30px; left: 0;">Scan for BLE Devices</button>
+    <button onclick="scanBLE()" type="button" id="btn_scan" class="hide" style="position: fixed; top: 30px; left: 0;">Scan for BLE Devices</button>
 
     <div id="needToSave" class="hide needToSave">
       <i class="fa fa-exclamation-triangle" style="color: gold; font-size: 20px;"></i>
@@ -42,9 +43,14 @@
       <table id='fc_devices_table' class='editorDemoTable hide'>
         <thead>
           <tr>
-            <td style='width: 50px;'>activ</td>
+            <td style='width: 50px;'>active</td>
             <td style='width: 150px;'>
                 <span title="MAC-Address of the FlowerCare device">address
+                <i class="fa fa-question-circle" style="font-size: 12px; cursor: pointer; color: gold;"></i>
+                </span>
+            </td>
+            <td style='width: 100px;'>
+              <span title="Alias for the device (optional)">alias
                 <i class="fa fa-question-circle" style="font-size: 12px; cursor: pointer; color: gold;"></i>
                 </span>
             </td>
@@ -58,6 +64,12 @@
                 <i class="fa fa-question-circle" style="font-size: 12px; cursor: pointer; color: gold;"></i>
                 </span>
             </td>
+            <td style='width: 80px;'>
+              <span title="Force update the values of the device">update
+                <i class="fa fa-question-circle" style="font-size: 12px; cursor: pointer; color: gold;"></i>
+              </span>
+            </td>
+            <td style='width: 50px;'>Delete</td>
           </tr>
         </thead>
         <tbody>
@@ -72,6 +84,7 @@
                   </span>
                 </dfn>
               </td>
+              <td><input type="text" id="alias" name="alias" spellcheck="false" size="20" ></td>
               <td><span id='moisture' class='ajaxchange'></span>%</td>
               <td><span id='brightness' class='ajaxchange'></span> lux</td>
               <td><span id='temperature' class='ajaxchange'></span>°C</td>
@@ -81,11 +94,13 @@
                 <div>LiveData:<span id="lastLiveDataUpdate" class='ajaxchange' style="float: right;"></span></div>
                 <div>Battery: <span id="lastBatteryUpdate" class='ajaxchange' style="float: right;"></span></div>
               </td>
+              <td><button type='button' style='font-size:18px' class='fa' title='force update' onclick='forceUpdate(this)'>&#xf021</button></td>
+              <td><button type='button' style='font-size:18px' class='fa' title='delete it' onclick='deleteRow(this)'>&#xf014</button></td>
             </tr>
           </template>
         </tbody>
       </table>
-    
+    </form>
     <br>
     <div id="footer"></div>
   </body>
