@@ -42,7 +42,7 @@ function MyCallback(json) {
   //global.CreateSelectionListFromInputField('input[type=number][id*=ConfiguredPort]', [JSON.parse(configuredPorts)]);
   //global.handleRadioSelections();
   global.transformCheckboxes();
-  //valveFn.validate_identifiers("fc_relations_table");
+  valveFn.validate_identifiers("fc_devices_table");
 
   // anpassen der Update werte auf ein lesbares Format
   formatAllDates();  
