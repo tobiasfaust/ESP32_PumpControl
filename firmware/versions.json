@@ -7,10 +7,10 @@
         "variant": "standard",
         "build": 63,
         "chipFamilies": [
-            "ESP32-S3",
+            "ESP32",
             "ESP32-S2",
-            "ESP32-C3",
-            "ESP32"
+            "ESP32-S3",
+            "ESP32-C3"
         ],
         "builds": [
             {
@@ -199,10 +199,10 @@
         "variant": "standard",
         "build": 133,
         "chipFamilies": [
-            "ESP32-S3",
+            "ESP32",
             "ESP32-S2",
-            "ESP32-C3",
-            "ESP32"
+            "ESP32-S3",
+            "ESP32-C3"
         ],
         "builds": [
             {
@@ -353,10 +353,10 @@
         "variant": "standard",
         "build": 134,
         "chipFamilies": [
-            "ESP32-S3",
+            "ESP32",
             "ESP32-S2",
-            "ESP32-C3",
-            "ESP32"
+            "ESP32-S3",
+            "ESP32-C3"
         ],
         "builds": [
             {
@@ -500,6 +500,160 @@
         ]
     },
     {
+        "manifest": "firmware/v3.2.1-136-development/manifestAll-standard.json",
+        "files": "firmware/v3.2.1-136-development/filesAll.json",
+        "version": "v3.2.1",
+        "stage": "development",
+        "variant": "standard",
+        "build": 136,
+        "chipFamilies": [
+            "ESP32",
+            "ESP32-S2",
+            "ESP32-S3",
+            "ESP32-C3"
+        ],
+        "builds": [
+            {
+                "chipFamily": "ESP32-S2",
+                "parts": [
+                    {
+                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-136-development/firmware_ESP32-S2/bootloader.ESP32-S2.v3.2.1-136.standard.development.bin",
+                        "offset": 4096,
+                        "filetype": "bootloader"
+                    },
+                    {
+                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-136-development/firmware_ESP32-S2/partitions.ESP32-S2.v3.2.1-136.standard.development.bin",
+                        "offset": 32768,
+                        "filetype": "partitions"
+                    },
+                    {
+                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-136-development/firmware_ESP32-S2/littlefs.ESP32-S2.v3.2.1-136.standard.development.bin",
+                        "offset": 3538944,
+                        "filetype": "filesystem"
+                    },
+                    {
+                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-136-development/firmware_ESP32-S2/firmware.ESP32-S2.v3.2.1-136.standard.development.bin",
+                        "offset": 65536,
+                        "filetype": "firmware"
+                    }
+                ]
+            },
+            {
+                "chipFamily": "ESP32-S3",
+                "parts": [
+                    {
+                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-136-development/firmware_ESP32-S3/bootloader.ESP32-S3.v3.2.1-136.standard.development.bin",
+                        "offset": 4096,
+                        "filetype": "bootloader"
+                    },
+                    {
+                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-136-development/firmware_ESP32-S3/partitions.ESP32-S3.v3.2.1-136.standard.development.bin",
+                        "offset": 32768,
+                        "filetype": "partitions"
+                    },
+                    {
+                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-136-development/firmware_ESP32-S3/littlefs.ESP32-S3.v3.2.1-136.standard.development.bin",
+                        "offset": 3538944,
+                        "filetype": "filesystem"
+                    },
+                    {
+                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-136-development/firmware_ESP32-S3/firmware.ESP32-S3.v3.2.1-136.standard.development.bin",
+                        "offset": 65536,
+                        "filetype": "firmware"
+                    }
+                ]
+            },
+            {
+                "chipFamily": "ESP32-C3",
+                "parts": [
+                    {
+                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-136-development/firmware_ESP32-C3/bootloader.ESP32-C3.v3.2.1-136.standard.development.bin",
+                        "offset": 4096,
+                        "filetype": "bootloader"
+                    },
+                    {
+                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-136-development/firmware_ESP32-C3/partitions.ESP32-C3.v3.2.1-136.standard.development.bin",
+                        "offset": 32768,
+                        "filetype": "partitions"
+                    },
+                    {
+                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-136-development/firmware_ESP32-C3/littlefs.ESP32-C3.v3.2.1-136.standard.development.bin",
+                        "offset": 3538944,
+                        "filetype": "filesystem"
+                    },
+                    {
+                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-136-development/firmware_ESP32-C3/firmware.ESP32-C3.v3.2.1-136.standard.development.bin",
+                        "offset": 65536,
+                        "filetype": "firmware"
+                    }
+                ]
+            },
+            {
+                "chipFamily": "ESP32",
+                "parts": [
+                    {
+                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-136-development/firmware_ESP32/bootloader.ESP32.v3.2.1-136.standard.development.bin",
+                        "offset": 4096,
+                        "filetype": "bootloader"
+                    },
+                    {
+                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-136-development/firmware_ESP32/partitions.ESP32.v3.2.1-136.standard.development.bin",
+                        "offset": 32768,
+                        "filetype": "partitions"
+                    },
+                    {
+                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-136-development/firmware_ESP32/littlefs.ESP32.v3.2.1-136.standard.development.bin",
+                        "offset": 3538944,
+                        "filetype": "filesystem"
+                    },
+                    {
+                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-136-development/firmware_ESP32/firmware.ESP32.v3.2.1-136.standard.development.bin",
+                        "offset": 65536,
+                        "filetype": "firmware"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "manifest": "firmware/v3.2.1-136-development/manifestAll-flowercare.json",
+        "files": "firmware/v3.2.1-136-development/filesAll.json",
+        "version": "v3.2.1",
+        "stage": "development",
+        "variant": "flowercare",
+        "build": 136,
+        "chipFamilies": [
+            "ESP32"
+        ],
+        "builds": [
+            {
+                "chipFamily": "ESP32",
+                "parts": [
+                    {
+                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-136-development/firmware_ESP32-Flowercare/bootloader.ESP32.v3.2.1-136.flowercare.development.bin",
+                        "offset": 4096,
+                        "filetype": "bootloader"
+                    },
+                    {
+                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-136-development/firmware_ESP32-Flowercare/partitions.ESP32.v3.2.1-136.flowercare.development.bin",
+                        "offset": 32768,
+                        "filetype": "partitions"
+                    },
+                    {
+                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-136-development/firmware_ESP32-Flowercare/littlefs.ESP32.v3.2.1-136.flowercare.development.bin",
+                        "offset": 3538944,
+                        "filetype": "filesystem"
+                    },
+                    {
+                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-136-development/firmware_ESP32-Flowercare/firmware.ESP32.v3.2.1-136.flowercare.development.bin",
+                        "offset": 65536,
+                        "filetype": "firmware"
+                    }
+                ]
+            }
+        ]
+    },
+    {
         "manifest": "firmware/v3.1.1-55-prelive/manifestAll-standard.json",
         "files": "firmware/v3.1.1-55-prelive/filesAll.json",
         "version": "v3.1.1",
@@ -507,10 +661,10 @@
         "variant": "standard",
         "build": 55,
         "chipFamilies": [
-            "ESP32-S3",
+            "ESP32",
             "ESP32-S2",
-            "ESP32-C3",
-            "ESP32"
+            "ESP32-S3",
+            "ESP32-C3"
         ],
         "builds": [
             {
@@ -699,10 +853,10 @@
         "variant": "standard",
         "build": 109,
         "chipFamilies": [
-            "ESP32-S3",
+            "ESP32",
             "ESP32-S2",
-            "ESP32-C3",
-            "ESP32"
+            "ESP32-S3",
+            "ESP32-C3"
         ],
         "builds": [
             {
@@ -846,160 +1000,6 @@
         ]
     },
     {
-        "manifest": "firmware/v3.2.1-130-development/manifestAll-standard.json",
-        "files": "firmware/v3.2.1-130-development/filesAll.json",
-        "version": "v3.2.1",
-        "stage": "development",
-        "variant": "standard",
-        "build": 130,
-        "chipFamilies": [
-            "ESP32-S3",
-            "ESP32-S2",
-            "ESP32-C3",
-            "ESP32"
-        ],
-        "builds": [
-            {
-                "chipFamily": "ESP32-S2",
-                "parts": [
-                    {
-                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-130-development/firmware_ESP32-S2/bootloader.ESP32-S2.v3.2.1-130.standard.development.bin",
-                        "offset": 4096,
-                        "filetype": "bootloader"
-                    },
-                    {
-                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-130-development/firmware_ESP32-S2/partitions.ESP32-S2.v3.2.1-130.standard.development.bin",
-                        "offset": 32768,
-                        "filetype": "partitions"
-                    },
-                    {
-                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-130-development/firmware_ESP32-S2/littlefs.ESP32-S2.v3.2.1-130.standard.development.bin",
-                        "offset": 3538944,
-                        "filetype": "filesystem"
-                    },
-                    {
-                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-130-development/firmware_ESP32-S2/firmware.ESP32-S2.v3.2.1-130.standard.development.bin",
-                        "offset": 65536,
-                        "filetype": "firmware"
-                    }
-                ]
-            },
-            {
-                "chipFamily": "ESP32-S3",
-                "parts": [
-                    {
-                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-130-development/firmware_ESP32-S3/bootloader.ESP32-S3.v3.2.1-130.standard.development.bin",
-                        "offset": 4096,
-                        "filetype": "bootloader"
-                    },
-                    {
-                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-130-development/firmware_ESP32-S3/partitions.ESP32-S3.v3.2.1-130.standard.development.bin",
-                        "offset": 32768,
-                        "filetype": "partitions"
-                    },
-                    {
-                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-130-development/firmware_ESP32-S3/littlefs.ESP32-S3.v3.2.1-130.standard.development.bin",
-                        "offset": 3538944,
-                        "filetype": "filesystem"
-                    },
-                    {
-                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-130-development/firmware_ESP32-S3/firmware.ESP32-S3.v3.2.1-130.standard.development.bin",
-                        "offset": 65536,
-                        "filetype": "firmware"
-                    }
-                ]
-            },
-            {
-                "chipFamily": "ESP32-C3",
-                "parts": [
-                    {
-                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-130-development/firmware_ESP32-C3/bootloader.ESP32-C3.v3.2.1-130.standard.development.bin",
-                        "offset": 4096,
-                        "filetype": "bootloader"
-                    },
-                    {
-                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-130-development/firmware_ESP32-C3/partitions.ESP32-C3.v3.2.1-130.standard.development.bin",
-                        "offset": 32768,
-                        "filetype": "partitions"
-                    },
-                    {
-                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-130-development/firmware_ESP32-C3/littlefs.ESP32-C3.v3.2.1-130.standard.development.bin",
-                        "offset": 3538944,
-                        "filetype": "filesystem"
-                    },
-                    {
-                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-130-development/firmware_ESP32-C3/firmware.ESP32-C3.v3.2.1-130.standard.development.bin",
-                        "offset": 65536,
-                        "filetype": "firmware"
-                    }
-                ]
-            },
-            {
-                "chipFamily": "ESP32",
-                "parts": [
-                    {
-                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-130-development/firmware_ESP32/bootloader.ESP32.v3.2.1-130.standard.development.bin",
-                        "offset": 4096,
-                        "filetype": "bootloader"
-                    },
-                    {
-                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-130-development/firmware_ESP32/partitions.ESP32.v3.2.1-130.standard.development.bin",
-                        "offset": 32768,
-                        "filetype": "partitions"
-                    },
-                    {
-                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-130-development/firmware_ESP32/littlefs.ESP32.v3.2.1-130.standard.development.bin",
-                        "offset": 3538944,
-                        "filetype": "filesystem"
-                    },
-                    {
-                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-130-development/firmware_ESP32/firmware.ESP32.v3.2.1-130.standard.development.bin",
-                        "offset": 65536,
-                        "filetype": "firmware"
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        "manifest": "firmware/v3.2.1-130-development/manifestAll-flowercare.json",
-        "files": "firmware/v3.2.1-130-development/filesAll.json",
-        "version": "v3.2.1",
-        "stage": "development",
-        "variant": "flowercare",
-        "build": 130,
-        "chipFamilies": [
-            "ESP32"
-        ],
-        "builds": [
-            {
-                "chipFamily": "ESP32",
-                "parts": [
-                    {
-                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-130-development/firmware_ESP32-Flowercare/bootloader.ESP32.v3.2.1-130.flowercare.development.bin",
-                        "offset": 4096,
-                        "filetype": "bootloader"
-                    },
-                    {
-                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-130-development/firmware_ESP32-Flowercare/partitions.ESP32.v3.2.1-130.flowercare.development.bin",
-                        "offset": 32768,
-                        "filetype": "partitions"
-                    },
-                    {
-                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-130-development/firmware_ESP32-Flowercare/littlefs.ESP32.v3.2.1-130.flowercare.development.bin",
-                        "offset": 3538944,
-                        "filetype": "filesystem"
-                    },
-                    {
-                        "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-130-development/firmware_ESP32-Flowercare/firmware.ESP32.v3.2.1-130.flowercare.development.bin",
-                        "offset": 65536,
-                        "filetype": "firmware"
-                    }
-                ]
-            }
-        ]
-    },
-    {
         "manifest": "firmware/v3.2.1-131-development/manifestAll-standard.json",
         "files": "firmware/v3.2.1-131-development/filesAll.json",
         "version": "v3.2.1",
@@ -1007,10 +1007,10 @@
         "variant": "standard",
         "build": 131,
         "chipFamilies": [
-            "ESP32-S3",
+            "ESP32",
             "ESP32-S2",
-            "ESP32-C3",
-            "ESP32"
+            "ESP32-S3",
+            "ESP32-C3"
         ],
         "builds": [
             {
@@ -1161,10 +1161,10 @@
         "variant": "standard",
         "build": 132,
         "chipFamilies": [
-            "ESP32-S3",
+            "ESP32",
             "ESP32-S2",
-            "ESP32-C3",
-            "ESP32"
+            "ESP32-S3",
+            "ESP32-C3"
         ],
         "builds": [
             {
@@ -1315,10 +1315,10 @@
         "variant": "standard",
         "build": 135,
         "chipFamilies": [
-            "ESP32-S3",
+            "ESP32",
             "ESP32-S2",
-            "ESP32-C3",
-            "ESP32"
+            "ESP32-S3",
+            "ESP32-C3"
         ],
         "builds": [
             {
@@ -1469,10 +1469,10 @@
         "variant": "standard",
         "build": 108,
         "chipFamilies": [
-            "ESP32-S3",
+            "ESP32",
             "ESP32-S2",
-            "ESP32-C3",
-            "ESP32"
+            "ESP32-S3",
+            "ESP32-C3"
         ],
         "builds": [
             {
@@ -1623,10 +1623,10 @@
         "variant": "standard",
         "build": 49,
         "chipFamilies": [
-            "ESP32-S3",
+            "ESP32",
             "ESP32-S2",
-            "ESP32-C3",
-            "ESP32"
+            "ESP32-S3",
+            "ESP32-C3"
         ],
         "builds": [
             {

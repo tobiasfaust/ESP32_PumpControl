@@ -1,0 +1,14 @@
+{
+    "name": "ESP32_PumpControl (v3.2.1-development)",
+    "chipFamily": "ESP32",
+    "stage": "development",
+    "build": 136,
+    "variant": "flowercare",
+    "version": "v3.2.1",
+    "parts": [
+        {
+            "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-136-development/firmware_ESP32-Flowercare/merged-firmware.ESP32.v3.2.1-136.flowercare.development.bin",
+            "offset": 0
+        }
+    ]
+}
