@@ -30,7 +30,7 @@ MyWebServer::MyWebServer(fs::LittleFSFS& sysFS, fs::LittleFSFS& configFS, AsyncW
 
   this->ws = new AsyncWebSocket("/ajaxws");
 
-  ElegantOTA.setTargetPartition("webdata");  // Set default partition for OTA updates
+  ElegantOTA.setTargetPartition("webdata");  // Set default partition for OTA LittleFS/SPIFFS updates
   ElegantOTA.setGitEnv(String(GIT_OWNER), String(GIT_REPO), String(GIT_BRANCH), String(GITHUB_RUN).toInt());
   ElegantOTA.setFWVersion(String(Config->GetReleaseName() + " / Build: " + GITHUB_RUN ));
   ElegantOTA.setFWVariant(String(GIT_VARIANT));
@@ -167,277 +167,282 @@ void MyWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * clie
     String msg(""); msg.reserve(len + 1);
     for (size_t i = 0; i < len; i++) { msg += (char)data[i]; } msg += '\0';
     Config->logN(4, "[Client: %u] WebSocket data received: %s", client->id(), msg.c_str()); 
+    
+    JsonDocument ret;
+    this->processCommand(ret, msg, client->id());
+    this->ws->text(client->id(), ret.as<String>());
+  }
+}
 
-    String action(""), subaction(""), item(""), item2("");
-    bool newState = false;
-    JsonDocument json;
-    DeserializationError error = deserializeJson(json, msg.c_str());
-    if (!error) {
-      if (json["cmd"]) {
-        if (json["cmd"]["action"])      { action    = json["cmd"]["action"].as<String>();}
-        if (json["cmd"]["subaction"])   { subaction = json["cmd"]["subaction"].as<String>();}
-        if (json["cmd"]["newState"])    { newState  = json["cmd"]["newState"].as<bool>();}
-        if (json["cmd"]["item"])        { item      = json["cmd"]["item"].as<String>(); }
-        if (json["cmd"]["item2"])       { item2     = json["cmd"]["item2"].as<String>(); }
+void MyWebServer::processCommand(JsonDocument& ret, String& jsonStr, uint32_t client_id) {
+  // This function can be used to process commands received from other sources (e.g., MQTT)
+  // For now, it just logs the received command
+  Config->logN(4, "Processing command: %s", jsonStr.c_str());
+
+  String action(""), subaction(""), item(""), item2("");
+  bool newState = false;
+  DeserializationError error = deserializeJson(ret, jsonStr.c_str());
+  if (!error) {
+      if (ret["cmd"]) {
+        if (ret["cmd"]["action"])      { action    = ret["cmd"]["action"].as<String>();}
+        if (ret["cmd"]["subaction"])   { subaction = ret["cmd"]["subaction"].as<String>();}
+        if (ret["cmd"]["newState"])    { newState  = ret["cmd"]["newState"].as<bool>();}
+        if (ret["cmd"]["item"])        { item      = ret["cmd"]["item"].as<String>(); }
+        if (ret["cmd"]["item2"])       { item2     = ret["cmd"]["item2"].as<String>(); }
         
-      }
+    }
 
-      if (action && action == "subscribe") {
-        if (subaction && subaction == "flowercare_data") {
-          #ifdef USE_FLOWERCARE
-            this->_wsclientRequests->push_back({client->id(), wsclient_t::FLOWERCARE_DATA});
-            flowerCare->onValues(std::bind(&MyWebServer::flowerCareGetValuesCallback, this, std::placeholders::_1, client->id()));
-          #endif
-        } else if (subaction && subaction == "ads1115_data") {
-          this->_wsclientRequests->push_back({client->id(), wsclient_t::ADS1115_DATA});
-          LevelSensor->onValues(std::bind(&MyWebServer::LevelSensorGetValuesCallback, this, std::placeholders::_1, client->id()));
-        } else if (subaction && subaction == "flowcontrol_data") {
-          #ifdef USE_FLOWCONTROL
-            this->_wsclientRequests->push_back({client->id(), wsclient_t::FLOWCONTROL_DATA});
-            FlowCtrl->onValues(std::bind(&MyWebServer::flowControlGetValuesCallback, this, std::placeholders::_1, client->id()));
-          #endif
-        } else if (subaction && subaction == "log_data") {
-          this->_wsclientRequests->push_back({client->id(), wsclient_t::LOG_DATA});
-          Config->onLogValues(std::bind(&MyWebServer::logGetValuesCallback, this, std::placeholders::_1, json, client->id()));
-        }
-      }
-
-      if (action && action == "reset") {
-        if (handleReset()) {
-          json["response"]["status"] = 1;
-          json["response"]["text"] = "all config files deleted successfully";
-        } else {
-          json["response"]["status"] = 0;
-          json["response"]["text"] = "deletion of config files failed";
-        }
-      }
-
-      if(action && action == "reboot") {
-        this->DoReboot = true;
-        json["response"]["status"] = 1;
-        json["response"]["text"] = "reboot after 5sec...";
-      }
-
-      if(action && action == "GetInitData")  {
-        if (subaction && subaction == "status") {
-          this->GetInitDataStatus(json);
-          VStruct->getWebJsParameter(json);
-        } else if (subaction && subaction == "navi") {
-          this->GetInitDataNavi(json);
-        } else if (subaction && subaction == "baseconfig") {
-          Config->GetInitData(json);
-          VStruct->getWebJsParameter(json);
-          json["js"]["gpio_disabled"] = Config->disabledGPIO.getArrayExcludeIdentifier(BaseConfig::GpioIdentifier::BASECONFIG);
-        } else if (subaction && subaction == "valveconfig") {
-          VStruct->GetInitData(json);
-          VStruct->getWebJsParameter(json);
-          json["js"]["gpio_disabled"] = Config->disabledGPIO.getArrayExcludeIdentifier(BaseConfig::GpioIdentifier::VALVES);
-        } else if (subaction && subaction == "1wireconfig") {
-          VStruct->GetInitData1Wire(json);
-          //VStruct->getWebJsParameter(json);
-        } else if (subaction && subaction == "sensorconfig") {
-          LevelSensor->GetInitData(json);
-          //VStruct->getWebJsParameter(json);
-          json["js"]["gpio_disabled"] = Config->disabledGPIO.getArrayExcludeIdentifier(BaseConfig::GpioIdentifier::SENSOR);
-        } else if (subaction && subaction == "relations") {
-          ValveRel->GetInitData(json);
-          VStruct->getWebJsParameter(json);
-        } else if (subaction && subaction == "flowcontrol") {
-          #ifdef USE_FLOWCONTROL
-            FlowCtrl->GetInitData(json);
-            VStruct->getWebJsParameter(json);
-            json["js"]["gpio_disabled"] = Config->disabledGPIO.getArrayExcludeIdentifier(BaseConfig::GpioIdentifier::FLOWCONTROL);
-        #endif
-        } else if (subaction && subaction == "flowercare") {
-          #ifdef USE_FLOWERCARE
-            flowerCare->GetInitData(json);
-            VStruct->getWebJsParameter(json);
-          #endif
-        } else if (subaction && subaction == "doif") {
-          #ifdef USE_DOIF
-             doif->GetInitData(json);
-            VStruct->getWebJsParameter(json);
-          #endif
-        } else {
-          json["response"]["status"] = 0;
-          json["response"]["text"] = "unknown subaction";
-        }
-      }
-
-      if(action && action == "ReloadConfig")  {
-        if (subaction && subaction == "baseconfig") {
-          Config->LoadJsonConfig();
-        } 
-        
-        if (subaction && subaction == "valveconfig") {
-          VStruct->LoadJsonConfig();
-        } 
-        
-        if (subaction && subaction == "sensorconfig") {
-          LevelSensor->LoadJsonConfig();
-        } 
-        
-        if (subaction && subaction == "relations") {
-          ValveRel->LoadJsonConfig();
-        }
-
-        #ifdef USE_FLOWCONTROL
-          if (subaction && subaction == "flowcontrol") {
-            FlowCtrl->LoadJsonConfig();
-          }
-        #endif
+    if (action && action == "subscribe") {
+      if (subaction && subaction == "flowercare_data") {
         #ifdef USE_FLOWERCARE
-          if (subaction && subaction == "flowercare") {
-            flowerCare->LoadJsonConfig();
-          }
+          this->_wsclientRequests->push_back({client_id, wsclient_t::FLOWERCARE_DATA});
+          flowerCare->onValues(std::bind(&MyWebServer::flowerCareGetValuesCallback, this, std::placeholders::_1, client_id));
         #endif
+      } else if (subaction && subaction == "ads1115_data") {
+        this->_wsclientRequests->push_back({client_id, wsclient_t::ADS1115_DATA});
+        LevelSensor->onValues(std::bind(&MyWebServer::LevelSensorGetValuesCallback, this, std::placeholders::_1, client_id));
+      } else if (subaction && subaction == "flowcontrol_data") {
+        #ifdef USE_FLOWCONTROL
+          this->_wsclientRequests->push_back({client_id, wsclient_t::FLOWCONTROL_DATA});
+          FlowCtrl->onValues(std::bind(&MyWebServer::flowControlGetValuesCallback, this, std::placeholders::_1, client_id));
+        #endif
+      } else if (subaction && subaction == "log_data") {
+        this->_wsclientRequests->push_back({client_id, wsclient_t::LOG_DATA});
+        Config->onLogValues(std::bind(&MyWebServer::logGetValuesCallback, this, std::placeholders::_1, ret, client_id));
+      }
+    }
 
+    if (action && action == "reset") {
+      if (handleReset()) {
+        ret["response"]["status"] = 1;
+        ret["response"]["text"] = "all config files deleted successfully";
+      } else {
+        ret["response"]["status"] = 0;
+        ret["response"]["text"] = "deletion of config files failed";
+      }
+    }
+
+    if(action && action == "reboot") {
+      this->DoReboot = true;
+      ret["response"]["status"] = 1;
+      ret["response"]["text"] = "reboot after 5sec...";
+    }
+
+    if(action && action == "GetInitData")  {
+      if (subaction && subaction == "status") {
+        this->GetInitDataStatus(ret);
+        VStruct->getWebJsParameter(ret);
+      } else if (subaction && subaction == "navi") {
+        this->GetInitDataNavi(ret);
+      } else if (subaction && subaction == "baseconfig") {
+        Config->GetInitData(ret);
+        VStruct->getWebJsParameter(ret);
+        ret["js"]["gpio_disabled"] = Config->disabledGPIO.getArrayExcludeIdentifier(BaseConfig::GpioIdentifier::BASECONFIG);
+      } else if (subaction && subaction == "valveconfig") {
+        VStruct->GetInitData(ret);
+        VStruct->getWebJsParameter(ret);
+        ret["js"]["gpio_disabled"] = Config->disabledGPIO.getArrayExcludeIdentifier(BaseConfig::GpioIdentifier::VALVES);
+      } else if (subaction && subaction == "1wireconfig") {
+        VStruct->GetInitData1Wire(ret);
+        //VStruct->getWebJsParameter(ret);
+      } else if (subaction && subaction == "sensorconfig") {
+        LevelSensor->GetInitData(ret);
+        //VStruct->getWebJsParameter(ret);
+        ret["js"]["gpio_disabled"] = Config->disabledGPIO.getArrayExcludeIdentifier(BaseConfig::GpioIdentifier::SENSOR);
+      } else if (subaction && subaction == "relations") {
+        ValveRel->GetInitData(ret);
+        VStruct->getWebJsParameter(ret);
+      } else if (subaction && subaction == "flowcontrol") {
+        #ifdef USE_FLOWCONTROL
+          FlowCtrl->GetInitData(ret);
+          VStruct->getWebJsParameter(ret);
+          ret["js"]["gpio_disabled"] = Config->disabledGPIO.getArrayExcludeIdentifier(BaseConfig::GpioIdentifier::FLOWCONTROL);
+        #endif
+      } else if (subaction && subaction == "flowercare") {
+        #ifdef USE_FLOWERCARE
+          flowerCare->GetInitData(ret);
+          VStruct->getWebJsParameter(ret);
+        #endif
+      } else if (subaction && subaction == "doif") {
         #ifdef USE_DOIF
-          if (subaction && subaction == "doif") {
-            doif->LoadJsonConfig();
-          }
+          doif->GetInitData(ret);
+          VStruct->getWebJsParameter(ret);
         #endif
-      
-        json["response"]["status"] = 1;
-        json["response"]["text"] = "new config reloaded sucessfully";
+      } else {
+        ret["response"]["status"] = 0;
+        ret["response"]["text"] = "unknown subaction";
+      }
+    }
+
+    if(action && action == "ReloadConfig")  {
+      if (subaction && subaction == "baseconfig") {
+        Config->LoadJsonConfig();
+      } 
+        
+      if (subaction && subaction == "valveconfig") {
+        VStruct->LoadJsonConfig();
+      } 
+        
+      if (subaction && subaction == "sensorconfig") {
+        LevelSensor->LoadJsonConfig();
+      } 
+        
+      if (subaction && subaction == "relations") {
+        ValveRel->LoadJsonConfig();
       }
 
-      if(action && action == "handlefiles") {
-        fsfiles->HandleRequest(json);
-      }
-     
-      #ifdef USE_ADS1115
-      if (action && action == "sensor") {
-        if (subaction && subaction == "requestMeasurementMoisture") {
-          LevelSensor->RequestMeasurementMoisture();
-          json["response"]["status"] = 1;
-          json["response"]["text"] = "Measurement requested";
+      #ifdef USE_FLOWCONTROL
+        if (subaction && subaction == "flowcontrol") {
+          FlowCtrl->LoadJsonConfig();
         }
-      }
       #endif
-
       #ifdef USE_FLOWERCARE
-      if (action && action == "flowercare") {
-        if (flowerCare && subaction && subaction == "scan") {
-          flowerCare->ScanBLE();
-          json["response"]["status"] = 1;
-          json["response"]["text"] = "scan started, please wait 10sec .....";
+        if (subaction && subaction == "flowercare") {
+          flowerCare->LoadJsonConfig();
         }
-
-        if (flowerCare && subaction && subaction == "forceUpdate") {
-          if (item && item.length() > 0) {
-            if (flowerCare->forceUpdate(item)) {
-              json["response"]["status"] = 1;
-              json["response"]["text"] = "update requested for device with macaddress: " + item;
-            } else {
-                json["response"]["status"] = 0;
-                json["response"]["text"] = "device with macaddress: " + item + " not found";
-            }
-          } else {
-            json["response"]["status"] = 0;
-            json["response"]["text"] = "no macaddress provided";
-          }
-        }
-
-        if (flowerCare && subaction && subaction == "activateDevice") {
-          if (flowerCare->setActive(item, newState)) {
-            json["response"]["status"] = 1;
-            json["response"]["text"] = String("device set to ") + (newState ? "active" : "inactive");
-          } else {
-            json["response"]["status"] = 0;
-            json["response"]["text"] = "device not found";
-          }
-        }
-      }
       #endif
 
       #ifdef USE_DOIF
-      if (action && action == "doif") {
-        if (subaction && subaction == "activateRelation") {
-          if (item && item2 && newState) {
-            // item -> mqtttopic, item2 -> port
-            if (doif->setActive(item, item2.toInt(), newState)) {
-              if (newState) mqtt->Subscribe(item, MyMQTT::DOIF); // do not unsubscribe, because it is possible that the same topic is used by another relation
-              json["response"]["status"] = 1;
-              json["response"]["text"] = (newState ? "relation activated" : "relation deactivated");
-            } else {
-              json["response"]["status"] = 0;
-              json["response"]["text"] = "relation not found, please save first";
-            }
-        
-          }
+        if (subaction && subaction == "doif") {
+          doif->LoadJsonConfig();
         }
-      }
-      #endif
-
-      if(action && action == "SetValve") {
-        uint8_t port = item.toInt();
-        if (item && port > 0 && !VStruct->GetEnabled(port)) { 
-          json["response"]["status"] = 0; 
-          json["response"]["text"] = "Requested Port not enabled. Please enable first!";
-        }
-        else if (item && port > 0 )  { 
-          if (newState) {
-            VStruct->SetOn(port); 
-          } else { 
-            VStruct->SetOff(port); 
-          }
-
-          json["response"]["status"] = 1;
-          json["response"]["text"] =(VStruct->GetState(port)?"Valve is now: ON":"Valve is now: OFF");
-          json["data"][subaction] = (VStruct->GetState(port)?"Set Off":"Set On"); // subaction = button.id
-        }
-      }
-
-      if(action && action == "EnableValve") {
-        uint8_t port = item.toInt();
-        if (item && port > 0) {
-          if (newState) VStruct->SetEnable(port, true);
-          if (!newState) VStruct->SetEnable(port, false);
-          json["response"]["status"] = 1;
-          json["response"]["text"] = (VStruct->GetEnabled(port)?"valve now enabled":"valve now disabled");
-        }
-      }
-
-      if (action && action == "RefreshWifiAPs") {
-        bool result = Config->addWifiBssid(json, true);  
-
-        json["response"]["status"] = (result ? 1 : 0);
-        json["response"]["text"] = (result ? "Wifi AP-Scan completed" : "Wifi AP-Scan failed");
-      }
-
-      #ifdef USE_I2C
-      if (action && action == "RefreshI2C") {
-        I2Cdetect->i2cScan();  
-        
-        json["data"].to<JsonObject>();
-        json["data"]["showI2C"] = I2Cdetect->i2cGetAddresses();
-        json["response"]["status"] = 1;
-        json["response"]["text"] = "successful";
-      }
       #endif
       
-      #ifdef USE_ONEWIRE
-      if (action && action == "Refresh1Wire") {
-        uint8_t ow = VStruct->Refresh1WireDevices();  
-        
-        String buffer = String(ow) + " (" + String(ow * 8) + ")";
-        
-        json["data"].to<JsonObject>();
-        json["data"]["show1Wire"] = buffer;
-        json["response"]["status"] = 1;
-        json["response"]["text"] = "successful";
-      }
-      #endif
-
-    } else {
-      Config->logN(1, "WebSocket data received but not a valid json string: %s -> %s", msg.c_str(), error.c_str());
-      json["response"]["status"] = 0;
-      json["response"]["text"] = error.c_str();
+      ret["response"]["status"] = 1;
+      ret["response"]["text"] = "new config reloaded sucessfully";
     }
 
-    this->ws->text(client->id(), json.as<String>());
+    if(action && action == "handlefiles") {
+      fsfiles->HandleRequest(ret);
+    }
+     
+    #ifdef USE_ADS1115
+    if (action && action == "sensor") {
+      if (subaction && subaction == "requestMeasurementMoisture") {
+        LevelSensor->RequestMeasurementMoisture();
+        ret["response"]["status"] = 1;
+        ret["response"]["text"] = "Measurement requested";
+      }
+    }
+    #endif
 
+    #ifdef USE_FLOWERCARE
+    if (action && action == "flowercare") {
+      if (flowerCare && subaction && subaction == "scan") {
+        flowerCare->ScanBLE();
+        ret["response"]["status"] = 1;
+        ret["response"]["text"] = "scan started, please wait 10sec .....";
+      }
+
+    if (flowerCare && subaction && subaction == "forceUpdate") {
+        if (item && item.length() > 0) {
+          if (flowerCare->forceUpdate(item)) {
+            ret["response"]["status"] = 1;
+            ret["response"]["text"] = "update requested for device with macaddress: " + item;
+          } else {
+              ret["response"]["status"] = 0;
+              ret["response"]["text"] = "device with macaddress: " + item + " not found";
+          }
+        } else {
+          ret["response"]["status"] = 0;
+          ret["response"]["text"] = "no macaddress provided";
+        }
+      }
+
+      if (flowerCare && subaction && subaction == "activateDevice") {
+        if (flowerCare->setActive(item, newState)) {
+          ret["response"]["status"] = 1;
+          ret["response"]["text"] = String("device set to ") + (newState ? "active" : "inactive");
+        } else {
+          ret["response"]["status"] = 0;
+          ret["response"]["text"] = "device not found";
+        }
+      }
+    }
+    #endif
+
+    #ifdef USE_DOIF
+    if (action && action == "doif") {
+      if (subaction && subaction == "activateRelation") {
+        if (item && item2 && newState) {
+          // item -> mqtttopic, item2 -> port
+          if (doif->setActive(item, item2.toInt(), newState)) {
+            if (newState) mqtt->Subscribe(item, MyMQTT::DOIF); // do not unsubscribe, because it is possible that the same topic is used by another relation
+            ret["response"]["status"] = 1;
+            ret["response"]["text"] = (newState ? "relation activated" : "relation deactivated");
+          } else {
+            ret["response"]["status"] = 0;
+            ret["response"]["text"] = "relation not found, please save first";
+          }
+      
+        }
+      }
+    }
+    #endif
+
+    if(action && action == "SetValve") {
+      uint8_t port = item.toInt();
+      if (item && port > 0 && !VStruct->GetEnabled(port)) { 
+        ret["response"]["status"] = 0; 
+        ret["response"]["text"] = "Requested Port not enabled. Please enable first!";
+      }
+      else if (item && port > 0 )  { 
+        if (newState) {
+          VStruct->SetOn(port); 
+        } else { 
+          VStruct->SetOff(port); 
+        }
+
+        ret["response"]["status"] = 1;
+        ret["response"]["text"] =(VStruct->GetState(port)?"Valve is now: ON":"Valve is now: OFF");
+        ret["data"][subaction] = (VStruct->GetState(port)?"Set Off":"Set On"); // subaction = button.id
+      }
+    }
+
+    if(action && action == "EnableValve") {
+      uint8_t port = item.toInt();
+      if (item && port > 0) {
+        if (newState) VStruct->SetEnable(port, true);
+        if (!newState) VStruct->SetEnable(port, false);
+        ret["response"]["status"] = 1;
+        ret["response"]["text"] = (VStruct->GetEnabled(port)?"valve now enabled":"valve now disabled");
+      }
+    }
+
+    if (action && action == "RefreshWifiAPs") {
+      bool result = Config->addWifiBssid(ret, true);  
+      ret["response"]["status"] = (result ? 1 : 0);
+       ret["response"]["text"] = (result ? "Wifi AP-Scan completed" : "Wifi AP-Scan failed");
+    }
+
+    #ifdef USE_I2C
+    if (action && action == "RefreshI2C") {
+      I2Cdetect->i2cScan();  
+      
+      ret["data"].to<JsonObject>();
+      ret["data"]["showI2C"] = I2Cdetect->i2cGetAddresses();
+      ret["response"]["status"] = 1;
+      ret["response"]["text"] = "successful";
+    }
+    #endif
+      
+    #ifdef USE_ONEWIRE
+    if (action && action == "Refresh1Wire") {
+      uint8_t ow = VStruct->Refresh1WireDevices();  
+      
+      String buffer = String(ow) + " (" + String(ow * 8) + ")";
+        
+      ret["data"].to<JsonObject>();
+      ret["data"]["show1Wire"] = buffer;
+      ret["response"]["status"] = 1;
+      ret["response"]["text"] = "successful";
+    }
+    #endif
+
+  } else {
+    Config->logN(1, "WebSocket data received but not a valid ret string: %s -> %s", jsonStr.c_str(), error.c_str());
+    ret["response"]["status"] = 0;
+    ret["response"]["text"] = error.c_str();
   }
 }
 

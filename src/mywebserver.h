@@ -44,6 +44,7 @@ class MyWebServer {
   public:
     MyWebServer(fs::LittleFSFS& sysFS, fs::LittleFSFS& configFS, AsyncWebServer *server, DNSServer* dns);
     void  loop();
+    void  processCommand(JsonDocument& ret, String& jsonStr, uint32_t client_id = 0); // client_id is optional, default is for non-websocket commands
 
     #ifdef USE_DOIF
       void  DoIfOnMqttMessage(String& topic, String& msg);
