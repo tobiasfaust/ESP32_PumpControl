@@ -87,8 +87,15 @@ void BaseConfig::LoadJsonConfig() {
     this->logN(1, "baseconfig.json config File not exists, load default BaseConfig");
   }
 
-  // Data Cleaning, needed without trailing slash
+  // Data Cleaning
+  this->mqtt_root.trim();
+  this->mqtt_server.trim();
+  this->mqtt_username.trim();
+  this->mqtt_password.trim();
+  this->mqtt_basepath.trim();
+  
   if(this->mqtt_basepath.endsWith("/")) {
+    //needed without trailing slash
     this->mqtt_basepath = this->mqtt_basepath.substring(0, this->mqtt_basepath.length()-1); 
   }
 
