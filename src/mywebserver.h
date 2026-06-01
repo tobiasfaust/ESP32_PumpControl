@@ -28,6 +28,7 @@
 extern sensor* LevelSensor;
 extern valveStructure* VStruct;
 extern valveRelation* ValveRel;
+extern flowControl* FlowCtrl;
 
 
 #ifdef USE_I2C

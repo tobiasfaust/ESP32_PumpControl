@@ -73,3 +73,11 @@ try {
 } catch(e) { console.error('Callback Registrierung fehlgeschlagen (sensorconfig):', e); }
 
 // ************************************************
+// Registrierung der Callback-Funktionen
+// Dieses Modul nutzt das Inversion-of-Control Callback-Registry aus Javascript.js
+// Es werden folgende Callbacks aktiv beim Laden des Moduls registriert.
+try {
+  global.registerCallback('sensorconfig_Callback', MyCallback);
+} catch(e) { console.error('Callback Registrierung fehlgeschlagen (sensorconfig):', e); }
+
+// ************************************************

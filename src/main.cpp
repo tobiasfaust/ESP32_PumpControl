@@ -6,6 +6,7 @@
 #include "mymqtt.h"
 #include "mywebserver.h"
 #include "sensor.h"
+#include "flowcontrol.h"
 
 #ifdef USE_FLOWCONTROL
   #include "flowcontrol.h"
@@ -30,6 +31,11 @@ valveStructure* VStruct = nullptr;
 MyMQTT* mqtt = nullptr;
 sensor* LevelSensor = nullptr;
 MyWebServer* mywebserver = nullptr;
+flowControl* FlowCtrl = nullptr;
+
+// Initialize littlefs data partitions  
+fs::LittleFSFS sysFS;
+fs::LittleFSFS configFS;
 
 
 // Initialize littlefs data partitions  
