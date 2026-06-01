@@ -1,0 +1,14 @@
+{
+    "name": "ESP32_PumpControl (v3.2.1-prelive)",
+    "chipFamily": "ESP32-S3",
+    "stage": "prelive",
+    "build": 137,
+    "variant": "standard",
+    "version": "v3.2.1",
+    "parts": [
+        {
+            "path": "https://tobiasfaust.github.io/ESP32_PumpControl/firmware/v3.2.1-137-prelive/firmware_ESP32-S3/merged-firmware.ESP32-S3.v3.2.1-137.standard.prelive.bin",
+            "offset": 0
+        }
+    ]
+}
